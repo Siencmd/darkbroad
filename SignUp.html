@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link
@@ -45,84 +45,76 @@
           <form class="login-form" id="signupForm">
             <div
               id="signupMessage"
-              style="display: none; margin-bottom: 10px"
+              style="display: none; margin-bottom: 10px; padding: 12px; border-radius: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger);"
             ></div>
 
             <div class="form-group">
-              <label for="fullName"
-                ><i class="fas fa-user"></i> Full Name</label
-              >
+              <label for="fullName"><i class="fas fa-user"></i> Full Name</label>
               <input
                 type="text"
                 id="fullName"
-                placeholder="Full Name"
+                placeholder="Enter your full name"
                 required
               />
             </div>
 
             <div class="form-group">
-              <label for="signupEmail"
-                ><i class="fas fa-envelope"></i> Email</label
-              >
+              <label for="signupEmail"><i class="fas fa-envelope"></i> Email</label>
               <input
                 type="email"
                 id="signupEmail"
-                placeholder="Email"
+                placeholder="Enter your email"
                 required
               />
             </div>
 
             <div class="form-group">
-              <label for="phone"
-                ><i class="fas fa-phone"></i> Phone Number</label
-              >
-              <input type="tel" id="phone" placeholder="Number" />
+              <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+              <input type="tel" id="phone" placeholder="Enter your phone" />
             </div>
 
             <div class="form-group">
-              <label for="course"
-                ><i class="fas fa-graduation-cap"></i> Course/Program</label
-              >
-              <input type="text" id="course" placeholder="Course" required />
+              <label for="course"><i class="fas fa-graduation-cap"></i> Course/Program</label>
+              <input type="text" id="course" placeholder="Your course" required />
             </div>
 
             <div class="form-group">
-              <label for="signupPassword"
-                ><i class="fas fa-lock"></i> Password</label
-              >
+              <label for="userRole"><i class="fas fa-user-tag"></i> Role</label>
+              <select id="userRole" required>
+                <option value="student">Student</option>
+                <option value="instructor">Instructor</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="signupPassword"><i class="fas fa-lock"></i> Password</label>
               <input
                 type="password"
                 id="signupPassword"
-                placeholder="••••••••"
+                placeholder="Create a password"
                 required
               />
-              <span class="toggle-password" id="toggleSignupPassword"
-                ><i class="fas fa-eye-slash"></i
-              ></span>
             </div>
 
             <div class="form-group">
-              <label for="confirmPassword"
-                ><i class="fas fa-lock"></i> Confirm Password</label
-              >
+              <label for="confirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
               <input
                 type="password"
                 id="confirmPassword"
-                placeholder="••••••••"
+                placeholder="Confirm your password"
                 required
               />
-              <span class="toggle-password" id="toggleConfirmPassword"
-                ><i class="fas fa-eye-slash"></i
-              ></span>
             </div>
 
-            <button type="submit" class="login-btn">Create Account</button>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-user-plus"></i> Create Account
+            </button>
           </form>
 
           <div class="login-footer">
             <p>
               Already have an account?
-              <a href="Login.html" class="signup-link">Sign in here</a>
+              <a href="Login.html">Sign in here</a>
             </p>
           </div>
         </div>
@@ -131,23 +123,19 @@
           <h2>Get Started Today</h2>
           <ul class="features">
             <li>
-              <i class="fas fa-check-circle"></i> Quick and easy account
-              creation
+              <i class="fas fa-check-circle"></i> Quick and easy account creation
             </li>
             <li>
-              <i class="fas fa-check-circle"></i> Track all your subjects and
-              grades
+              <i class="fas fa-check-circle"></i> Track all your subjects and grades
             </li>
             <li>
               <i class="fas fa-check-circle"></i> Monitor your academic progress
             </li>
             <li>
-              <i class="fas fa-check-circle"></i> Access class schedules and
-              assignments
+              <i class="fas fa-check-circle"></i> Access class schedules and assignments
             </li>
             <li>
-              <i class="fas fa-check-circle"></i> Stay connected with your
-              school
+              <i class="fas fa-check-circle"></i> Stay connected with your school
             </li>
           </ul>
         </div>
