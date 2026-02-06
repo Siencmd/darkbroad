@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Darkboard - Dashboard</title>
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="dashboard-wrapper">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <a href="index.html" class="brand">DARKBOARD</a>
+        <nav class="sidebar-nav">
+          <a href="index.html" class="nav-item active">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="Subjects.html" class="nav-item">
+            <i class="fas fa-book"></i>
+            <span>Subjects</span>
+          </a>
+          <a href="Grades.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>Grades</span>
+          </a>
+          <a href="Schedule.html" class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Schedule</span>
+          </a>
+          <a href="Announcements.html" class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span>Announcements</span>
+          </a>
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+              margin: 10px 0;
+            "
+          />
+          <a href="Profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+          </a>
+          <a href="Settings.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+          <a href="Help.html" class="nav-item">
+            <i class="fas fa-question-circle"></i>
+            <span>Help</span>
+          </a>
+          <a href="#" id="logoutBtn" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Dashboard Content -->
+      <main class="dashboard-content">
+        <!-- School Banner Section -->
+        <div
+          class="school-banner"
+          style="
+            background-image: url(&quot;Classroom\ Header-4\ -\ Made\ with\ PosterMyWall.jpg&quot;);
+          "
+        >
+          <div class="school-logo-container">
+            <img
+              src="Gemini_Generated_Image_g3iakg3iakg3iakg.png"
+              alt="School Logo"
+              class="school-logo"
+            />
+          </div>
+          <h2>College of Computer Studies</h2>
+        </div>
+
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+          <div class="welcome-text">
+            <h1>Welcome back, <span id="dashboardUserName">John</span>! 👋</h1>
+            <p>
+              <span class="greetingMessage"></span>
+            </p>
+          </div>
+        </section>
+
+        <!-- Quick Stats Banner -->
+        <div class="grades-stats" style="margin-bottom: 30px">
+          <div class="stat-card">
+            <div class="stat-value">4</div>
+            <div class="stat-name">Subjects Enrolled</div>
+            <div class="stat-bar">
+              <div class="stat-fill" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">A-</div>
+            <div class="stat-name">Current Average</div>
+            <div class="stat-bar">
+              <div
+                class="stat-fill"
+                style="width: 90%; background: #4ade80"
+              ></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">2</div>
+            <div class="stat-name">Upcoming Deadlines</div>
+            <div class="stat-bar">
+              <div
+                class="stat-fill"
+                style="width: 50%; background: #fbbf24"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <section class="dashboard-card">
+          <div class="card-header">
+            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+          </div>
+          <div class="quick-actions-grid">
+            <button class="action-card">
+              <i class="fas fa-file-upload"></i>
+              <span>Submit Assignment</span>
+            </button>
+            <button class="action-card">
+              <i class="fas fa-message"></i>
+              <span>Message Teacher</span>
+            </button>
+            <button class="action-card">
+              <i class="fas fa-download"></i>
+              <span>Download Materials</span>
+            </button>
+            <button class="action-card">
+              <i class="fas fa-eye"></i>
+              <span>View Results</span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
+    <script type="module">
+      import { logout } from "./script.js"; // Make sure logout function is exported
+
+      // Logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Add animation on the web page using ScrollReveal
+      ScrollReveal().reveal(".school-banner", {
+        delay: 1000,
+      });
+
+      ScrollReveal().reveal(".welcome-section", {
+        delay: 1500,
+      });
+
+      ScrollReveal().reveal(".stat-card", {
+        delay: 1700,
+        interval: 500,
+      });
+
+      ScrollReveal().reveal(".dashboard-card", {
+        delay: 1000,
+      });
+
+      ScrollReveal().reveal(".action-card", {
+        interval: 1000,
+      });
+
+      // Typing animation in the user name
+      const typed = new Typed(".greetingMessage", {
+        strings: [
+          "Ready to master your studies?",
+          "Ready to level up your studies?",
+          "Ready to crush your studies?",
+        ],
+        typeSpeed: 50,
+        backSpeed: 50,
+        loop: true,
+      });
+    </script>
+  </body>
+</html>

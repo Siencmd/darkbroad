@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subjects - Darkboard</title>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="Darkboard.css" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"/>
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <div class="dashboard-wrapper">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <a href="index.html" class="brand">DARKBOARD</a>
+
+        <nav class="sidebar-nav">
+          <a href="index.html" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <a href="Subjects.html" class="nav-item active">
+            <i class="fas fa-book"></i>
+            <span>Subjects</span>
+          </a>
+
+          <a href="Grades.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>Grades</span>
+          </a>
+
+          <a href="Schedule.html" class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Schedule</span>
+          </a>
+
+          <a href="Announcements.html" class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span>Announcements</span>
+          </a>
+
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+              margin: 10px 0;
+            "
+          />
+
+          <a href="Profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+          </a>
+
+          <a href="Settings.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+
+          <a href="Help.html" class="nav-item">
+            <i class="fas fa-question-circle"></i>
+            <span>Help</span>
+          </a>
+
+          <a href="#" id="logoutBtn" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="dashboard-content">
+        <section class="subjects-section">
+          <div class="subjects-header">
+            <h1>My Subjects</h1>
+            <p>Track your school subjects and grades</p>
+          </div>
+
+          <!-- New Split Layout -->
+          <div class="subjects-content-wrapper">
+            <!-- Left Sidebar: List -->
+            <div class="subjects-sidebar">
+              <div class="sidebar-header">
+                <h3>Subject List</h3>
+                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+              <div class="subjects-list" id="subjectsList">
+                <!-- List items will be injected here -->
+              </div>
+            </div>
+
+            <!-- Right Panel: Details -->
+            <div class="subject-details" id="subjectDetailsPanel">
+              <div class="empty-state">
+                <i class="fas fa-book-open"></i>
+                <p>Select a subject from the list to view details and lessons.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Subject Modal (Kept) -->
+          <div class="modal" id="addSubjectModal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+
+              <div class="modal-body">
+                <h2>Add New Subject</h2>
+
+                <form id="addSubjectForm">
+                  <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
+                  </div>
+
+                  <div class="form-group">
+                    <label>Teacher</label>
+                    <input type="text" id="newTeacherName" required placeholder="e.g. Mr. Anderson" />
+                  </div>
+
+                  <div class="form-group">
+                    <label>Time</label>
+                    <input type="text" id="newSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
+                  </div>
+
+                  <button type="submit" class="btn-add-subject">
+                    <i class="fas fa-check"></i> Save Subject
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
