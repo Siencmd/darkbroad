@@ -8,7 +8,7 @@ import { supabase } from './supabase.js';
 
 const db = getFirestore();
 
-// Upload file to Supabase
+// Upload file to Supabase with enhanced error handling and logging
 async function uploadFileToSupabase(file, path) {
     try {
         console.log('Starting upload to Supabase:', path + file.name);
@@ -17,14 +17,18 @@ async function uploadFileToSupabase(file, path) {
         });
         if (error) {
             console.error('Supabase upload error:', error);
-            throw error;
+            throw new Error(`Upload failed: ${error.message}`);
         }
         console.log('Upload successful, getting public URL');
         const { data: urlData } = supabase.storage.from('files').getPublicUrl(path + file.name);
-        console.log('Public URL:', urlData.publicUrl);
+        if (!urlData || !urlData.publicUrl) {
+            throw new Error('Failed to get public URL');
+        }
+        console.log('Public URL obtained:', urlData.publicUrl);
         return urlData.publicUrl;
     } catch (error) {
         console.error('Upload error:', error);
+        alert(`File upload failed: ${error.message}`);
         return null;
     }
 }
@@ -716,6 +720,7 @@ function initializeSubjects() {
         e.preventDefault();
 
         const subject = {
+            id: Date.now().toString(), // Unique ID for subject
             name: document.getElementById('newSubjectName').value.trim(),
             teacher: document.getElementById('newTeacherName').value.trim(),
             time: document.getElementById('newSubjectTime').value.trim(),
@@ -790,25 +795,24 @@ function initializeSubjects() {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
-        const fileInput = document.getElementById('newTaskFile');
-        let fileName = null;
-        let fileUrl = null;
-
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/tasks/`);
-        }
-
-        const task = {
-            title: document.getElementById('newTaskTitle').value.trim(),
-            dueDate: document.getElementById('newTaskDueDate').value,
-            priority: document.getElementById('newTaskPriority').value,
-            status: 'pending',
-            description: document.getElementById('newTaskDescription').value.trim(),
-            file: fileName,
-            fileUrl: fileUrl
-        };
+    const task = {
+        id: Date.now().toString(),
+        title: document.getElementById('newTaskTitle').value.trim(),
+        dueDate: document.getElementById('newTaskDueDate').value,
+        priority: document.getElementById('newTaskPriority').value,
+        status: 'pending',
+        description: document.getElementById('newTaskDescription').value.trim(),
+        file: null,
+        fileUrl: null
+    };
+    const fileInput = document.getElementById('newTaskFile');
+    if (fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${task.id}/`);
+        task.file = fileName;
+        task.fileUrl = fileUrl;
+    }
 
         sub.tasks.push(task);
         saveSubjects();
@@ -837,7 +841,7 @@ function initializeSubjects() {
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/tasks/`);
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.tasks[itemIndex].id}/`);
         }
 
         sub.tasks[itemIndex] = {
@@ -877,26 +881,25 @@ function initializeSubjects() {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
-        const fileInput = document.getElementById('newAssignmentFile');
-        let fileName = null;
-        let fileUrl = null;
-
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/`);
-        }
-
         const assignment = {
+            id: Date.now().toString(),
             title: document.getElementById('newAssignmentTitle').value.trim(),
             dueDate: document.getElementById('newAssignmentDueDate').value,
             points: parseInt(document.getElementById('newAssignmentPoints').value),
             status: document.getElementById('newAssignmentStatus').value,
             instructions: document.getElementById('newAssignmentInstructions').value.trim(),
-            file: fileName,
-            fileUrl: fileUrl,
+            file: null,
+            fileUrl: null,
             submissions: []
         };
+        const fileInput = document.getElementById('newAssignmentFile');
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const fileName = file.name;
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/`);
+            assignment.file = fileName;
+            assignment.fileUrl = fileUrl;
+        }
 
         sub.assignments.push(assignment);
         saveSubjects();
@@ -925,7 +928,7 @@ function initializeSubjects() {
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/`);
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.assignments[itemIndex].id}/`);
         }
 
         sub.assignments[itemIndex] = {
@@ -966,24 +969,23 @@ function initializeSubjects() {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
-        const fileInput = document.getElementById('newLessonFile');
-        let fileName = null;
-        let fileUrl = null;
-
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/lessons/`);
-        }
-
         const lesson = {
+            id: Date.now().toString(),
             title: document.getElementById('newLessonTitle').value.trim(),
             duration: document.getElementById('newLessonDuration').value.trim(),
             status: document.getElementById('newLessonStatus').value,
             content: document.getElementById('newLessonContent').value.trim(),
-            file: fileName,
-            fileUrl: fileUrl
+            file: null,
+            fileUrl: null
         };
+        const fileInput = document.getElementById('newLessonFile');
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const fileName = file.name;
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${lesson.id}/`);
+            lesson.file = fileName;
+            lesson.fileUrl = fileUrl;
+        }
 
         sub.lessons.push(lesson);
         saveSubjects();
@@ -1012,7 +1014,7 @@ function initializeSubjects() {
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/lessons/`);
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.lessons[itemIndex].id}/`);
         }
 
         sub.lessons[itemIndex] = {
@@ -1258,7 +1260,7 @@ function initializeSubjects() {
 
             const file = fileInput.files[0];
             console.log('Uploading file:', file.name);
-            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/submissions/${userData.id}/`);
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/submissions/${userData.id}/`);
             console.log('Upload result:', fileUrl);
 
             if (!fileUrl) {
