@@ -103,22 +103,27 @@ function initializeLogin() {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Fetch user role from Firestore (check "users" first, then "students" for backward compatibility)
+            // Fetch user role and course from Firestore (check "users" first, then "students" for backward compatibility)
             let userDoc = await getDoc(doc(db, "users", user.uid));
             let userRole = 'student';
+            let userCourse = '';
             if (userDoc.exists()) {
-                userRole = userDoc.data().role || 'student';
+                const data = userDoc.data();
+                userRole = data.role || 'student';
+                userCourse = data.course || '';
             } else {
                 // Check "students" collection for old signups
                 userDoc = await getDoc(doc(db, "students", user.uid));
                 if (userDoc.exists()) {
-                    userRole = userDoc.data().role || 'student';
+                    const data = userDoc.data();
+                    userRole = data.role || 'student';
+                    userCourse = data.course || '';
                 }
             }
 
             // Store logged-in user in localStorage
             localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("userData", JSON.stringify({ id: user.uid, name: user.displayName || email, role: userRole }));
+            localStorage.setItem("userData", JSON.stringify({ id: user.uid, name: user.displayName || email, role: userRole, course: userCourse }));
 
             setMessage("loginSuccess", "Login successful! Redirecting...", true);
             setTimeout(() => location.href = "index.html", 1200);
@@ -360,9 +365,9 @@ function initializeSubjects() {
     ];
 
     // Load subjects from Firestore if user is logged in
-    if (userData && userData.id) {
-        loadSubjectsFromFirestore(userData.id);
-        setupRealtimeSubjects(userData.id); // Enable realtime updates
+    if (userData && userData.course) {
+        loadSubjectsFromFirestore(userData.course);
+        setupRealtimeSubjects(userData.course); // Enable realtime updates
     }
 
     // Dummy lessons data
@@ -432,7 +437,7 @@ function initializeSubjects() {
                 <button class="tab-btn active" data-tab="tasks">Tasks</button>
                 <button class="tab-btn" data-tab="assignments">Assignments</button>
                 <button class="tab-btn" data-tab="lessons">Lessons</button>
-                ${isInstructor ? '<button class="tab-btn" data-tab="quizzes">Quizzes</button>' : '<button class="tab-btn" data-tab="quizzes" style="display: none;">Quizzes</button>'}
+                <button class="tab-btn" data-tab="quizzes">Quizzes</button>
             </div>
 
             <div class="tab-content active" id="tasks-tab">
@@ -1333,7 +1338,7 @@ function initializeSubjects() {
     function saveSubjects() {
         localStorage.setItem('subjects', JSON.stringify(subjects));
         // Auto-sync to Firestore if user is logged in
-        if (userData && userData.id) {
+        if (userData && userData.course) {
             saveSubjectsToFirestore();
         }
     }
@@ -1341,9 +1346,9 @@ function initializeSubjects() {
     // -------------------------
     // LOAD SUBJECTS FROM FIRESTORE
     // -------------------------
-    async function loadSubjectsFromFirestore(userId) {
+    async function loadSubjectsFromFirestore(courseId) {
         try {
-            const docRef = doc(db, "subjects", userId);
+            const docRef = doc(db, "subjects", courseId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
@@ -1363,15 +1368,15 @@ function initializeSubjects() {
     // SAVE SUBJECTS TO FIRESTORE
     // -------------------------
     async function saveSubjectsToFirestore() {
-        if (!userData || !userData.id) {
-            console.log("No user data, skipping Firestore save.");
+        if (!userData || !userData.course) {
+            console.log("No course data, skipping Firestore save.");
             return;
         }
 
         try {
             // Limit to 10 subjects to avoid quota issues
             const limitedSubjects = subjects.slice(0, 10);
-            await setDoc(doc(db, "subjects", userData.id), {
+            await setDoc(doc(db, "subjects", userData.course), {
                 subjects: limitedSubjects,
                 lastUpdated: serverTimestamp()
             });
@@ -1385,8 +1390,8 @@ function initializeSubjects() {
     // -------------------------
     // SETUP REALTIME SUBJECTS
     // -------------------------
-    function setupRealtimeSubjects(userId) {
-        const docRef = doc(db, "subjects", userId);
+    function setupRealtimeSubjects(courseId) {
+        const docRef = doc(db, "subjects", courseId);
         onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 subjects = docSnap.data().subjects || subjects;
