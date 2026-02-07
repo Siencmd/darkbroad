@@ -5,7 +5,7 @@ import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
-import { setupRealtimeTasks } from './realtime.js';
+import { setupRealtimeTasks, stopTaskListeners } from './realtime.js';
 
 const db = getFirestore();
 
@@ -388,43 +388,7 @@ function initializeSubjects() {
         addBtn.style.display = 'none';
     }
 
-    // Get subjects from localStorage or use dummy data
-    let subjects = JSON.parse(localStorage.getItem('subjects')) || [
-        {
-            name: "Mathematics",
-            teacher: "Mr. Anderson",
-            time: "08:00 AM - 09:30 AM",
-            description: "Advanced Calculus and Algebra",
-            tasks: [
-                { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
-            ],
-            assignments: [
-                { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
-            ],
-            lessons: [],
-            quizzes: []
-        },
-        {
-            name: "Physics",
-            teacher: "Ms. Curie",
-            time: "10:00 AM - 11:30 AM",
-            description: "Fundamentals of Physics",
-            tasks: [],
-            assignments: [],
-            lessons: [],
-            quizzes: []
-        },
-        {
-            name: "Computer Science",
-            teacher: "Mr. Turing",
-            time: "01:00 PM - 02:30 PM",
-            description: "Algorithms and Data Structures",
-            tasks: [],
-            assignments: [],
-            lessons: [],
-            quizzes: []
-        }
-    ];
+    // subjects is now defined globally at the top of the file
 
     // Function to setup task listeners for all subjects
     function setupTaskListeners() {
