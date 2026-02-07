@@ -367,10 +367,8 @@ function initializeSubjects() {
     // Load subjects from Firestore if user is logged in
     if (userData && userData.course) {
         loadSubjectsFromFirestore(userData.course);
-        // Only enable realtime updates for instructors to avoid quota issues
-        if (userData.role === 'instructor') {
-            setupRealtimeSubjects(userData.course);
-        }
+        // Enable realtime updates for all users (instructors and students) with debouncing
+        setupRealtimeSubjects(userData.course);
     }
 
     // Dummy lessons data
@@ -565,7 +563,7 @@ function initializeSubjects() {
                         </button>` : ''}
                     </div>
                     <div class="items-list">
-                        ${sub.quizzes.map((quiz, i) => `
+                        ${sub.quizzes.length > 0 ? sub.quizzes.map((quiz, i) => `
                             <div class="item-card">
                                 <div class="item-info">
                                     <h4>${quiz.title}</h4>
@@ -583,7 +581,7 @@ function initializeSubjects() {
                                 </div>
                                 ` : ''}
                             </div>
-                        `).join('')}
+                        `).join('') : '<p>No quizzes available yet.</p>'}
                     </div>
                 </div>
             </div>
