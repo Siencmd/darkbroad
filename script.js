@@ -371,10 +371,8 @@ function initializeSubjects() {
     // Load subjects from Firestore if user is logged in
     if (userData && userData.course) {
         loadSubjectsFromFirestore(userData.course);
-        // Enable realtime updates only for instructors
-        if (userRole === 'instructor') {
-            setupRealtimeSubjects(userData.course);
-        }
+        // Enable realtime updates for all users in the course
+        setupRealtimeSubjects(userData.course);
     }
 
     // Dummy lessons data
