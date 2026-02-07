@@ -367,7 +367,10 @@ function initializeSubjects() {
     // Load subjects from Firestore if user is logged in
     if (userData && userData.course) {
         loadSubjectsFromFirestore(userData.course);
-        setupRealtimeSubjects(userData.course); // Enable realtime updates
+        // Only enable realtime updates for instructors to avoid quota issues
+        if (userData.role === 'instructor') {
+            setupRealtimeSubjects(userData.course);
+        }
     }
 
     // Dummy lessons data
@@ -1393,24 +1396,12 @@ function initializeSubjects() {
     }
 
     // -------------------------
-    // SETUP REALTIME SUBJECTS
+    // SETUP REALTIME SUBJECTS (DISABLED DUE TO QUOTA LIMITS)
     // -------------------------
     function setupRealtimeSubjects(courseId) {
-        const docRef = doc(db, "subjects", courseId);
-        onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                subjects = docSnap.data().subjects || subjects;
-                saveSubjects(); // Sync to localStorage
-                renderSubjects();
-                // Re-render current subject details if one is selected
-                const activeSubject = document.querySelector('.subject-list-item.active');
-                if (activeSubject) {
-                    renderSubjectDetails(parseInt(activeSubject.dataset.index));
-                }
-            }
-        }, (error) => {
-            console.error("Error listening to subjects changes:", error);
-        });
+        // Disabled to avoid Firestore quota exhaustion
+        // Students will need to refresh page to see instructor updates
+        console.log("Realtime updates disabled due to Firestore quota limits. Refresh page to see updates.");
     }
 
     // Initial Render
