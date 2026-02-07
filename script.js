@@ -1382,7 +1382,7 @@ function initializeSubjects() {
                 subjects: limitedSubjects,
                 lastUpdated: serverTimestamp()
             });
-            console.log("Subjects synced to cloud successfully!");
+            console.log("Subjects synced to cloud successfully! Limited to 10 subjects.");
         } catch (error) {
             console.error("Error saving subjects to Firestore:", error);
             // Don't show alert to avoid spam, just log
