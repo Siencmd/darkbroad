@@ -3,7 +3,7 @@
 // =========================
 import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
 const db = getFirestore();
@@ -308,6 +308,12 @@ function initializeSubjects() {
     // Get user role
     let userData = JSON.parse(localStorage.getItem("userData"));
     const userRole = userData ? userData.role : 'student';
+    console.log('User role:', userRole); // Debug log
+
+    // Hide add subject button for students
+    if (userRole !== 'instructor') {
+        addBtn.style.display = 'none';
+    }
 
     // Get subjects from localStorage or use dummy data
     let subjects = JSON.parse(localStorage.getItem('subjects')) || [
@@ -392,6 +398,7 @@ function initializeSubjects() {
         if (!sub) return;
 
         const isInstructor = userRole === 'instructor';
+        console.log('User role in renderSubjectDetails:', userRole); // Debug log
         console.log('Rendering for instructor:', isInstructor); // Debug log
 
         detailsContainer.innerHTML = `
@@ -418,7 +425,7 @@ function initializeSubjects() {
                 <button class="tab-btn active" data-tab="tasks">Tasks</button>
                 <button class="tab-btn" data-tab="assignments">Assignments</button>
                 <button class="tab-btn" data-tab="lessons">Lessons</button>
-                ${isInstructor ? '<button class="tab-btn" data-tab="quizzes">Quizzes</button>' : ''}
+                ${isInstructor ? '<button class="tab-btn" data-tab="quizzes">Quizzes</button>' : '<button class="tab-btn" data-tab="quizzes" style="display: none;">Quizzes</button>'}
             </div>
 
             <div class="tab-content active" id="tasks-tab">
@@ -1307,6 +1314,10 @@ function initializeSubjects() {
     // -------------------------
     function saveSubjects() {
         localStorage.setItem('subjects', JSON.stringify(subjects));
+        // Auto-sync to Firestore if user is logged in
+        if (userData && userData.id) {
+            saveSubjectsToFirestore();
+        }
     }
 
     // -------------------------
@@ -1321,6 +1332,9 @@ function initializeSubjects() {
                 subjects = docSnap.data().subjects || subjects;
                 saveSubjects(); // Sync to localStorage
                 renderSubjects();
+            } else {
+                // If no Firestore data, save local data to Firestore for first time
+                saveSubjectsToFirestore();
             }
         } catch (error) {
             console.error("Error loading subjects from Firestore:", error);
@@ -1346,6 +1360,27 @@ function initializeSubjects() {
             console.error("Error saving subjects to Firestore:", error);
             alert("Failed to sync to cloud. Please try again.");
         }
+    }
+
+    // -------------------------
+    // SETUP REALTIME SUBJECTS
+    // -------------------------
+    function setupRealtimeSubjects(userId) {
+        const docRef = doc(db, "subjects", userId);
+        onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                subjects = docSnap.data().subjects || subjects;
+                saveSubjects(); // Sync to localStorage
+                renderSubjects();
+                // Re-render current subject details if one is selected
+                const activeSubject = document.querySelector('.subject-list-item.active');
+                if (activeSubject) {
+                    renderSubjectDetails(parseInt(activeSubject.dataset.index));
+                }
+            }
+        }, (error) => {
+            console.error("Error listening to subjects changes:", error);
+        });
     }
 
     // Initial Render
