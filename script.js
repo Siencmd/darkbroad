@@ -3,7 +3,7 @@
 // =========================
 import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
 const db = getFirestore();
@@ -1586,3 +1586,47 @@ document.addEventListener("DOMContentLoaded", () => {
 // EXPORT LOGOUT & THEME
 // =========================
 export { logout, applyTheme };
+
+window.submitStudentFile = async function(subjectId, taskId, file) {
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    alert("Please login first");
+    return;
+  }
+
+  const userId = session.user.id;
+
+  const path = `${subjectId}/${taskId}/submissions/${userId}/${file.name}`;
+
+  try {
+
+    const { error } = await supabase
+      .storage
+      .from("files")
+      .upload(path, file, { upsert: true });
+
+    if (error) throw error;
+
+    const fileUrl = supabase.storage.from('files').getPublicUrl(path).data.publicUrl;
+
+    const taskRef = doc(db, "subjects", subjectId, "tasks", taskId);
+
+    await updateDoc(taskRef, {
+      submissions: arrayUnion({
+        userId,
+        name: file.name,
+        url: fileUrl,
+        time: new Date().toISOString()
+      }),
+      updatedAt: serverTimestamp()
+    });
+
+    alert("Submission successful!");
+
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed: " + err.message);
+  }
+};
