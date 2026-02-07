@@ -11,11 +11,17 @@ const db = getFirestore();
 // Upload file to Supabase
 async function uploadFileToSupabase(file, path) {
     try {
+        console.log('Starting upload to Supabase:', path + file.name);
         const { data, error } = await supabase.storage.from('files').upload(path + file.name, file, {
             upsert: true
         });
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase upload error:', error);
+            throw error;
+        }
+        console.log('Upload successful, getting public URL');
         const { data: urlData } = supabase.storage.from('files').getPublicUrl(path + file.name);
+        console.log('Public URL:', urlData.publicUrl);
         return urlData.publicUrl;
     } catch (error) {
         console.error('Upload error:', error);
@@ -356,6 +362,7 @@ function initializeSubjects() {
     // Load subjects from Firestore if user is logged in
     if (userData && userData.id) {
         loadSubjectsFromFirestore(userData.id);
+        setupRealtimeSubjects(userData.id); // Enable realtime updates
     }
 
     // Dummy lessons data
@@ -1237,10 +1244,20 @@ function initializeSubjects() {
         modal.querySelector('#submitAssignmentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fileInput = document.getElementById('submitFile');
-            if (!fileInput.files[0]) return;
+            if (!fileInput.files[0]) {
+                alert('Please select a file to submit.');
+                return;
+            }
 
             const file = fileInput.files[0];
+            console.log('Uploading file:', file.name);
             const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/submissions/${userData.id}/`);
+            console.log('Upload result:', fileUrl);
+
+            if (!fileUrl) {
+                alert('File upload failed. Please try again.');
+                return;
+            }
 
             if (!assignment.submissions) assignment.submissions = [];
             assignment.submissions.push({
@@ -1252,6 +1269,7 @@ function initializeSubjects() {
 
             saveSubjects();
             renderSubjectDetails(subjectIndex);
+            alert('Assignment submitted successfully!');
             modal.remove();
         });
     }
@@ -1346,19 +1364,21 @@ function initializeSubjects() {
     // -------------------------
     async function saveSubjectsToFirestore() {
         if (!userData || !userData.id) {
-            alert("Please log in to sync to cloud.");
+            console.log("No user data, skipping Firestore save.");
             return;
         }
 
         try {
+            // Limit to 10 subjects to avoid quota issues
+            const limitedSubjects = subjects.slice(0, 10);
             await setDoc(doc(db, "subjects", userData.id), {
-                subjects: subjects,
+                subjects: limitedSubjects,
                 lastUpdated: serverTimestamp()
             });
-            alert("Subjects synced to cloud successfully!");
+            console.log("Subjects synced to cloud successfully!");
         } catch (error) {
             console.error("Error saving subjects to Firestore:", error);
-            alert("Failed to sync to cloud. Please try again.");
+            // Don't show alert to avoid spam, just log
         }
     }
 
