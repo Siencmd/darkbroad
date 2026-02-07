@@ -78,6 +78,12 @@ export function stopRealtimeListeners() {
     tasksListeners = {};
 }
 
+// Function to stop only task listeners
+export function stopTaskListeners() {
+    Object.values(tasksListeners).forEach(unsubscribe => unsubscribe());
+    tasksListeners = {};
+}
+
 // Function to handle UI updates when subjects change
 export function handleSubjectsRealtimeUpdate(subjects) {
     // This function can be called to update the UI
