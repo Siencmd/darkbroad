@@ -5,13 +5,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase
 
 // Your Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCf9rifuGfNqcfhOZK8Lygt43SshKaCKrQ",
-  authDomain: "group9-syntax-9fb66.firebaseapp.com",
-  projectId: "group9-syntax-9fb66",
-  storageBucket: "group9-syntax-9fb66.firebasestorage.app",
-  messagingSenderId: "463795941537",
-  appId: "1:463795941537:web:37fa287c7c1e50b69040e0",
-  measurementId: "G-YFBM5P78DX"
+  apiKey: "AIzaSyAx3BTNnEDw4AXEkk5GVR5NLeGjsfVAmlA",
+  authDomain: "darkbroads.firebaseapp.com",
+  projectId: "darkbroads",
+  storageBucket: "darkbroads.firebasestorage.app",
+  messagingSenderId: "271741371558",
+  appId: "1:271741371558:web:45372043bfe9d3205ee067",
+  measurementId: "G-SLEM50XYCK"
 };
 
 // Initialize Firebase
