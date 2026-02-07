@@ -1343,9 +1343,13 @@ function initializeSubjects() {
     // -------------------------
     function saveSubjects(autoSync = true) {
         localStorage.setItem('subjects', JSON.stringify(subjects));
+        console.log('Saving subjects to localStorage:', subjects);
         // Auto-sync to Firestore for all users
         if (autoSync && userData && userData.course) {
+            console.log('Auto-syncing to Firestore for course:', userData.course);
             saveSubjectsToFirestore();
+        } else {
+            console.log('Not syncing to Firestore: autoSync=', autoSync, 'userData.course=', userData?.course);
         }
     }
 
