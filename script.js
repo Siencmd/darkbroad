@@ -556,14 +556,13 @@ function initializeSubjects() {
                 </div>
             </div>
 
-            ${isInstructor ? `
             <div class="tab-content" id="quizzes-tab">
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-question-circle"></i> Quizzes</h3>
-                        <button class="btn-add-item" data-type="quiz" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="quiz" data-subject-index="${index}">
                             <i class="fas fa-plus"></i> Add Quiz
-                        </button>
+                        </button>` : ''}
                     </div>
                     <div class="items-list">
                         ${sub.quizzes.map((quiz, i) => `
@@ -573,6 +572,7 @@ function initializeSubjects() {
                                     <p>Due: ${quiz.dueDate} | Points: ${quiz.points} | Status: ${quiz.status}</p>
                                     <p>${quiz.instructions}</p>
                                 </div>
+                                ${isInstructor ? `
                                 <div class="item-actions">
                                     <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
                                         <i class="fas fa-edit"></i>
@@ -581,12 +581,12 @@ function initializeSubjects() {
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
                 </div>
             </div>
-            ` : ''}
         `;
 
         // Add click listener for Edit button in details
@@ -1396,12 +1396,29 @@ function initializeSubjects() {
     }
 
     // -------------------------
-    // SETUP REALTIME SUBJECTS (DISABLED DUE TO QUOTA LIMITS)
+    // SETUP REALTIME SUBJECTS
     // -------------------------
     function setupRealtimeSubjects(courseId) {
-        // Disabled to avoid Firestore quota exhaustion
-        // Students will need to refresh page to see instructor updates
-        console.log("Realtime updates disabled due to Firestore quota limits. Refresh page to see updates.");
+        const docRef = doc(db, "subjects", courseId);
+        onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                // Debounce updates to avoid excessive re-renders
+                clearTimeout(window.realtimeTimeout);
+                window.realtimeTimeout = setTimeout(() => {
+                    subjects = docSnap.data().subjects || subjects;
+                    saveSubjects(); // Sync to localStorage
+                    renderSubjects();
+                    // Re-render current subject details if any
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem) {
+                        renderSubjectDetails(activeItem.dataset.index);
+                    }
+                    console.log("Realtime update: Subjects refreshed from cloud.");
+                }, 2000); // 2-second debounce
+            }
+        }, (error) => {
+            console.error("Realtime listener error:", error);
+        });
     }
 
     // Initial Render
