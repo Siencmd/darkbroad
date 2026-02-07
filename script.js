@@ -371,8 +371,10 @@ function initializeSubjects() {
     // Load subjects from Firestore if user is logged in
     if (userData && userData.course) {
         loadSubjectsFromFirestore(userData.course);
-        // Enable realtime updates for all users (instructors and students) with debouncing
-        setupRealtimeSubjects(userData.course);
+        // Enable realtime updates only for instructors
+        if (userRole === 'instructor') {
+            setupRealtimeSubjects(userData.course);
+        }
     }
 
     // Dummy lessons data
@@ -1341,8 +1343,8 @@ function initializeSubjects() {
     // -------------------------
     function saveSubjects(autoSync = true) {
         localStorage.setItem('subjects', JSON.stringify(subjects));
-        // Auto-sync to Firestore immediately if user is instructor
-        if (autoSync && userData && userData.course && userData.role === 'instructor') {
+        // Auto-sync to Firestore for all users
+        if (autoSync && userData && userData.course) {
             saveSubjectsToFirestore();
         }
     }
@@ -1378,13 +1380,11 @@ function initializeSubjects() {
         }
 
         try {
-            // Limit to 10 subjects to avoid quota issues
-            const limitedSubjects = subjects.slice(0, 10);
             await setDoc(doc(db, "subjects", userData.course), {
-                subjects: limitedSubjects,
+                subjects: subjects,
                 lastUpdated: serverTimestamp()
             });
-            console.log("Subjects synced to cloud successfully! Limited to 10 subjects.");
+            console.log("Subjects synced to cloud successfully!");
         } catch (error) {
             console.error("Error saving subjects to Firestore:", error);
             // Don't show alert to avoid spam, just log
