@@ -8,6 +8,21 @@ import { supabase } from './supabase.js';
 
 const db = getFirestore();
 
+// Upload file to Supabase
+async function uploadFileToSupabase(file, path) {
+    try {
+        const { data, error } = await supabase.storage.from('files').upload(path + file.name, file, {
+            upsert: true
+        });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from('files').getPublicUrl(path + file.name);
+        return urlData.publicUrl;
+    } catch (error) {
+        console.error('Upload error:', error);
+        return null;
+    }
+}
+
 // =========================
 // THEME TOGGLE
 // =========================
@@ -82,9 +97,22 @@ function initializeLogin() {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            // Fetch user role from Firestore (check "users" first, then "students" for backward compatibility)
+            let userDoc = await getDoc(doc(db, "users", user.uid));
+            let userRole = 'student';
+            if (userDoc.exists()) {
+                userRole = userDoc.data().role || 'student';
+            } else {
+                // Check "students" collection for old signups
+                userDoc = await getDoc(doc(db, "students", user.uid));
+                if (userDoc.exists()) {
+                    userRole = userDoc.data().role || 'student';
+                }
+            }
+
             // Store logged-in user in localStorage
             localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("userData", JSON.stringify({ id: user.uid, name: user.displayName || email }));
+            localStorage.setItem("userData", JSON.stringify({ id: user.uid, name: user.displayName || email, role: userRole }));
 
             setMessage("loginSuccess", "Login successful! Redirecting...", true);
             setTimeout(() => location.href = "index.html", 1200);
@@ -364,6 +392,7 @@ function initializeSubjects() {
         if (!sub) return;
 
         const isInstructor = userRole === 'instructor';
+        console.log('Rendering for instructor:', isInstructor); // Debug log
 
         detailsContainer.innerHTML = `
             <div class="detail-header">
@@ -860,7 +889,7 @@ function initializeSubjects() {
     // EDIT ASSIGNMENT (FORM)
     // -------------------------
     const editAssignmentForm = document.getElementById('editAssignmentForm');
-    editAssignmentForm?.addEventListener('submit', e => {
+    editAssignmentForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const itemIndex = parseInt(document.getElementById('editAssignmentIndex').value);
@@ -869,7 +898,14 @@ function initializeSubjects() {
         if (!sub || !sub.assignments[itemIndex]) return;
 
         const fileInput = document.getElementById('editAssignmentFile');
-        const fileName = fileInput.files[0] ? fileInput.files[0].name : sub.assignments[itemIndex].file;
+        let fileName = sub.assignments[itemIndex].file;
+        let fileUrl = sub.assignments[itemIndex].fileUrl;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/`);
+        }
 
         sub.assignments[itemIndex] = {
             title: document.getElementById('editAssignmentTitle').value.trim(),
@@ -877,7 +913,9 @@ function initializeSubjects() {
             points: parseInt(document.getElementById('editAssignmentPoints').value),
             status: document.getElementById('editAssignmentStatus').value,
             instructions: document.getElementById('editAssignmentInstructions').value.trim(),
-            file: fileName
+            file: fileName,
+            fileUrl: fileUrl,
+            submissions: sub.assignments[itemIndex].submissions || []
         };
 
         saveSubjects();
@@ -938,7 +976,7 @@ function initializeSubjects() {
     // EDIT LESSON (FORM)
     // -------------------------
     const editLessonForm = document.getElementById('editLessonForm');
-    editLessonForm?.addEventListener('submit', e => {
+    editLessonForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const itemIndex = parseInt(document.getElementById('editLessonIndex').value);
@@ -947,14 +985,22 @@ function initializeSubjects() {
         if (!sub || !sub.lessons[itemIndex]) return;
 
         const fileInput = document.getElementById('editLessonFile');
-        const fileName = fileInput.files[0] ? fileInput.files[0].name : sub.lessons[itemIndex].file;
+        let fileName = sub.lessons[itemIndex].file;
+        let fileUrl = sub.lessons[itemIndex].fileUrl;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/lessons/`);
+        }
 
         sub.lessons[itemIndex] = {
             title: document.getElementById('editLessonTitle').value.trim(),
             duration: document.getElementById('editLessonDuration').value.trim(),
             status: document.getElementById('editLessonStatus').value,
             content: document.getElementById('editLessonContent').value.trim(),
-            file: fileName
+            file: fileName,
+            fileUrl: fileUrl
         };
 
         saveSubjects();
@@ -1144,6 +1190,99 @@ function initializeSubjects() {
 
             modal.style.display = 'block';
         }
+    }
+
+    // -------------------------
+    // OPEN SUBMIT ASSIGNMENT MODAL
+    // -------------------------
+    function openSubmitAssignmentModal(subjectIndex, assignmentIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const assignment = sub.assignments[assignmentIndex];
+        if (!assignment) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'submitAssignmentModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submit Assignment: ${assignment.title}</h2>
+                    <form id="submitAssignmentForm">
+                        <input type="hidden" id="submitSubjectIndex" value="${subjectIndex}" />
+                        <input type="hidden" id="submitAssignmentIndex" value="${assignmentIndex}" />
+                        <div class="form-group">
+                            <label>Upload Your Submission</label>
+                            <input type="file" id="submitFile" required />
+                        </div>
+                        <button type="submit" class="btn-add-subject">Submit Assignment</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+        modal.querySelector('#submitAssignmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('submitFile');
+            if (!fileInput.files[0]) return;
+
+            const file = fileInput.files[0];
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/submissions/${userData.id}/`);
+
+            if (!assignment.submissions) assignment.submissions = [];
+            assignment.submissions.push({
+                studentId: userData.id,
+                fileName: file.name,
+                fileUrl: fileUrl,
+                submittedAt: new Date().toISOString()
+            });
+
+            saveSubjects();
+            renderSubjectDetails(subjectIndex);
+            modal.remove();
+        });
+    }
+
+    // -------------------------
+    // VIEW SUBMISSIONS
+    // -------------------------
+    function viewSubmissions(subjectIndex, assignmentIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const assignment = sub.assignments[assignmentIndex];
+        if (!assignment || !assignment.submissions) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'viewSubmissionsModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submissions for: ${assignment.title}</h2>
+                    <div class="submissions-list">
+                        ${assignment.submissions.map(submission => `
+                            <div class="submission-item">
+                                <p><strong>Student ID:</strong> ${submission.studentId}</p>
+                                <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
+                                <p><strong>Submitted At:</strong> ${new Date(submission.submittedAt).toLocaleString()}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
     }
 
     // -------------------------
