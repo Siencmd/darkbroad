@@ -652,6 +652,7 @@ function initializeSubjects() {
         // Add click listener for Sync to Cloud button
         document.querySelectorAll('.btn-sync-cloud').forEach(btn => {
             btn.addEventListener('click', () => {
+                saveSubjects(false); // Save without auto-sync to avoid double save
                 saveSubjectsToFirestore();
             });
         });
@@ -1335,11 +1336,15 @@ function initializeSubjects() {
     // -------------------------
     // SAVE TO LOCALSTORAGE
     // -------------------------
-    function saveSubjects() {
+    function saveSubjects(autoSync = true) {
         localStorage.setItem('subjects', JSON.stringify(subjects));
-        // Auto-sync to Firestore if user is logged in
-        if (userData && userData.course) {
-            saveSubjectsToFirestore();
+        // Auto-sync to Firestore if user is logged in and autoSync is true
+        if (autoSync && userData && userData.course && userData.role === 'instructor') {
+            // Debounce saves to avoid quota issues
+            clearTimeout(window.saveTimeout);
+            window.saveTimeout = setTimeout(() => {
+                saveSubjectsToFirestore();
+            }, 2000); // Save after 2 seconds of inactivity
         }
     }
 
