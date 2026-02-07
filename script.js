@@ -13,6 +13,18 @@ const db = getFirestore();
 function initializeTheme() {
     const theme = localStorage.getItem("theme") || "dark";
     applyTheme(theme);
+
+    // Ensure buttons are updated on load
+    const darkBtn = document.getElementById("darkModeBtn") || document.getElementById("darkThemeBtn");
+    const lightBtn = document.getElementById("lightModeBtn") || document.getElementById("lightThemeBtn");
+
+    if (theme === "dark") {
+        if (darkBtn) darkBtn.classList.add("active");
+        if (lightBtn) lightBtn.classList.remove("active");
+    } else {
+        if (lightBtn) lightBtn.classList.add("active");
+        if (darkBtn) darkBtn.classList.remove("active");
+    }
 }
 
 function applyTheme(theme) {
@@ -96,6 +108,8 @@ function initializeSignup() {
         const confirmPassword = document.getElementById("confirmPassword").value;
         const phone = document.getElementById("phone").value.trim();
         const course = document.getElementById("course").value.trim();
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const accessCode = document.getElementById("accessCode").value.trim();
 
         if (!fullName || !email || !password || !confirmPassword || !course) {
             setMessage("signupMessage", "Please fill in all required fields");
@@ -112,18 +126,25 @@ function initializeSignup() {
             return;
         }
 
+        if (role === "instructor") {
+            if (accessCode !== "INSTRUCTOR2026") {
+                setMessage("signupMessage", "Invalid access code for Instructor");
+                return;
+            }
+        }
+
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
             await updateProfile(user, { displayName: fullName });
 
-            await setDoc(doc(db, "students", user.uid), {
+            await setDoc(doc(db, "users", user.uid), {
                 fullName,
                 email,
                 phone,
                 course,
-                role: "student",
+                role,
                 createdAt: serverTimestamp()
             });
 
@@ -133,6 +154,24 @@ function initializeSignup() {
         } catch (err) {
             setMessage("signupMessage", err.message);
         }
+    });
+}
+
+// =========================
+// ROLE TOGGLE FUNCTIONALITY
+// =========================
+function initializeRoleToggle() {
+    const roleRadios = document.querySelectorAll('input[name="role"]');
+    const accessCodeGroup = document.getElementById('accessCodeGroup');
+
+    roleRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'instructor') {
+                accessCodeGroup.style.display = 'block';
+            } else {
+                accessCodeGroup.style.display = 'none';
+            }
+        });
     });
 }
 
@@ -1080,6 +1119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeTheme();
     initializeLogin();
     initializeSignup();
+    initializeRoleToggle();
     initializePasswordToggles();
     initializeDashboard();
     initializeHelp();
@@ -1089,10 +1129,16 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeGradesFilter();
 
     // THEME BUTTONS FOR MULTIPLE PAGES
-    document.getElementById("darkModeBtn")?.addEventListener("click", () => applyTheme("dark"));
-    document.getElementById("lightModeBtn")?.addEventListener("click", () => applyTheme("light"));
-    document.getElementById("darkThemeBtn")?.addEventListener("click", () => applyTheme("dark"));
-    document.getElementById("lightThemeBtn")?.addEventListener("click", () => applyTheme("light"));
+    const darkModeBtn = document.getElementById("darkModeBtn");
+    const lightModeBtn = document.getElementById("lightModeBtn");
+    const darkThemeBtn = document.getElementById("darkThemeBtn");
+    const lightThemeBtn = document.getElementById("lightThemeBtn");
+
+    if (darkModeBtn) darkModeBtn.addEventListener("click", () => applyTheme("dark"));
+    if (lightModeBtn) lightModeBtn.addEventListener("click", () => applyTheme("light"));
+    if (darkThemeBtn) darkThemeBtn.addEventListener("click", () => applyTheme("dark"));
+    if (lightThemeBtn) lightThemeBtn.addEventListener("click", () => applyTheme("light"));
+
     document.getElementById("logoutBtn")?.addEventListener("click", logout);
 });
 
