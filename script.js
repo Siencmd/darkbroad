@@ -1339,13 +1339,9 @@ function initializeSubjects() {
     // -------------------------
     function saveSubjects(autoSync = true) {
         localStorage.setItem('subjects', JSON.stringify(subjects));
-        // Auto-sync to Firestore if user is logged in and autoSync is true
+        // Auto-sync to Firestore immediately if user is instructor
         if (autoSync && userData && userData.course && userData.role === 'instructor') {
-            // Debounce saves to avoid quota issues
-            clearTimeout(window.saveTimeout);
-            window.saveTimeout = setTimeout(() => {
-                saveSubjectsToFirestore();
-            }, 2000); // Save after 2 seconds of inactivity
+            saveSubjectsToFirestore();
         }
     }
 
@@ -1400,19 +1396,15 @@ function initializeSubjects() {
         const docRef = doc(db, "subjects", courseId);
         onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                // Debounce updates to avoid excessive re-renders
-                clearTimeout(window.realtimeTimeout);
-                window.realtimeTimeout = setTimeout(() => {
-                    subjects = docSnap.data().subjects || subjects;
-                    saveSubjects(); // Sync to localStorage
-                    renderSubjects();
-                    // Re-render current subject details if any
-                    const activeItem = document.querySelector('.subject-list-item.active');
-                    if (activeItem) {
-                        renderSubjectDetails(activeItem.dataset.index);
-                    }
-                    console.log("Realtime update: Subjects refreshed from cloud.");
-                }, 2000); // 2-second debounce
+                subjects = docSnap.data().subjects || subjects;
+                saveSubjects(false); // Sync to localStorage without triggering another save
+                renderSubjects();
+                // Re-render current subject details if any
+                const activeItem = document.querySelector('.subject-list-item.active');
+                if (activeItem) {
+                    renderSubjectDetails(activeItem.dataset.index);
+                }
+                console.log("Realtime update: Subjects refreshed from cloud.");
             }
         }, (error) => {
             console.error("Realtime listener error:", error);
