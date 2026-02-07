@@ -1,9 +1,10 @@
 // =========================
-// IMPORT FIREBASE AUTH
+// IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { supabase } from './supabase.js';
 
 const db = getFirestore();
 
@@ -276,6 +277,10 @@ function initializeSubjects() {
 
     if (!listContainer || !detailsContainer) return;
 
+    // Get user role
+    let userData = JSON.parse(localStorage.getItem("userData"));
+    const userRole = userData ? userData.role : 'student';
+
     // Get subjects from localStorage or use dummy data
     let subjects = JSON.parse(localStorage.getItem('subjects')) || [
         {
@@ -284,12 +289,13 @@ function initializeSubjects() {
             time: "08:00 AM - 09:30 AM",
             description: "Advanced Calculus and Algebra",
             tasks: [
-                { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null }
+                { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
             ],
             assignments: [
-                { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null }
+                { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
             ],
-            lessons: []
+            lessons: [],
+            quizzes: []
         },
         {
             name: "Physics",
@@ -298,7 +304,8 @@ function initializeSubjects() {
             description: "Fundamentals of Physics",
             tasks: [],
             assignments: [],
-            lessons: []
+            lessons: [],
+            quizzes: []
         },
         {
             name: "Computer Science",
@@ -307,12 +314,12 @@ function initializeSubjects() {
             description: "Algorithms and Data Structures",
             tasks: [],
             assignments: [],
-            lessons: []
+            lessons: [],
+            quizzes: []
         }
     ];
 
     // Load subjects from Firestore if user is logged in
-    const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData && userData.id) {
         loadSubjectsFromFirestore(userData.id);
     }
@@ -356,6 +363,8 @@ function initializeSubjects() {
         const sub = subjects[index];
         if (!sub) return;
 
+        const isInstructor = userRole === 'instructor';
+
         detailsContainer.innerHTML = `
             <div class="detail-header">
                 <h2>${sub.name}</h2>
@@ -364,6 +373,7 @@ function initializeSubjects() {
                     <span><i class="fas fa-clock"></i> ${sub.time}</span>
                 </div>
                 <p class="detail-description">${sub.description || "No description available."}</p>
+            ${isInstructor ? `
             <div class="detail-actions">
                 <button class="btn-edit-subject" data-index="${index}">
                     <i class="fas fa-edit"></i> Edit
@@ -372,21 +382,23 @@ function initializeSubjects() {
                     <i class="fas fa-cloud-upload-alt"></i> Sync to Cloud
                 </button>
             </div>
+            ` : ''}
             </div>
 
             <div class="subject-tabs">
                 <button class="tab-btn active" data-tab="tasks">Tasks</button>
                 <button class="tab-btn" data-tab="assignments">Assignments</button>
                 <button class="tab-btn" data-tab="lessons">Lessons</button>
+                ${isInstructor ? '<button class="tab-btn" data-tab="quizzes">Quizzes</button>' : ''}
             </div>
 
             <div class="tab-content active" id="tasks-tab">
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-tasks"></i> Tasks</h3>
-                        <button class="btn-add-item" data-type="task" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="task" data-subject-index="${index}">
                             <i class="fas fa-plus"></i> Add Task
-                        </button>
+                        </button>` : ''}
                     </div>
                     <div class="items-list">
                         ${sub.tasks.map((task, i) => `
@@ -395,8 +407,9 @@ function initializeSubjects() {
                                     <h4>${task.title}</h4>
                                     <p>Due: ${task.dueDate} | Priority: ${task.priority} | Status: ${task.status}</p>
                                     <p>${task.description}</p>
-                                    ${task.file ? `<p><i class="fas fa-paperclip"></i> ${task.file}</p>` : ''}
+                                    ${task.file ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl}" target="_blank">${task.file}</a></p>` : ''}
                                 </div>
+                                ${isInstructor ? `
                                 <div class="item-actions">
                                     <button class="btn-edit-item" data-type="task" data-item-index="${i}" data-subject-index="${index}">
                                         <i class="fas fa-edit"></i>
@@ -405,6 +418,7 @@ function initializeSubjects() {
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -415,9 +429,9 @@ function initializeSubjects() {
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-clipboard-list"></i> Assignments</h3>
-                        <button class="btn-add-item" data-type="assignment" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="assignment" data-subject-index="${index}">
                             <i class="fas fa-plus"></i> Add Assignment
-                        </button>
+                        </button>` : ''}
                     </div>
                     <div class="items-list">
                         ${sub.assignments.map((assignment, i) => `
@@ -426,8 +440,23 @@ function initializeSubjects() {
                                     <h4>${assignment.title}</h4>
                                     <p>Due: ${assignment.dueDate} | Points: ${assignment.points} | Status: ${assignment.status}</p>
                                     <p>${assignment.instructions}</p>
-                                    ${assignment.file ? `<p><i class="fas fa-paperclip"></i> ${assignment.file}</p>` : ''}
+                                    ${assignment.file ? `<p><i class="fas fa-paperclip"></i> <a href="${assignment.fileUrl}" target="_blank">${assignment.file}</a></p>` : ''}
+                                    ${!isInstructor ? `
+                                    <div class="student-actions">
+                                        <button class="btn-submit-assignment" data-assignment-index="${i}" data-subject-index="${index}">
+                                            <i class="fas fa-upload"></i> Submit Assignment
+                                        </button>
+                                        ${assignment.submissions && assignment.submissions.find(s => s.studentId === userData.id) ? '<p><i class="fas fa-check"></i> Submitted</p>' : ''}
+                                    </div>
+                                    ` : `
+                                    <div class="instructor-actions">
+                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}">
+                                            <i class="fas fa-eye"></i> View Submissions (${assignment.submissions ? assignment.submissions.length : 0})
+                                        </button>
+                                    </div>
+                                    `}
                                 </div>
+                                ${isInstructor ? `
                                 <div class="item-actions">
                                     <button class="btn-edit-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}">
                                         <i class="fas fa-edit"></i>
@@ -436,6 +465,7 @@ function initializeSubjects() {
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -446,9 +476,9 @@ function initializeSubjects() {
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-book-open"></i> Lessons</h3>
-                        <button class="btn-add-item" data-type="lesson" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="lesson" data-subject-index="${index}">
                             <i class="fas fa-plus"></i> Add Lesson
-                        </button>
+                        </button>` : ''}
                     </div>
                     <div class="items-list">
                         ${sub.lessons.map((lesson, i) => `
@@ -457,8 +487,9 @@ function initializeSubjects() {
                                     <h4>${lesson.title}</h4>
                                     <p><i class="fas fa-clock"></i> ${lesson.duration} • ${lesson.status}</p>
                                     <p>${lesson.content}</p>
-                                    ${lesson.file ? `<p><i class="fas fa-paperclip"></i> ${lesson.file}</p>` : ''}
+                                    ${lesson.file ? `<p><i class="fas fa-paperclip"></i> <a href="${lesson.fileUrl}" target="_blank">${lesson.file}</a></p>` : ''}
                                 </div>
+                                ${isInstructor ? `
                                 <div class="item-actions">
                                     <button class="btn-edit-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}">
                                         <i class="fas fa-edit"></i>
@@ -467,11 +498,44 @@ function initializeSubjects() {
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
                 </div>
             </div>
+
+            ${isInstructor ? `
+            <div class="tab-content" id="quizzes-tab">
+                <div class="items-container">
+                    <div class="items-header">
+                        <h3><i class="fas fa-question-circle"></i> Quizzes</h3>
+                        <button class="btn-add-item" data-type="quiz" data-subject-index="${index}">
+                            <i class="fas fa-plus"></i> Add Quiz
+                        </button>
+                    </div>
+                    <div class="items-list">
+                        ${sub.quizzes.map((quiz, i) => `
+                            <div class="item-card">
+                                <div class="item-info">
+                                    <h4>${quiz.title}</h4>
+                                    <p>Due: ${quiz.dueDate} | Points: ${quiz.points} | Status: ${quiz.status}</p>
+                                    <p>${quiz.instructions}</p>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
 
         // Add click listener for Edit button in details
@@ -516,6 +580,24 @@ function initializeSubjects() {
                 const itemIndex = parseInt(btn.dataset.itemIndex);
                 const subjectIndex = parseInt(btn.dataset.subjectIndex);
                 deleteItem(subjectIndex, type, itemIndex);
+            });
+        });
+
+        // Add click listeners for Submit Assignment buttons
+        document.querySelectorAll('.btn-submit-assignment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                openSubmitAssignmentModal(subjectIndex, assignmentIndex);
+            });
+        });
+
+        // Add click listeners for View Submissions buttons
+        document.querySelectorAll('.btn-view-submissions').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                viewSubmissions(subjectIndex, assignmentIndex);
             });
         });
 
@@ -580,7 +662,7 @@ function initializeSubjects() {
     // -------------------------
     // ADD SUBJECT (FORM)
     // -------------------------
-    addForm?.addEventListener('submit', e => {
+    addForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const subject = {
@@ -588,7 +670,10 @@ function initializeSubjects() {
             teacher: document.getElementById('newTeacherName').value.trim(),
             time: document.getElementById('newSubjectTime').value.trim(),
             description: document.getElementById('newSubjectDescription').value.trim(),
-            lessons: []
+            lessons: [],
+            tasks: [],
+            assignments: [],
+            quizzes: []
         };
 
         subjects.push(subject);
@@ -648,7 +733,7 @@ function initializeSubjects() {
     // ADD TASK (FORM)
     // -------------------------
     const addTaskForm = document.getElementById('addTaskForm');
-    addTaskForm?.addEventListener('submit', e => {
+    addTaskForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const subjectIndex = parseInt(document.getElementById('taskSubjectIndex').value);
@@ -656,7 +741,14 @@ function initializeSubjects() {
         if (!sub) return;
 
         const fileInput = document.getElementById('newTaskFile');
-        const fileName = fileInput.files[0] ? fileInput.files[0].name : null;
+        let fileName = null;
+        let fileUrl = null;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/tasks/`);
+        }
 
         const task = {
             title: document.getElementById('newTaskTitle').value.trim(),
@@ -664,7 +756,8 @@ function initializeSubjects() {
             priority: document.getElementById('newTaskPriority').value,
             status: 'pending',
             description: document.getElementById('newTaskDescription').value.trim(),
-            file: fileName
+            file: fileName,
+            fileUrl: fileUrl
         };
 
         sub.tasks.push(task);
@@ -679,7 +772,7 @@ function initializeSubjects() {
     // EDIT TASK (FORM)
     // -------------------------
     const editTaskForm = document.getElementById('editTaskForm');
-    editTaskForm?.addEventListener('submit', e => {
+    editTaskForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const itemIndex = parseInt(document.getElementById('editTaskIndex').value);
@@ -688,7 +781,14 @@ function initializeSubjects() {
         if (!sub || !sub.tasks[itemIndex]) return;
 
         const fileInput = document.getElementById('editTaskFile');
-        const fileName = fileInput.files[0] ? fileInput.files[0].name : sub.tasks[itemIndex].file;
+        let fileName = sub.tasks[itemIndex].file;
+        let fileUrl = sub.tasks[itemIndex].fileUrl;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/tasks/`);
+        }
 
         sub.tasks[itemIndex] = {
             title: document.getElementById('editTaskTitle').value.trim(),
@@ -696,7 +796,8 @@ function initializeSubjects() {
             priority: document.getElementById('editTaskPriority').value,
             status: document.getElementById('editTaskStatus').value,
             description: document.getElementById('editTaskDescription').value.trim(),
-            file: fileName
+            file: fileName,
+            fileUrl: fileUrl
         };
 
         saveSubjects();
@@ -719,7 +820,7 @@ function initializeSubjects() {
     // ADD ASSIGNMENT (FORM)
     // -------------------------
     const addAssignmentForm = document.getElementById('addAssignmentForm');
-    addAssignmentForm?.addEventListener('submit', e => {
+    addAssignmentForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const subjectIndex = parseInt(document.getElementById('assignmentSubjectIndex').value);
@@ -727,7 +828,14 @@ function initializeSubjects() {
         if (!sub) return;
 
         const fileInput = document.getElementById('newAssignmentFile');
-        const fileName = fileInput.files[0] ? fileInput.files[0].name : null;
+        let fileName = null;
+        let fileUrl = null;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/assignments/`);
+        }
 
         const assignment = {
             title: document.getElementById('newAssignmentTitle').value.trim(),
@@ -735,7 +843,9 @@ function initializeSubjects() {
             points: parseInt(document.getElementById('newAssignmentPoints').value),
             status: document.getElementById('newAssignmentStatus').value,
             instructions: document.getElementById('newAssignmentInstructions').value.trim(),
-            file: fileName
+            file: fileName,
+            fileUrl: fileUrl,
+            submissions: []
         };
 
         sub.assignments.push(assignment);
@@ -790,7 +900,7 @@ function initializeSubjects() {
     // ADD LESSON (FORM)
     // -------------------------
     const addLessonForm = document.getElementById('addLessonForm');
-    addLessonForm?.addEventListener('submit', e => {
+    addLessonForm?.addEventListener('submit', async e => {
         e.preventDefault();
 
         const subjectIndex = parseInt(document.getElementById('lessonSubjectIndex').value);
@@ -798,14 +908,22 @@ function initializeSubjects() {
         if (!sub) return;
 
         const fileInput = document.getElementById('newLessonFile');
-        const fileName = fileInput.files[0] ? fileInput.files[0].name : null;
+        let fileName = null;
+        let fileUrl = null;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.name}/lessons/`);
+        }
 
         const lesson = {
             title: document.getElementById('newLessonTitle').value.trim(),
             duration: document.getElementById('newLessonDuration').value.trim(),
             status: document.getElementById('newLessonStatus').value,
             content: document.getElementById('newLessonContent').value.trim(),
-            file: fileName
+            file: fileName,
+            fileUrl: fileUrl
         };
 
         sub.lessons.push(lesson);
@@ -859,12 +977,67 @@ function initializeSubjects() {
     // OPEN ADD ITEM MODAL
     // -------------------------
     function openAddItemModal(subjectIndex, type) {
-        const modalId = `add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
+        if (type === 'quiz') {
+            // Custom modal for quiz
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'addQuizModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <div class="modal-body">
+                        <h2>Add New Quiz</h2>
+                        <form id="addQuizForm">
+                            <input type="hidden" id="quizSubjectIndex" value="${subjectIndex}" />
+                            <div class="form-group">
+                                <label>Quiz Title</label>
+                                <input type="text" id="newQuizTitle" required placeholder="e.g. Midterm Quiz" />
+                            </div>
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="newQuizDueDate" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="newQuizPoints" required placeholder="e.g. 50" />
+                            </div>
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <textarea id="newQuizInstructions" rows="4" placeholder="Quiz instructions..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-add-subject">Add Quiz</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'block';
 
-        document.getElementById(`${type}SubjectIndex`).value = subjectIndex;
-        modal.style.display = 'block';
+            modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+            modal.querySelector('#addQuizForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const sub = subjects[subjectIndex];
+                const quiz = {
+                    title: document.getElementById('newQuizTitle').value.trim(),
+                    dueDate: document.getElementById('newQuizDueDate').value,
+                    points: parseInt(document.getElementById('newQuizPoints').value),
+                    status: 'available',
+                    instructions: document.getElementById('newQuizInstructions').value.trim()
+                };
+                sub.quizzes.push(quiz);
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                modal.remove();
+            });
+        } else {
+            const modalId = `add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            document.getElementById(`${type}SubjectIndex`).value = subjectIndex;
+            modal.style.display = 'block';
+        }
     }
 
     // -------------------------
@@ -877,34 +1050,100 @@ function initializeSubjects() {
         const item = sub[`${type}s`][itemIndex];
         if (!item) return;
 
-        const modalId = `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
+        if (type === 'quiz') {
+            // Custom edit modal for quiz
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'editQuizModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <div class="modal-body">
+                        <h2>Edit Quiz</h2>
+                        <form id="editQuizForm">
+                            <input type="hidden" id="editQuizIndex" value="${itemIndex}" />
+                            <input type="hidden" id="editQuizSubjectIndex" value="${subjectIndex}" />
+                            <div class="form-group">
+                                <label>Quiz Title</label>
+                                <input type="text" id="editQuizTitle" required value="${item.title}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="editQuizDueDate" required value="${item.dueDate}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="editQuizPoints" required value="${item.points}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <textarea id="editQuizInstructions" rows="4">${item.instructions}</textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save">Save Changes</button>
+                                <button type="button" class="btn-delete" id="deleteQuizBtn">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'block';
 
-        document.getElementById(`edit${type.charAt(0).toUpperCase() + type.slice(1)}Index`).value = itemIndex;
-        document.getElementById(`edit${type.charAt(0).toUpperCase() + type.slice(1)}SubjectIndex`).value = subjectIndex;
+            modal.querySelector('.close').addEventListener('click', () => modal.remove());
 
-        // Populate form fields based on type
-        if (type === 'task') {
-            document.getElementById('editTaskTitle').value = item.title;
-            document.getElementById('editTaskDueDate').value = item.dueDate;
-            document.getElementById('editTaskPriority').value = item.priority;
-            document.getElementById('editTaskStatus').value = item.status;
-            document.getElementById('editTaskDescription').value = item.description;
-        } else if (type === 'assignment') {
-            document.getElementById('editAssignmentTitle').value = item.title;
-            document.getElementById('editAssignmentDueDate').value = item.dueDate;
-            document.getElementById('editAssignmentPoints').value = item.points;
-            document.getElementById('editAssignmentStatus').value = item.status;
-            document.getElementById('editAssignmentInstructions').value = item.instructions;
-        } else if (type === 'lesson') {
-            document.getElementById('editLessonTitle').value = item.title;
-            document.getElementById('editLessonDuration').value = item.duration;
-            document.getElementById('editLessonStatus').value = item.status;
-            document.getElementById('editLessonContent').value = item.content;
+            modal.querySelector('#editQuizForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                sub.quizzes[itemIndex] = {
+                    title: document.getElementById('editQuizTitle').value.trim(),
+                    dueDate: document.getElementById('editQuizDueDate').value,
+                    points: parseInt(document.getElementById('editQuizPoints').value),
+                    status: item.status,
+                    instructions: document.getElementById('editQuizInstructions').value.trim()
+                };
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                modal.remove();
+            });
+
+            modal.querySelector('#deleteQuizBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to delete this quiz?')) {
+                    sub.quizzes.splice(itemIndex, 1);
+                    saveSubjects();
+                    renderSubjectDetails(subjectIndex);
+                    modal.remove();
+                }
+            });
+        } else {
+            const modalId = `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            document.getElementById(`edit${type.charAt(0).toUpperCase() + type.slice(1)}Index`).value = itemIndex;
+            document.getElementById(`edit${type.charAt(0).toUpperCase() + type.slice(1)}SubjectIndex`).value = subjectIndex;
+
+            // Populate form fields based on type
+            if (type === 'task') {
+                document.getElementById('editTaskTitle').value = item.title;
+                document.getElementById('editTaskDueDate').value = item.dueDate;
+                document.getElementById('editTaskPriority').value = item.priority;
+                document.getElementById('editTaskStatus').value = item.status;
+                document.getElementById('editTaskDescription').value = item.description;
+            } else if (type === 'assignment') {
+                document.getElementById('editAssignmentTitle').value = item.title;
+                document.getElementById('editAssignmentDueDate').value = item.dueDate;
+                document.getElementById('editAssignmentPoints').value = item.points;
+                document.getElementById('editAssignmentStatus').value = item.status;
+                document.getElementById('editAssignmentInstructions').value = item.instructions;
+            } else if (type === 'lesson') {
+                document.getElementById('editLessonTitle').value = item.title;
+                document.getElementById('editLessonDuration').value = item.duration;
+                document.getElementById('editLessonStatus').value = item.status;
+                document.getElementById('editLessonContent').value = item.content;
+            }
+
+            modal.style.display = 'block';
         }
-
-        modal.style.display = 'block';
     }
 
     // -------------------------
@@ -953,7 +1192,6 @@ function initializeSubjects() {
     // SAVE SUBJECTS TO FIRESTORE
     // -------------------------
     async function saveSubjectsToFirestore() {
-        const userData = JSON.parse(localStorage.getItem("userData"));
         if (!userData || !userData.id) {
             alert("Please log in to sync to cloud.");
             return;
