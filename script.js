@@ -5,8 +5,66 @@ import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
+import { setupRealtimeTasks } from './realtime.js';
 
 const db = getFirestore();
+
+let subjects = JSON.parse(localStorage.getItem('subjects')) || [
+    {
+        name: "Mathematics",
+        teacher: "Mr. Anderson",
+        time: "08:00 AM - 09:30 AM",
+        description: "Advanced Calculus and Algebra",
+        tasks: [
+            { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
+        ],
+        assignments: [
+            { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
+        ],
+        lessons: [],
+        quizzes: []
+    },
+    {
+        name: "Physics",
+        teacher: "Ms. Curie",
+        time: "10:00 AM - 11:30 AM",
+        description: "Fundamentals of Physics",
+        tasks: [],
+        assignments: [],
+        lessons: [],
+        quizzes: []
+    },
+    {
+        name: "Computer Science",
+        teacher: "Mr. Turing",
+        time: "01:00 PM - 02:30 PM",
+        description: "Algorithms and Data Structures",
+        tasks: [],
+        assignments: [],
+        lessons: [],
+        quizzes: []
+    }
+];
+
+// Function to setup task listeners for all subjects
+function setupTaskListeners() {
+    subjects.forEach((subject, index) => {
+        if (subject.id) {
+            setupRealtimeTasks(subject.id, (subjectId, tasks) => {
+                // Find the subject in local array and update tasks
+                const localSubject = subjects.find(s => s.id === subjectId);
+                if (localSubject) {
+                    localSubject.tasks = tasks;
+                    // Re-render if this subject is currently active
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem && parseInt(activeItem.dataset.index) === index) {
+                        renderSubjectDetails(index);
+                    }
+                }
+            });
+        }
+    });
+}
 
 // Upload file to Supabase with enhanced error handling and logging
 async function uploadFileToSupabase(file, path) {
@@ -368,11 +426,48 @@ function initializeSubjects() {
         }
     ];
 
+    // Function to setup task listeners for all subjects
+    function setupTaskListeners() {
+        subjects.forEach((subject, index) => {
+            if (subject.id) {
+                setupRealtimeTasks(subject.id, (subjectId, tasks) => {
+                    // Find the subject in local array and update tasks
+                    const localSubject = subjects.find(s => s.id === subjectId);
+                    if (localSubject) {
+                        localSubject.tasks = tasks;
+                        // Re-render if this subject is currently active
+                        const activeItem = document.querySelector('.subject-list-item.active');
+                        if (activeItem && parseInt(activeItem.dataset.index) === index) {
+                            renderSubjectDetails(index);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
     // Load subjects from Firestore if user is logged in
     if (userData && userData.course) {
-        loadSubjectsFromFirestore(userData.course);
-        // Enable realtime updates for all users in the course
-        setupRealtimeSubjects(userData.course);
+        loadSubjectsFromFirestore(userData.course).then(() => {
+            // Enable realtime updates for all users in the course
+            setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                // When subjects update, stop existing task listeners and re-setup
+                stopTaskListeners();
+                subjects = updatedSubjects;
+                saveSubjects(false); // Sync to localStorage without triggering another save
+                renderSubjects();
+                // Re-render current subject details if any
+                const activeItem = document.querySelector('.subject-list-item.active');
+                if (activeItem) {
+                    renderSubjectDetails(activeItem.dataset.index);
+                }
+                // Setup task listeners for all subjects
+                setupTaskListeners();
+                console.log("Realtime update: Subjects refreshed from cloud.");
+            });
+            // Setup task listeners after subjects are loaded
+            setupTaskListeners();
+        });
     }
 
     // Dummy lessons data
@@ -734,6 +829,21 @@ function initializeSubjects() {
         subjects.push(subject);
         saveSubjects();
         renderSubjects();
+
+        // Setup task listener for the new subject
+        setupRealtimeTasks(subject.id, (subjectId, tasks) => {
+            // Find the subject in local array and update tasks
+            const localSubject = subjects.find(s => s.id === subjectId);
+            if (localSubject) {
+                localSubject.tasks = tasks;
+                // Re-render if this subject is currently active
+                const activeItem = document.querySelector('.subject-list-item.active');
+                const subjectIndex = subjects.findIndex(s => s.id === subjectId);
+                if (activeItem && parseInt(activeItem.dataset.index) === subjectIndex) {
+                    renderSubjectDetails(subjectIndex);
+                }
+            }
+        });
 
         addForm.reset();
         addModal.style.display = 'none';
@@ -1396,7 +1506,7 @@ function initializeSubjects() {
     // -------------------------
     // SETUP REALTIME SUBJECTS
     // -------------------------
-    function setupRealtimeSubjects(courseId) {
+    function setupRealtimeSubjects(courseId, onSubjectsUpdate) {
         const docRef = doc(db, "subjects", courseId);
         onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
@@ -1407,6 +1517,10 @@ function initializeSubjects() {
                 const activeItem = document.querySelector('.subject-list-item.active');
                 if (activeItem) {
                     renderSubjectDetails(activeItem.dataset.index);
+                }
+                // Call the callback if provided
+                if (onSubjectsUpdate) {
+                    onSubjectsUpdate(subjects);
                 }
                 console.log("Realtime update: Subjects refreshed from cloud.");
             }
