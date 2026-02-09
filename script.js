@@ -473,6 +473,12 @@ function initializeSubjects() {
         const sub = subjects[index];
         if (!sub) return;
 
+        // Ensure arrays exist to prevent map errors
+        if (!sub.tasks) sub.tasks = [];
+        if (!sub.assignments) sub.assignments = [];
+        if (!sub.lessons) sub.lessons = [];
+        if (!sub.quizzes) sub.quizzes = [];
+
         const isInstructor = userRole === 'instructor';
         console.log('User role in renderSubjectDetails:', userRole); // Debug log
         console.log('Rendering for instructor:', isInstructor); // Debug log
@@ -822,6 +828,7 @@ function initializeSubjects() {
         const index = parseInt(document.getElementById('editSubjectIndex').value);
 
         subjects[index] = {
+            ...subjects[index],
             name: document.getElementById('editSubjectName').value.trim(),
             teacher: document.getElementById('editTeacherName').value.trim(),
             time: document.getElementById('editSubjectTime').value.trim(),
