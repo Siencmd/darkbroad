@@ -821,10 +821,12 @@ function initializeSubjects() {
 
         const index = parseInt(document.getElementById('editSubjectIndex').value);
 
-        subjects[index].name = document.getElementById('editSubjectName').value.trim();
-        subjects[index].teacher = document.getElementById('editTeacherName').value.trim();
-        subjects[index].time = document.getElementById('editSubjectTime').value.trim();
-        subjects[index].description = document.getElementById('editSubjectDescription').value.trim();
+        subjects[index] = {
+            name: document.getElementById('editSubjectName').value.trim(),
+            teacher: document.getElementById('editTeacherName').value.trim(),
+            time: document.getElementById('editSubjectTime').value.trim(),
+            description: document.getElementById('editSubjectDescription').value.trim()
+        };
 
         saveSubjects();
         renderSubjects();
