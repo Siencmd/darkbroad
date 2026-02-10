@@ -300,15 +300,47 @@ function initializePasswordToggles() {
 // =========================
 function initializeForgotPassword() {
     const forgotBtn = document.getElementById("forgotPasswordBtn");
-    forgotBtn?.addEventListener("click", async () => {
-        const email = prompt("Enter your email address to reset your password:");
-        if (!email) return;
+    const modal = document.getElementById("forgotPasswordModal");
+    const closeBtn = document.getElementById("closeForgotModal");
+    const form = document.getElementById("forgotPasswordForm");
+
+    // Open modal
+    forgotBtn?.addEventListener("click", () => {
+        modal.style.display = "block";
+        document.getElementById("forgotPasswordForm").reset();
+        setMessage("forgotModalMessage", "", false);
+    });
+
+    // Close modal
+    closeBtn?.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+
+    // Handle form submission
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("resetEmail").value.trim();
+
+        if (!email) {
+            setMessage("forgotModalMessage", "Please enter your email address");
+            return;
+        }
 
         try {
             await sendPasswordResetEmail(auth, email);
-            setMessage("forgotMessage", "Password reset email sent! Check your inbox.", true);
+            setMessage("forgotModalMessage", "Password reset email sent! Check your inbox.", true);
+            setTimeout(() => {
+                modal.style.display = "none";
+            }, 3000);
         } catch (err) {
-            setMessage("forgotMessage", err.message);
+            setMessage("forgotModalMessage", err.message);
         }
     });
 }
