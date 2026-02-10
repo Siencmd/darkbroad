@@ -147,6 +147,7 @@ header{
     align-items: center;
     z-index: 1000;
     transition: 0.5 ease;
+    border-bottom: 0.125rem transparent rgba(255, 255, 255, 0.2);
 }
 
 header.dashboard-header {
@@ -2336,6 +2337,8 @@ body.light-mode .theme-toggle-btn:hover {
     mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .login-box:hover {
@@ -2618,6 +2621,9 @@ body.light-mode .theme-toggle-btn:hover {
     text-align: center;
     margin-top: 25px;
     color: var(--text-secondary);
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
 }
 
 .signup-link {
@@ -2625,6 +2631,8 @@ body.light-mode .theme-toggle-btn:hover {
     text-decoration: none;
     font-weight: 600;
     transition: 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .signup-link:hover {
