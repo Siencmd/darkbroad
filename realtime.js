@@ -19,16 +19,18 @@ export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
         subjectsListener();
     }
 
-    const subjectsRef = collection(db, 'subjects');
-    const q = query(subjectsRef, where('courseId', '==', courseId), orderBy('createdAt', 'desc'));
+    const docRef = doc(db, 'subjects', courseId);
 
-    subjectsListener = onSnapshot(q, (snapshot) => {
-        const subjects = [];
-        snapshot.forEach((doc) => {
-            subjects.push({ id: doc.id, ...doc.data() });
-        });
-        console.log('Real-time subjects update:', subjects);
-        onSubjectsUpdate(subjects);
+    subjectsListener = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const subjects = data.subjects || [];
+            console.log('Real-time subjects update:', subjects);
+            onSubjectsUpdate(subjects);
+        } else {
+            console.log('No subjects document found');
+            onSubjectsUpdate([]);
+        }
     }, (error) => {
         console.error('Real-time subjects error:', error);
         if (onError) onError(error);
