@@ -425,7 +425,7 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 /* Responsive User Menu */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .user-menu-right {
         top: 15px;
         right: 70px; /* Make room for hamburger */
@@ -448,7 +448,7 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 /* Responsive App Container */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .app-container {
         grid-template-columns: 1fr;
         grid-template-areas: "header" "main";
@@ -469,7 +469,7 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 /* Responsive Sidebar */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .sidebar {
         position: fixed;
         left: -250px;
@@ -569,14 +569,14 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 /* Responsive Content */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .content {
         padding: 1rem;
         margin-top: 60px; /* Account for fixed hamburger */
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 430px) {
     .content {
         padding: 0.75rem;
     }
@@ -650,15 +650,15 @@ body.light-mode .theme-toggle-btn:hover {
     text-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 430px) {
     .school-banner {
         height: 200px;
     }
-    
+
     .school-banner h2 {
         font-size: 1.8em;
     }
-    
+
     .school-logo-container {
         width: 80px;
         height: 80px;
