@@ -1981,6 +1981,7 @@ body.light-mode .theme-toggle-btn:hover {
     opacity: 1;
     position: relative;
     overflow: hidden;
+    z-index: 2001;
 }
 
 .modal-content::before {
@@ -2007,12 +2008,15 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 .close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
     color: var(--text-secondary);
-    float: right;
     font-size: 2em;
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s ease;
+    z-index: 2002;
 }
 
 .close:hover {
