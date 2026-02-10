@@ -2,7 +2,7 @@
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeTasks, stopTaskListeners } from './realtime.js';
@@ -293,6 +293,24 @@ function initializePasswordToggles() {
     document.getElementById("togglePassword")?.addEventListener("click", () => togglePassword("password", "togglePassword"));
     document.getElementById("toggleSignupPassword")?.addEventListener("click", () => togglePassword("signupPassword", "toggleSignupPassword"));
     document.getElementById("toggleConfirmPassword")?.addEventListener("click", () => togglePassword("confirmPassword", "toggleConfirmPassword"));
+}
+
+// =========================
+// FORGOT PASSWORD FUNCTIONALITY
+// =========================
+function initializeForgotPassword() {
+    const forgotBtn = document.getElementById("forgotPasswordBtn");
+    forgotBtn?.addEventListener("click", async () => {
+        const email = prompt("Enter your email address to reset your password:");
+        if (!email) return;
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setMessage("forgotMessage", "Password reset email sent! Check your inbox.", true);
+        } catch (err) {
+            setMessage("forgotMessage", err.message);
+        }
+    });
 }
 
 // =========================
@@ -1724,6 +1742,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeSignup();
     initializeRoleToggle();
     initializePasswordToggles();
+    initializeForgotPassword();
     initializeDashboard();
     initializeHelp();
     initializeSubjects();
