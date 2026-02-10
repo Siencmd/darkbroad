@@ -3,9 +3,9 @@
 // =========================
 import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
-import { setupRealtimeTasks, stopTaskListeners } from './realtime.js';
+import { setupRealtimeTasks, stopTaskListeners, setupRealtimeSubjects } from './realtime.js';
 
 const db = getFirestore();
 
@@ -441,28 +441,28 @@ function initializeSubjects() {
     // subjects is now defined globally at the top of the file
 
     // Load subjects from Firestore if user is logged in
-    if (userData && userData.course) {
-        loadSubjectsFromFirestore(userData.course).then(() => {
-            // Enable realtime updates for all users in the course
-            setupRealtimeSubjects(userData.course, (updatedSubjects) => {
-                // When subjects update, stop existing task listeners and re-setup
-                stopTaskListeners();
-                subjects = updatedSubjects;
-                saveSubjects(false); // Sync to localStorage without triggering another save
-                renderSubjects();
-                // Re-render current subject details if any
-                const activeItem = document.querySelector('.subject-list-item.active');
-                if (activeItem) {
-                    renderSubjectDetails(activeItem.dataset.index);
-                }
-                // Setup task listeners for all subjects
+        if (userData && userData.course) {
+            loadSubjectsFromFirestore(userData.course).then(() => {
+                // Enable realtime updates for all users in the course
+                setupRealtimeSubjectsLocal(userData.course, (updatedSubjects) => {
+                    // When subjects update, stop existing task listeners and re-setup
+                    stopTaskListeners();
+                    subjects = updatedSubjects;
+                    saveSubjects(false); // Sync to localStorage without triggering another save
+                    renderSubjects();
+                    // Re-render current subject details if any
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem) {
+                        renderSubjectDetails(activeItem.dataset.index);
+                    }
+                    // Setup task listeners for all subjects
+                    setupTaskListeners();
+                    console.log("Realtime update: Subjects refreshed from cloud.");
+                });
+                // Setup task listeners after subjects are loaded
                 setupTaskListeners();
-                console.log("Realtime update: Subjects refreshed from cloud.");
             });
-            // Setup task listeners after subjects are loaded
-            setupTaskListeners();
-        });
-    }
+        }
 
     // Dummy lessons data
     const dummyLessons = [
@@ -1472,7 +1472,7 @@ function initializeSubjects() {
 
             if (docSnap.exists()) {
                 subjects = docSnap.data().subjects || subjects;
-                saveSubjects(); // Sync to localStorage
+                saveSubjects(false); // Sync to localStorage without triggering another save
                 renderSubjects();
             } else {
                 // If no Firestore data, save local data to Firestore for first time
@@ -1505,9 +1505,9 @@ function initializeSubjects() {
     }
 
     // -------------------------
-    // SETUP REALTIME SUBJECTS
+    // SETUP REALTIME SUBJECTS LOCAL
     // -------------------------
-    function setupRealtimeSubjects(courseId, onSubjectsUpdate) {
+    function setupRealtimeSubjectsLocal(courseId, onSubjectsUpdate) {
         const docRef = doc(db, "subjects", courseId);
         onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
