@@ -299,13 +299,17 @@ function initializePasswordToggles() {
 // FORGOT PASSWORD FUNCTIONALITY
 // =========================
 function initializeForgotPassword() {
+    console.log("Initializing forgot password functionality");
     const forgotBtn = document.getElementById("forgotPasswordBtn");
     const modal = document.getElementById("forgotPasswordModal");
     const closeBtn = document.getElementById("closeForgotModal");
     const form = document.getElementById("forgotPasswordForm");
 
+    console.log("Forgot password elements found:", !!forgotBtn, !!modal, !!closeBtn, !!form);
+
     // Open modal
     forgotBtn?.addEventListener("click", () => {
+        console.log("Forgot password button clicked");
         modal.style.display = "block";
         document.getElementById("forgotPasswordForm").reset();
         setMessage("forgotModalMessage", "", false);
@@ -313,12 +317,14 @@ function initializeForgotPassword() {
 
     // Close modal
     closeBtn?.addEventListener("click", () => {
+        console.log("Close forgot password modal clicked");
         modal.style.display = "none";
     });
 
     // Close modal when clicking outside
     window.addEventListener("click", (e) => {
         if (e.target === modal) {
+            console.log("Clicked outside forgot password modal");
             modal.style.display = "none";
         }
     });
@@ -327,6 +333,7 @@ function initializeForgotPassword() {
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("resetEmail").value.trim();
+        console.log("Forgot password form submitted with email:", email);
 
         if (!email) {
             setMessage("forgotModalMessage", "Please enter your email address");
@@ -334,12 +341,15 @@ function initializeForgotPassword() {
         }
 
         try {
+            console.log("Sending password reset email to:", email);
             await sendPasswordResetEmail(auth, email);
+            console.log("Password reset email sent successfully");
             setMessage("forgotModalMessage", "Password reset email sent! Check your inbox.", true);
             setTimeout(() => {
                 modal.style.display = "none";
             }, 3000);
         } catch (err) {
+            console.error("Error sending password reset email:", err);
             setMessage("forgotModalMessage", err.message);
         }
     });
@@ -442,7 +452,9 @@ function initializeSubjects() {
 
     // Load subjects from Firestore if user is logged in
         if (userData && userData.course) {
+            console.log("Loading subjects from Firestore for course:", userData.course);
             loadSubjectsFromFirestore(userData.course).then(() => {
+                console.log("Subjects loaded from Firestore, setting up realtime updates");
                 // Enable realtime updates for all users in the course
                 setupRealtimeSubjectsLocal(userData.course, (updatedSubjects) => {
                     // When subjects update, stop existing task listeners and re-setup
@@ -461,7 +473,53 @@ function initializeSubjects() {
                 });
                 // Setup task listeners after subjects are loaded
                 setupTaskListeners();
+            }).catch(err => {
+                console.error("Error loading subjects from Firestore:", err);
             });
+        } else {
+            console.log("No user data or course, using default subjects");
+        }
+
+        // Ensure we have at least default subjects if none loaded
+        if (subjects.length === 0) {
+            console.log("No subjects loaded, using defaults");
+            subjects = [
+                {
+                    name: "Mathematics",
+                    teacher: "Mr. Anderson",
+                    time: "08:00 AM - 09:30 AM",
+                    description: "Advanced Calculus and Algebra",
+                    tasks: [
+                        { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
+                    ],
+                    assignments: [
+                        { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
+                    ],
+                    lessons: [],
+                    quizzes: []
+                },
+                {
+                    name: "Physics",
+                    teacher: "Ms. Curie",
+                    time: "10:00 AM - 11:30 AM",
+                    description: "Fundamentals of Physics",
+                    tasks: [],
+                    assignments: [],
+                    lessons: [],
+                    quizzes: []
+                },
+                {
+                    name: "Computer Science",
+                    teacher: "Mr. Turing",
+                    time: "01:00 PM - 02:30 PM",
+                    description: "Algorithms and Data Structures",
+                    tasks: [],
+                    assignments: [],
+                    lessons: [],
+                    quizzes: []
+                }
+            ];
+            saveSubjects(false);
         }
 
     // Dummy lessons data
@@ -476,6 +534,7 @@ function initializeSubjects() {
     // RENDER SUBJECTS
     // -------------------------
     function renderSubjects() {
+        console.log("Rendering subjects:", subjects);
         listContainer.innerHTML = subjects.map((sub, index) => `
             <div class="subject-list-item" data-index="${index}">
                 <h4>${sub.name}</h4>
@@ -486,6 +545,7 @@ function initializeSubjects() {
         // Add click listeners
         document.querySelectorAll('.subject-list-item').forEach(item => {
             item.addEventListener('click', () => {
+                console.log("Subject item clicked:", item.dataset.index);
                 // Remove active class from all
                 document.querySelectorAll('.subject-list-item').forEach(i => i.classList.remove('active'));
                 // Add active to clicked
@@ -762,6 +822,7 @@ function initializeSubjects() {
     // OPEN ADD MODAL
     // -------------------------
     addBtn?.addEventListener('click', () => {
+        console.log("Add subject button clicked");
         addModal.style.display = 'block';
     });
 
@@ -1531,6 +1592,7 @@ function initializeSubjects() {
     }
 
     // Initial Render
+    console.log("Initializing subjects page, initial subjects:", subjects);
     renderSubjects();
 }
 
@@ -1710,10 +1772,15 @@ function initializeHamburger() {
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const sidebar = document.querySelector('.sidebar');
 
+    console.log("Initializing hamburger menu, button found:", !!hamburgerBtn, "sidebar found:", !!sidebar);
+
     if (hamburgerBtn && sidebar) {
         hamburgerBtn.addEventListener('click', () => {
+            console.log("Hamburger clicked, toggling classes");
             sidebar.classList.toggle('open');
             hamburgerBtn.classList.toggle('open');
+            console.log("Sidebar classes:", sidebar.classList);
+            console.log("Hamburger classes:", hamburgerBtn.classList);
         });
     }
 
@@ -1722,6 +1789,7 @@ function initializeHamburger() {
         if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
             const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
             if (!openModal || !openModal.contains(e.target)) {
+                console.log("Clicking outside, closing sidebar");
                 sidebar.classList.remove('open');
                 hamburgerBtn.classList.remove('open');
             }
@@ -1733,6 +1801,7 @@ function initializeHamburger() {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
             if (window.innerWidth < 768) {
+                console.log("Nav item clicked, closing sidebar");
                 sidebar.classList.remove('open');
                 hamburgerBtn.classList.remove('open');
             }
