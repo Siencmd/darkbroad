@@ -564,9 +564,12 @@
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
           if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-            console.log("Clicking outside, closing sidebar");
-            sidebar.classList.remove('mobile-open');
-            hamburgerBtn.classList.remove('mobile-open');
+            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
+            if (!openModal || !openModal.contains(e.target)) {
+              console.log("Clicking outside, closing sidebar");
+              sidebar.classList.remove('mobile-open');
+              hamburgerBtn.classList.remove('mobile-open');
+            }
           }
         });
 
