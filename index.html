@@ -221,27 +221,33 @@
         loop: true,
       });
 
-      // Search functionality
-      const searchInput = document.querySelector('.search-bar input');
-      const clearSearchBtn = document.querySelector('.clear-search');
+      // Search functionality (commented out as no search bar exists in HTML)
+      // const searchInput = document.querySelector('.search-bar input');
+      // const clearSearchBtn = document.querySelector('.clear-search');
 
-      searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        const actions = document.querySelectorAll('.action-card');
-        actions.forEach(action => {
-          const text = action.textContent.toLowerCase();
-          action.style.display = text.includes(query) ? 'block' : 'none';
-        });
-        // Show/hide clear button
-        clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
-      });
+      // if (searchInput) {
+      //   searchInput.addEventListener('input', (e) => {
+      //     const query = e.target.value.toLowerCase();
+      //     const actions = document.querySelectorAll('.action-card');
+      //     actions.forEach(action => {
+      //       const text = action.textContent.toLowerCase();
+      //       action.style.display = text.includes(query) ? 'block' : 'none';
+      //     });
+      //     // Show/hide clear button
+      //     if (clearSearchBtn) clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
+      //   });
+      // }
 
-      // Clear search functionality
-      clearSearchBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        searchInput.dispatchEvent(new Event('input'));
-        searchInput.focus();
-      });
+      // // Clear search functionality
+      // if (clearSearchBtn) {
+      //   clearSearchBtn.addEventListener('click', () => {
+      //     if (searchInput) {
+      //       searchInput.value = '';
+      //       searchInput.dispatchEvent(new Event('input'));
+      //       searchInput.focus();
+      //     }
+      //   });
+      // }
     </script>
   </body>
 </html>
