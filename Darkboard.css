@@ -2019,6 +2019,40 @@ body.light-mode .theme-toggle-btn:hover {
     color: var(--text-primary);
 }
 
+.modal-body {
+    padding-top: 20px;
+}
+
+.modal-body h2 {
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.modal-body p {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+    margin-top: 20px;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+}
+
 #modalTitle {
     font-size: 2em;
     margin-bottom: 25px;
