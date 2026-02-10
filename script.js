@@ -1777,8 +1777,8 @@ function initializeHamburger() {
     if (hamburgerBtn && sidebar) {
         hamburgerBtn.addEventListener('click', () => {
             console.log("Hamburger clicked, toggling classes");
-            sidebar.classList.toggle('open');
-            hamburgerBtn.classList.toggle('open');
+            sidebar.classList.toggle('mobile-open');
+            hamburgerBtn.classList.toggle('mobile-open');
             console.log("Sidebar classes:", sidebar.classList);
             console.log("Hamburger classes:", hamburgerBtn.classList);
         });
@@ -1790,8 +1790,8 @@ function initializeHamburger() {
             const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
             if (!openModal || !openModal.contains(e.target)) {
                 console.log("Clicking outside, closing sidebar");
-                sidebar.classList.remove('open');
-                hamburgerBtn.classList.remove('open');
+                sidebar.classList.remove('mobile-open');
+                hamburgerBtn.classList.remove('mobile-open');
             }
         }
     });
@@ -1802,8 +1802,8 @@ function initializeHamburger() {
         item.addEventListener('click', () => {
             if (window.innerWidth < 768) {
                 console.log("Nav item clicked, closing sidebar");
-                sidebar.classList.remove('open');
-                hamburgerBtn.classList.remove('open');
+                sidebar.classList.remove('mobile-open');
+                hamburgerBtn.classList.remove('mobile-open');
             }
         });
     });
