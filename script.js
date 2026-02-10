@@ -1,106 +1,1897 @@
-// realtime.js - Real-time Firestore listeners for subjects and tasks
+// =========================
+// IMPORT FIREBASE AUTH & SUPABASE
+// =========================
+import { auth } from './firebase.js';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { supabase } from './supabase.js';
+import { setupRealtimeTasks, stopTaskListeners } from './realtime.js';
 
-import { db } from './firebase.js';
-import { collection, doc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+const db = getFirestore();
 
-// Global variables to store listeners (for cleanup if needed)
-let subjectsListener = null;
-let tasksListeners = {}; // Map of subjectId to listener
-
-// Function to setup real-time listeners for subjects
-export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
-    if (!courseId) {
-        console.error('Course ID required for real-time subjects');
-        return;
+let subjects = JSON.parse(localStorage.getItem('subjects')) || [
+    {
+        name: "Mathematics",
+        teacher: "Mr. Anderson",
+        time: "08:00 AM - 09:30 AM",
+        description: "Advanced Calculus and Algebra",
+        tasks: [
+            { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
+        ],
+        assignments: [
+            { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
+        ],
+        lessons: [],
+        quizzes: []
+    },
+    {
+        name: "Physics",
+        teacher: "Ms. Curie",
+        time: "10:00 AM - 11:30 AM",
+        description: "Fundamentals of Physics",
+        tasks: [],
+        assignments: [],
+        lessons: [],
+        quizzes: []
+    },
+    {
+        name: "Computer Science",
+        teacher: "Mr. Turing",
+        time: "01:00 PM - 02:30 PM",
+        description: "Algorithms and Data Structures",
+        tasks: [],
+        assignments: [],
+        lessons: [],
+        quizzes: []
     }
+];
 
-    // Unsubscribe previous listener if exists
-    if (subjectsListener) {
-        subjectsListener();
-    }
+// Function to setup task listeners for all subjects
+function setupTaskListeners() {
+    subjects.forEach((subject, index) => {
+        if (subject.id) {
+            setupRealtimeTasks(subject.id, (subjectId, tasks) => {
+                // Find the subject in local array and update tasks
+                const localSubject = subjects.find(s => s.id === subjectId);
+                if (localSubject) {
+                    localSubject.tasks = tasks;
+                    // Re-render if this subject is currently active
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem && parseInt(activeItem.dataset.index) === index) {
+                        renderSubjectDetails(index);
+                    }
+                }
+            });
+        }
+    });
+}
 
-    const subjectsRef = collection(db, 'subjects');
-    const q = query(subjectsRef, where('courseId', '==', courseId), orderBy('createdAt', 'desc'));
-
-    subjectsListener = onSnapshot(q, (snapshot) => {
-        const subjects = [];
-        snapshot.forEach((doc) => {
-            subjects.push({ id: doc.id, ...doc.data() });
+// Upload file to Supabase with enhanced error handling and logging
+async function uploadFileToSupabase(file, path) {
+    try {
+        console.log('Starting upload to Supabase:', path + file.name);
+        const { data, error } = await supabase.storage.from('files').upload(path + file.name, file, {
+            upsert: true
         });
-        console.log('Real-time subjects update:', subjects);
-        onSubjectsUpdate(subjects);
-    }, (error) => {
-        console.error('Real-time subjects error:', error);
-        if (onError) onError(error);
+        if (error) {
+            console.error('Supabase upload error:', error);
+            throw new Error(`Upload failed: ${error.message}`);
+        }
+        console.log('Upload successful, getting public URL');
+        const { data: urlData } = supabase.storage.from('files').getPublicUrl(path + file.name);
+        if (!urlData || !urlData.publicUrl) {
+            throw new Error('Failed to get public URL');
+        }
+        console.log('Public URL obtained:', urlData.publicUrl);
+        return urlData.publicUrl;
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert(`File upload failed: ${error.message}`);
+        return null;
+    }
+}
+
+// =========================
+// THEME TOGGLE
+// =========================
+function initializeTheme() {
+    const theme = localStorage.getItem("theme") || "dark";
+    applyTheme(theme);
+
+    // Ensure buttons are updated on load
+    const darkBtn = document.getElementById("darkModeBtn") || document.getElementById("darkThemeBtn");
+    const lightBtn = document.getElementById("lightModeBtn") || document.getElementById("lightThemeBtn");
+
+    if (theme === "dark") {
+        if (darkBtn) darkBtn.classList.add("active");
+        if (lightBtn) lightBtn.classList.remove("active");
+    } else {
+        if (lightBtn) lightBtn.classList.add("active");
+        if (darkBtn) darkBtn.classList.remove("active");
+    }
+}
+
+function applyTheme(theme) {
+    if (theme === "light") document.body.classList.add("light-mode");
+    else document.body.classList.remove("light-mode");
+    localStorage.setItem("theme", theme);
+
+    const darkBtn = document.getElementById("darkModeBtn") || document.getElementById("darkThemeBtn");
+    const lightBtn = document.getElementById("lightModeBtn") || document.getElementById("lightThemeBtn");
+
+    // Remove active from all
+    [document.getElementById("darkModeBtn"), document.getElementById("lightModeBtn"), 
+     document.getElementById("darkThemeBtn"), document.getElementById("lightThemeBtn")].forEach(btn => {
+        if (btn) btn.classList.remove("active");
     });
 
-    return subjectsListener;
+    // Add active to the correct button
+    if (theme === "dark") {
+        document.getElementById("darkModeBtn")?.classList.add("active");
+        document.getElementById("darkThemeBtn")?.classList.add("active");
+    } else {
+        document.getElementById("lightModeBtn")?.classList.add("active");
+        document.getElementById("lightThemeBtn")?.classList.add("active");
+    }
 }
 
-// Function to setup real-time listeners for tasks in a specific subject
-export function setupRealtimeTasks(subjectId, onTasksUpdate, onError) {
-    if (!subjectId) {
-        console.error('Subject ID required for real-time tasks');
-        return;
-    }
+// =========================
+// LOGIN / SIGNUP MESSAGES
+// =========================
+function setMessage(id, msg, success = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "block";
+    el.style.color = success ? "#51cf66" : "#ff6b6b";
+}
 
-    // Unsubscribe previous listener for this subject if exists
-    if (tasksListeners[subjectId]) {
-        tasksListeners[subjectId]();
-    }
+// =========================
+// LOGIN FUNCTIONALITY
+// =========================
+function initializeLogin() {
+    const loginForm = document.getElementById("loginForm");
+    loginForm?.addEventListener("submit", async e => {
+        e.preventDefault();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-    const tasksRef = collection(db, 'subjects', subjectId, 'tasks');
-    const q = query(tasksRef, orderBy('createdAt', 'desc'));
+        if (!email || !password) {
+            setMessage("loginError", "Please fill in all fields");
+            return;
+        }
 
-    tasksListeners[subjectId] = onSnapshot(q, (snapshot) => {
-        const tasks = [];
-        snapshot.forEach((doc) => {
-            tasks.push({ id: doc.id, ...doc.data() });
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Fetch user role and course from Firestore (check "users" first, then "students" for backward compatibility)
+            let userDoc = await getDoc(doc(db, "users", user.uid));
+            let userRole = 'student';
+            let userCourse = '';
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                userRole = data.role || 'student';
+                userCourse = data.course || '';
+            } else {
+                // Check "students" collection for old signups
+                userDoc = await getDoc(doc(db, "students", user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    userRole = data.role || 'student';
+                    userCourse = data.course || '';
+                }
+            }
+
+            // Store logged-in user in localStorage
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("userData", JSON.stringify({ id: user.uid, name: user.displayName || email, role: userRole, course: userCourse }));
+
+            setMessage("loginSuccess", "Login successful! Redirecting...", true);
+            setTimeout(() => location.href = "index.html", 1200);
+        } catch (err) {
+            setMessage("loginError", err.message);
+        }
+    });
+}
+
+// =========================
+// SIGNUP FUNCTIONALITY
+// =========================
+function initializeSignup() {
+    const signupForm = document.getElementById("signupForm");
+
+    signupForm?.addEventListener("submit", async e => {
+        e.preventDefault();
+
+        const fullName = document.getElementById("fullName").value.trim();
+        const email = document.getElementById("signupEmail").value.trim();
+        const password = document.getElementById("signupPassword").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        const phone = document.getElementById("phone").value.trim();
+        const course = document.getElementById("course").value.trim();
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const accessCode = document.getElementById("accessCode").value.trim();
+
+        if (!fullName || !email || !password || !confirmPassword || !course) {
+            setMessage("signupMessage", "Please fill in all required fields");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setMessage("signupMessage", "Passwords do not match");
+            return;
+        }
+
+        if (password.length < 6) {
+            setMessage("signupMessage", "Password must be at least 6 characters");
+            return;
+        }
+
+        if (role === "instructor") {
+            if (accessCode !== "INSTRUCTOR2026") {
+                setMessage("signupMessage", "Invalid access code for Instructor");
+                return;
+            }
+        }
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await updateProfile(user, { displayName: fullName });
+
+            await setDoc(doc(db, "users", user.uid), {
+                fullName,
+                email,
+                phone,
+                course,
+                role,
+                createdAt: serverTimestamp()
+            });
+
+            setMessage("signupMessage", "Account created successfully! Redirecting...", true);
+            setTimeout(() => window.location.href = "Login.html", 1500);
+
+        } catch (err) {
+            setMessage("signupMessage", err.message);
+        }
+    });
+}
+
+// =========================
+// ROLE TOGGLE FUNCTIONALITY
+// =========================
+function initializeRoleToggle() {
+    const roleRadios = document.querySelectorAll('input[name="role"]');
+    const accessCodeGroup = document.getElementById('accessCodeGroup');
+
+    roleRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'instructor') {
+                accessCodeGroup.style.display = 'block';
+            } else {
+                accessCodeGroup.style.display = 'none';
+            }
         });
-        console.log(`Real-time tasks update for subject ${subjectId}:`, tasks);
-        onTasksUpdate(subjectId, tasks);
-    }, (error) => {
-        console.error(`Real-time tasks error for subject ${subjectId}:`, error);
-        if (onError) onError(error);
+    });
+}
+
+// =========================
+// PASSWORD TOGGLE
+// =========================
+function initializePasswordToggles() {
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.querySelector(`#${iconId} i`);
+        if (!input || !icon) return;
+        input.type = input.type === "password" ? "text" : "password";
+        icon.classList.toggle("fa-eye-slash");
+        icon.classList.toggle("fa-eye");
+    }
+
+    document.getElementById("togglePassword")?.addEventListener("click", () => togglePassword("password", "togglePassword"));
+    document.getElementById("toggleSignupPassword")?.addEventListener("click", () => togglePassword("signupPassword", "toggleSignupPassword"));
+    document.getElementById("toggleConfirmPassword")?.addEventListener("click", () => togglePassword("confirmPassword", "toggleConfirmPassword"));
+}
+
+// =========================
+// FORGOT PASSWORD FUNCTIONALITY
+// =========================
+function initializeForgotPassword() {
+    console.log("Initializing forgot password functionality");
+    const forgotBtn = document.getElementById("forgotPasswordBtn");
+    const modal = document.getElementById("forgotPasswordModal");
+    const closeBtn = document.getElementById("closeForgotModal");
+    const form = document.getElementById("forgotPasswordForm");
+
+    console.log("Forgot password elements found:", !!forgotBtn, !!modal, !!closeBtn, !!form);
+
+    // Open modal
+    forgotBtn?.addEventListener("click", () => {
+        console.log("Forgot password button clicked");
+        modal.style.display = "block";
+        document.getElementById("forgotPasswordForm").reset();
+        setMessage("forgotModalMessage", "", false);
     });
 
-    return tasksListeners[subjectId];
+    // Close modal
+    closeBtn?.addEventListener("click", () => {
+        console.log("Close forgot password modal clicked");
+        modal.style.display = "none";
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            console.log("Clicked outside forgot password modal");
+            modal.style.display = "none";
+        }
+    });
+
+    // Handle form submission
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("resetEmail").value.trim();
+        console.log("Forgot password form submitted with email:", email);
+
+        if (!email) {
+            setMessage("forgotModalMessage", "Please enter your email address");
+            return;
+        }
+
+        try {
+            console.log("Sending password reset email to:", email);
+            await sendPasswordResetEmail(auth, email);
+            console.log("Password reset email sent successfully");
+            setMessage("forgotModalMessage", "Password reset email sent! Check your inbox.", true);
+            setTimeout(() => {
+                modal.style.display = "none";
+            }, 3000);
+        } catch (err) {
+            console.error("Error sending password reset email:", err);
+            setMessage("forgotModalMessage", err.message);
+        }
+    });
 }
 
-// Function to stop all real-time listeners
-export function stopRealtimeListeners() {
-    if (subjectsListener) {
-        subjectsListener();
-        subjectsListener = null;
+// =========================
+// DASHBOARD USER INFO
+// =========================
+function initializeDashboard() {
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (!userData) return;
+
+    const userNameEl = document.getElementById("headerUserName");
+    const dashboardNameEl = document.getElementById("dashboardUserName");
+    const greetingEl = document.getElementById("greetingMessage");
+
+    if (userNameEl) userNameEl.textContent = userData.name;
+    if (dashboardNameEl) dashboardNameEl.textContent = userData.name.split(" ")[0];
+
+    if (greetingEl) {
+        const hour = new Date().getHours();
+        greetingEl.textContent = hour < 12 ? "Good morning 🌅" :
+                                 hour < 17 ? "Good afternoon ☀️" :
+                                             "Good evening 🌙";
+    }
+}
+
+// =========================
+// LOGOUT
+// =========================
+function logout(e) {
+    if (e) e.preventDefault();
+    localStorage.clear();
+    location.href = "Login.html";
+}
+
+// =========================
+// HELP PAGE FUNCTIONALITY
+// =========================
+function initializeHelp() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        if (!question) return;
+
+        question.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all other items
+            faqItems.forEach(otherItem => {
+                otherItem.classList.remove('active');
+            });
+
+            // Toggle current item
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        });
+    });
+
+    // Contact Form Handling (Visual only)
+    const contactForm = document.getElementById('helpContactForm');
+    contactForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const btn = contactForm.querySelector('.btn-submit');
+        const originalText = btn.textContent;
+        btn.textContent = 'Message Sent!';
+        btn.style.background = '#4ade80';
+        setTimeout(() => { btn.textContent = originalText; btn.style.background = ''; contactForm.reset(); }, 3000);
+    });
+}
+
+// =========================
+// SUBJECTS PAGE FUNCTIONALITY
+// =========================
+function initializeSubjects() {
+    const listContainer = document.getElementById('subjectsList');
+    const detailsContainer = document.getElementById('subjectDetailsPanel');
+    const addBtn = document.getElementById('addSubjectBtn');
+    const addModal = document.getElementById('addSubjectModal');
+    const addForm = document.getElementById('addSubjectForm');
+    const editModal = document.getElementById('editSubjectModal');
+    const editForm = document.getElementById('editSubjectForm');
+    const deleteBtn = document.getElementById('deleteSubjectBtn');
+
+    if (!listContainer || !detailsContainer) return;
+
+    // Get user role
+    let userData = JSON.parse(localStorage.getItem("userData"));
+    const userRole = userData ? userData.role : 'student';
+    console.log('User role:', userRole); // Debug log
+
+    // Hide add subject button for students
+    if (userRole !== 'instructor') {
+        addBtn.style.display = 'none';
     }
 
-    Object.values(tasksListeners).forEach(unsubscribe => unsubscribe());
-    tasksListeners = {};
+    // subjects is now defined globally at the top of the file
+
+    // Load subjects from Firestore if user is logged in
+        if (userData && userData.course) {
+            console.log("Loading subjects from Firestore for course:", userData.course);
+            loadSubjectsFromFirestore(userData.course).then(() => {
+                console.log("Subjects loaded from Firestore, setting up realtime updates");
+                // Enable realtime updates for all users in the course
+                setupRealtimeSubjectsLocal(userData.course, (updatedSubjects) => {
+                    // When subjects update, stop existing task listeners and re-setup
+                    stopTaskListeners();
+                    subjects = updatedSubjects;
+                    saveSubjects(false); // Sync to localStorage without triggering another save
+                    renderSubjects();
+                    // Re-render current subject details if any
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem) {
+                        renderSubjectDetails(activeItem.dataset.index);
+                    }
+                    // Setup task listeners for all subjects
+                    setupTaskListeners();
+                    console.log("Realtime update: Subjects refreshed from cloud.");
+                });
+                // Setup task listeners after subjects are loaded
+                setupTaskListeners();
+            }).catch(err => {
+                console.error("Error loading subjects from Firestore:", err);
+            });
+        } else {
+            console.log("No user data or course, using default subjects");
+        }
+
+        // Ensure we have at least default subjects if none loaded
+        if (subjects.length === 0) {
+            console.log("No subjects loaded, using defaults");
+            subjects = [
+                {
+                    name: "Mathematics",
+                    teacher: "Mr. Anderson",
+                    time: "08:00 AM - 09:30 AM",
+                    description: "Advanced Calculus and Algebra",
+                    tasks: [
+                        { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
+                    ],
+                    assignments: [
+                        { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
+                    ],
+                    lessons: [],
+                    quizzes: []
+                },
+                {
+                    name: "Physics",
+                    teacher: "Ms. Curie",
+                    time: "10:00 AM - 11:30 AM",
+                    description: "Fundamentals of Physics",
+                    tasks: [],
+                    assignments: [],
+                    lessons: [],
+                    quizzes: []
+                },
+                {
+                    name: "Computer Science",
+                    teacher: "Mr. Turing",
+                    time: "01:00 PM - 02:30 PM",
+                    description: "Algorithms and Data Structures",
+                    tasks: [],
+                    assignments: [],
+                    lessons: [],
+                    quizzes: []
+                }
+            ];
+            saveSubjects(false);
+        }
+
+    // Dummy lessons data
+    const dummyLessons = [
+        { title: "Introduction to the Course", duration: "45 mins", status: "Completed" },
+        { title: "Chapter 1: Fundamentals", duration: "1 hr 20 mins", status: "In Progress" },
+        { title: "Chapter 2: Advanced Concepts", duration: "55 mins", status: "Locked" },
+        { title: "Midterm Review", duration: "2 hrs", status: "Locked" }
+    ];
+
+    // -------------------------
+    // RENDER SUBJECTS
+    // -------------------------
+    function renderSubjects() {
+        console.log("Rendering subjects:", subjects);
+        listContainer.innerHTML = subjects.map((sub, index) => `
+            <div class="subject-list-item" data-index="${index}">
+                <h4>${sub.name}</h4>
+                <p><i class="fas fa-chalkboard-teacher"></i> ${sub.teacher}</p>
+            </div>
+        `).join('');
+
+        // Add click listeners
+        document.querySelectorAll('.subject-list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                console.log("Subject item clicked:", item.dataset.index);
+                // Remove active class from all
+                document.querySelectorAll('.subject-list-item').forEach(i => i.classList.remove('active'));
+                // Add active to clicked
+                item.classList.add('active');
+                // Show details
+                renderSubjectDetails(item.dataset.index);
+            });
+        });
+    }
+
+    // -------------------------
+    // RENDER DETAILS
+    // -------------------------
+    function renderSubjectDetails(index) {
+        const sub = subjects[index];
+        if (!sub) return;
+
+        // Ensure arrays exist to prevent map errors
+        if (!sub.tasks) sub.tasks = [];
+        if (!sub.assignments) sub.assignments = [];
+        if (!sub.lessons) sub.lessons = [];
+        if (!sub.quizzes) sub.quizzes = [];
+
+        const isInstructor = userRole === 'instructor';
+        console.log('User role in renderSubjectDetails:', userRole); // Debug log
+        console.log('Rendering for instructor:', isInstructor); // Debug log
+
+        detailsContainer.innerHTML = `
+            <div class="detail-header">
+                <h2>${sub.name}</h2>
+                <div class="detail-meta">
+                    <span><i class="fas fa-chalkboard-teacher"></i> ${sub.teacher}</span>
+                    <span><i class="fas fa-clock"></i> ${sub.time}</span>
+                </div>
+                <p class="detail-description">${sub.description || "No description available."}</p>
+            ${isInstructor ? `
+            <div class="detail-actions">
+                <button class="btn-edit-subject" data-index="${index}">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-sync-cloud" data-index="${index}">
+                    <i class="fas fa-cloud-upload-alt"></i> Sync to Cloud
+                </button>
+            </div>
+            ` : ''}
+            </div>
+
+            <div class="subject-tabs">
+                <button class="tab-btn active" data-tab="tasks">Tasks</button>
+                <button class="tab-btn" data-tab="assignments">Assignments</button>
+                <button class="tab-btn" data-tab="lessons">Lessons</button>
+                <button class="tab-btn" data-tab="quizzes">Quizzes</button>
+            </div>
+
+            <div class="tab-content active" id="tasks-tab">
+                <div class="items-container">
+                    <div class="items-header">
+                        <h3><i class="fas fa-tasks"></i> Tasks</h3>
+                        ${isInstructor ? `<button class="btn-add-item" data-type="task" data-subject-index="${index}">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>` : ''}
+                    </div>
+                    <div class="items-list">
+                        ${sub.tasks.map((task, i) => `
+                            <div class="item-card">
+                                <div class="item-info">
+                                    <h4>${task.title}</h4>
+                                    <p>Due: ${task.dueDate} | Priority: ${task.priority} | Status: ${task.status}</p>
+                                    <p>${task.description}</p>
+                                    ${task.file ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl}" target="_blank">${task.file}</a></p>` : ''}
+                                </div>
+                                ${isInstructor ? `
+                                <div class="item-actions">
+                                    <button class="btn-edit-item" data-type="task" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-delete-item" data-type="task" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="assignments-tab">
+                <div class="items-container">
+                    <div class="items-header">
+                        <h3><i class="fas fa-clipboard-list"></i> Assignments</h3>
+                        ${isInstructor ? `<button class="btn-add-item" data-type="assignment" data-subject-index="${index}">
+                            <i class="fas fa-plus"></i> Add Assignment
+                        </button>` : ''}
+                    </div>
+                    <div class="items-list">
+                        ${sub.assignments.map((assignment, i) => `
+                            <div class="item-card">
+                                <div class="item-info">
+                                    <h4>${assignment.title}</h4>
+                                    <p>Due: ${assignment.dueDate} | Points: ${assignment.points} | Status: ${assignment.status}</p>
+                                    <p>${assignment.instructions}</p>
+                                    ${assignment.file ? `<p><i class="fas fa-paperclip"></i> <a href="${assignment.fileUrl}" target="_blank">${assignment.file}</a></p>` : ''}
+                                    ${!isInstructor ? `
+                                    <div class="student-actions">
+                                        <button class="btn-submit-assignment" data-assignment-index="${i}" data-subject-index="${index}">
+                                            <i class="fas fa-upload"></i> Submit Assignment
+                                        </button>
+                                        ${assignment.submissions && assignment.submissions.find(s => s.studentId === userData.id) ? '<p><i class="fas fa-check"></i> Submitted</p>' : ''}
+                                    </div>
+                                    ` : `
+                                    <div class="instructor-actions">
+                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}">
+                                            <i class="fas fa-eye"></i> View Submissions (${assignment.submissions ? assignment.submissions.length : 0})
+                                        </button>
+                                    </div>
+                                    `}
+                                </div>
+                                ${isInstructor ? `
+                                <div class="item-actions">
+                                    <button class="btn-edit-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-delete-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="lessons-tab">
+                <div class="items-container">
+                    <div class="items-header">
+                        <h3><i class="fas fa-book-open"></i> Lessons</h3>
+                        ${isInstructor ? `<button class="btn-add-item" data-type="lesson" data-subject-index="${index}">
+                            <i class="fas fa-plus"></i> Add Lesson
+                        </button>` : ''}
+                    </div>
+                    <div class="items-list">
+                        ${sub.lessons.map((lesson, i) => `
+                            <div class="item-card">
+                                <div class="lesson-info">
+                                    <h4>${lesson.title}</h4>
+                                    <p><i class="fas fa-clock"></i> ${lesson.duration} • ${lesson.status}</p>
+                                    <p>${lesson.content}</p>
+                                    ${lesson.file ? `<p><i class="fas fa-paperclip"></i> <a href="${lesson.fileUrl}" target="_blank">${lesson.file}</a></p>` : ''}
+                                </div>
+                                ${isInstructor ? `
+                                <div class="item-actions">
+                                    <button class="btn-edit-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-delete-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="quizzes-tab">
+                <div class="items-container">
+                    <div class="items-header">
+                        <h3><i class="fas fa-question-circle"></i> Quizzes</h3>
+                        ${isInstructor ? `<button class="btn-add-item" data-type="quiz" data-subject-index="${index}">
+                            <i class="fas fa-plus"></i> Add Quiz
+                        </button>` : ''}
+                    </div>
+                    <div class="items-list">
+                        ${sub.quizzes.length > 0 ? sub.quizzes.map((quiz, i) => `
+                            <div class="item-card">
+                                <div class="item-info">
+                                    <h4>${quiz.title}</h4>
+                                    <p>Due: ${quiz.dueDate} | Points: ${quiz.points} | Status: ${quiz.status}</p>
+                                    <p>${quiz.instructions}</p>
+                                </div>
+                                ${isInstructor ? `
+                                <div class="item-actions">
+                                    <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `).join('') : '<p>No quizzes available yet.</p>'}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add click listener for Edit button in details
+        document.querySelector('.btn-edit-subject')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditModal(e.target.closest('.btn-edit-subject').dataset.index);
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // Add click listeners for Add Item buttons
+        document.querySelectorAll('.btn-add-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = btn.dataset.type;
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                openAddItemModal(subjectIndex, type);
+            });
+        });
+
+        // Add click listeners for Edit Item buttons
+        document.querySelectorAll('.btn-edit-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = btn.dataset.type;
+                const itemIndex = parseInt(btn.dataset.itemIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                openEditItemModal(subjectIndex, type, itemIndex);
+            });
+        });
+
+        // Add click listeners for Delete Item buttons
+        document.querySelectorAll('.btn-delete-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = btn.dataset.type;
+                const itemIndex = parseInt(btn.dataset.itemIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                deleteItem(subjectIndex, type, itemIndex);
+            });
+        });
+
+        // Add click listeners for Submit Assignment buttons
+        document.querySelectorAll('.btn-submit-assignment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                openSubmitAssignmentModal(subjectIndex, assignmentIndex);
+            });
+        });
+
+        // Add click listeners for View Submissions buttons
+        document.querySelectorAll('.btn-view-submissions').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                viewSubmissions(subjectIndex, assignmentIndex);
+            });
+        });
+
+        // Add click listener for Sync to Cloud button
+        document.querySelectorAll('.btn-sync-cloud').forEach(btn => {
+            btn.addEventListener('click', () => {
+                saveSubjects(false); // Save without auto-sync to avoid double save
+                saveSubjectsToFirestore();
+            });
+        });
+    }
+
+    // -------------------------
+    // OPEN ADD MODAL
+    // -------------------------
+    addBtn?.addEventListener('click', () => {
+        console.log("Add subject button clicked");
+        addModal.style.display = 'block';
+    });
+
+    // -------------------------
+    // OPEN EDIT MODAL
+    // -------------------------
+    function openEditModal(index) {
+        const sub = subjects[index];
+        if (!sub) return;
+
+        document.getElementById('editSubjectIndex').value = index;
+        document.getElementById('editSubjectName').value = sub.name;
+        document.getElementById('editTeacherName').value = sub.teacher;
+        document.getElementById('editSubjectTime').value = sub.time;
+        document.getElementById('editSubjectDescription').value = sub.description || '';
+
+        editModal.style.display = 'block';
+    }
+
+
+
+
+
+    // -------------------------
+    // CLOSE MODALS
+    // -------------------------
+    function closeAllModals() {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+        });
+    }
+
+    document.querySelectorAll('.modal .close').forEach(btn => {
+        btn.addEventListener('click', closeAllModals);
+    });
+
+    window.addEventListener('click', e => {
+        if (e.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
+
+
+
+
+
+    // -------------------------
+    // ADD SUBJECT (FORM)
+    // -------------------------
+    addForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const subject = {
+            id: Date.now().toString(), // Unique ID for subject
+            name: document.getElementById('newSubjectName').value.trim(),
+            teacher: document.getElementById('newTeacherName').value.trim(),
+            time: document.getElementById('newSubjectTime').value.trim(),
+            description: document.getElementById('newSubjectDescription').value.trim(),
+            lessons: [],
+            tasks: [],
+            assignments: [],
+            quizzes: []
+        };
+
+        subjects.push(subject);
+        saveSubjects();
+        renderSubjects();
+
+        // Setup task listener for the new subject
+        setupRealtimeTasks(subject.id, (subjectId, tasks) => {
+            // Find the subject in local array and update tasks
+            const localSubject = subjects.find(s => s.id === subjectId);
+            if (localSubject) {
+                localSubject.tasks = tasks;
+                // Re-render if this subject is currently active
+                const activeItem = document.querySelector('.subject-list-item.active');
+                const subjectIndex = subjects.findIndex(s => s.id === subjectId);
+                if (activeItem && parseInt(activeItem.dataset.index) === subjectIndex) {
+                    renderSubjectDetails(subjectIndex);
+                }
+            }
+        });
+
+        addForm.reset();
+        addModal.style.display = 'none';
+    });
+
+    // -------------------------
+    // EDIT SUBJECT (FORM)
+    // -------------------------
+    editForm?.addEventListener('submit', e => {
+        e.preventDefault();
+
+        const index = parseInt(document.getElementById('editSubjectIndex').value);
+
+        subjects[index] = {
+            ...subjects[index],
+            name: document.getElementById('editSubjectName').value.trim(),
+            teacher: document.getElementById('editTeacherName').value.trim(),
+            time: document.getElementById('editSubjectTime').value.trim(),
+            description: document.getElementById('editSubjectDescription').value.trim()
+        };
+
+        saveSubjects();
+        renderSubjects();
+        renderSubjectDetails(index);
+
+        closeAllModals();
+    });
+
+    // -------------------------
+    // DELETE SUBJECT
+    // -------------------------
+    deleteBtn?.addEventListener('click', () => {
+        const index = parseInt(document.getElementById('editSubjectIndex').value);
+
+        if (confirm('Are you sure you want to delete this subject?')) {
+            subjects.splice(index, 1);
+            saveSubjects();
+            renderSubjects();
+
+            // Show empty state
+            detailsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <p>Select a subject from the list to view details, tasks, assignments, and lessons.</p>
+                </div>
+            `;
+
+            closeAllModals();
+        }
+    });
+
+    // -------------------------
+    // ADD TASK (FORM)
+    // -------------------------
+    const addTaskForm = document.getElementById('addTaskForm');
+    addTaskForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const subjectIndex = parseInt(document.getElementById('taskSubjectIndex').value);
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+    const task = {
+        id: Date.now().toString(),
+        title: document.getElementById('newTaskTitle').value.trim(),
+        dueDate: document.getElementById('newTaskDueDate').value,
+        priority: document.getElementById('newTaskPriority').value,
+        status: 'pending',
+        description: document.getElementById('newTaskDescription').value.trim(),
+        file: null,
+        fileUrl: null
+    };
+    const fileInput = document.getElementById('newTaskFile');
+    if (fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${task.id}/`);
+        task.file = fileName;
+        task.fileUrl = fileUrl;
+    }
+
+        sub.tasks.push(task);
+        saveSubjects();
+        renderSubjectDetails(subjectIndex);
+
+        addTaskForm.reset();
+        document.getElementById('addTaskModal').style.display = 'none';
+    });
+
+    // -------------------------
+    // EDIT TASK (FORM)
+    // -------------------------
+    const editTaskForm = document.getElementById('editTaskForm');
+    editTaskForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const itemIndex = parseInt(document.getElementById('editTaskIndex').value);
+        const subjectIndex = parseInt(document.getElementById('editTaskSubjectIndex').value);
+        const sub = subjects[subjectIndex];
+        if (!sub || !sub.tasks[itemIndex]) return;
+
+        const fileInput = document.getElementById('editTaskFile');
+        let fileName = sub.tasks[itemIndex].file;
+        let fileUrl = sub.tasks[itemIndex].fileUrl;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.tasks[itemIndex].id}/`);
+        }
+
+        sub.tasks[itemIndex] = {
+            title: document.getElementById('editTaskTitle').value.trim(),
+            dueDate: document.getElementById('editTaskDueDate').value,
+            priority: document.getElementById('editTaskPriority').value,
+            status: document.getElementById('editTaskStatus').value,
+            description: document.getElementById('editTaskDescription').value.trim(),
+            file: fileName,
+            fileUrl: fileUrl
+        };
+
+        saveSubjects();
+        renderSubjectDetails(subjectIndex);
+
+        closeAllModals();
+    });
+
+    // -------------------------
+    // DELETE TASK
+    // -------------------------
+    const deleteTaskBtn = document.getElementById('deleteTaskBtn');
+    deleteTaskBtn?.addEventListener('click', () => {
+        const itemIndex = parseInt(document.getElementById('editTaskIndex').value);
+        const subjectIndex = parseInt(document.getElementById('editTaskSubjectIndex').value);
+        deleteItem(subjectIndex, 'task', itemIndex);
+    });
+
+    // -------------------------
+    // ADD ASSIGNMENT (FORM)
+    // -------------------------
+    const addAssignmentForm = document.getElementById('addAssignmentForm');
+    addAssignmentForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const subjectIndex = parseInt(document.getElementById('assignmentSubjectIndex').value);
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const assignment = {
+            id: Date.now().toString(),
+            title: document.getElementById('newAssignmentTitle').value.trim(),
+            dueDate: document.getElementById('newAssignmentDueDate').value,
+            points: parseInt(document.getElementById('newAssignmentPoints').value),
+            status: document.getElementById('newAssignmentStatus').value,
+            instructions: document.getElementById('newAssignmentInstructions').value.trim(),
+            file: null,
+            fileUrl: null,
+            submissions: []
+        };
+        const fileInput = document.getElementById('newAssignmentFile');
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const fileName = file.name;
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/`);
+            assignment.file = fileName;
+            assignment.fileUrl = fileUrl;
+        }
+
+        sub.assignments.push(assignment);
+        saveSubjects();
+        renderSubjectDetails(subjectIndex);
+
+        addAssignmentForm.reset();
+        document.getElementById('addAssignmentModal').style.display = 'none';
+    });
+
+    // -------------------------
+    // EDIT ASSIGNMENT (FORM)
+    // -------------------------
+    const editAssignmentForm = document.getElementById('editAssignmentForm');
+    editAssignmentForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const itemIndex = parseInt(document.getElementById('editAssignmentIndex').value);
+        const subjectIndex = parseInt(document.getElementById('editAssignmentSubjectIndex').value);
+        const sub = subjects[subjectIndex];
+        if (!sub || !sub.assignments[itemIndex]) return;
+
+        const fileInput = document.getElementById('editAssignmentFile');
+        let fileName = sub.assignments[itemIndex].file;
+        let fileUrl = sub.assignments[itemIndex].fileUrl;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.assignments[itemIndex].id}/`);
+        }
+
+        sub.assignments[itemIndex] = {
+            title: document.getElementById('editAssignmentTitle').value.trim(),
+            dueDate: document.getElementById('editAssignmentDueDate').value,
+            points: parseInt(document.getElementById('editAssignmentPoints').value),
+            status: document.getElementById('editAssignmentStatus').value,
+            instructions: document.getElementById('editAssignmentInstructions').value.trim(),
+            file: fileName,
+            fileUrl: fileUrl,
+            submissions: sub.assignments[itemIndex].submissions || []
+        };
+
+        saveSubjects();
+        renderSubjectDetails(subjectIndex);
+
+        closeAllModals();
+    });
+
+    // -------------------------
+    // DELETE ASSIGNMENT
+    // -------------------------
+    const deleteAssignmentBtn = document.getElementById('deleteAssignmentBtn');
+    deleteAssignmentBtn?.addEventListener('click', () => {
+        const itemIndex = parseInt(document.getElementById('editAssignmentIndex').value);
+        const subjectIndex = parseInt(document.getElementById('editAssignmentSubjectIndex').value);
+        deleteItem(subjectIndex, 'assignment', itemIndex);
+    });
+
+    // -------------------------
+    // ADD LESSON (FORM)
+    // -------------------------
+    const addLessonForm = document.getElementById('addLessonForm');
+    addLessonForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const subjectIndex = parseInt(document.getElementById('lessonSubjectIndex').value);
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const lesson = {
+            id: Date.now().toString(),
+            title: document.getElementById('newLessonTitle').value.trim(),
+            duration: document.getElementById('newLessonDuration').value.trim(),
+            status: document.getElementById('newLessonStatus').value,
+            content: document.getElementById('newLessonContent').value.trim(),
+            file: null,
+            fileUrl: null
+        };
+        const fileInput = document.getElementById('newLessonFile');
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const fileName = file.name;
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${lesson.id}/`);
+            lesson.file = fileName;
+            lesson.fileUrl = fileUrl;
+        }
+
+        sub.lessons.push(lesson);
+        saveSubjects();
+        renderSubjectDetails(subjectIndex);
+
+        addLessonForm.reset();
+        document.getElementById('addLessonModal').style.display = 'none';
+    });
+
+    // -------------------------
+    // EDIT LESSON (FORM)
+    // -------------------------
+    const editLessonForm = document.getElementById('editLessonForm');
+    editLessonForm?.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const itemIndex = parseInt(document.getElementById('editLessonIndex').value);
+        const subjectIndex = parseInt(document.getElementById('editLessonSubjectIndex').value);
+        const sub = subjects[subjectIndex];
+        if (!sub || !sub.lessons[itemIndex]) return;
+
+        const fileInput = document.getElementById('editLessonFile');
+        let fileName = sub.lessons[itemIndex].file;
+        let fileUrl = sub.lessons[itemIndex].fileUrl;
+
+        if (fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.lessons[itemIndex].id}/`);
+        }
+
+        sub.lessons[itemIndex] = {
+            title: document.getElementById('editLessonTitle').value.trim(),
+            duration: document.getElementById('editLessonDuration').value.trim(),
+            status: document.getElementById('editLessonStatus').value,
+            content: document.getElementById('editLessonContent').value.trim(),
+            file: fileName,
+            fileUrl: fileUrl
+        };
+
+        saveSubjects();
+        renderSubjectDetails(subjectIndex);
+
+        closeAllModals();
+    });
+
+    // -------------------------
+    // DELETE LESSON
+    // -------------------------
+    const deleteLessonBtn = document.getElementById('deleteLessonBtn');
+    deleteLessonBtn?.addEventListener('click', () => {
+        const itemIndex = parseInt(document.getElementById('editLessonIndex').value);
+        const subjectIndex = parseInt(document.getElementById('editLessonSubjectIndex').value);
+        deleteItem(subjectIndex, 'lesson', itemIndex);
+    });
+
+    // -------------------------
+    // OPEN ADD ITEM MODAL
+    // -------------------------
+    function openAddItemModal(subjectIndex, type) {
+        if (type === 'quiz') {
+            // Custom modal for quiz
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'addQuizModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <div class="modal-body">
+                        <h2>Add New Quiz</h2>
+                        <form id="addQuizForm">
+                            <input type="hidden" id="quizSubjectIndex" value="${subjectIndex}" />
+                            <div class="form-group">
+                                <label>Quiz Title</label>
+                                <input type="text" id="newQuizTitle" required placeholder="e.g. Midterm Quiz" />
+                            </div>
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="newQuizDueDate" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="newQuizPoints" required placeholder="e.g. 50" />
+                            </div>
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <textarea id="newQuizInstructions" rows="4" placeholder="Quiz instructions..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-add-subject">Add Quiz</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'block';
+
+            modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+            modal.querySelector('#addQuizForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const sub = subjects[subjectIndex];
+                const quiz = {
+                    title: document.getElementById('newQuizTitle').value.trim(),
+                    dueDate: document.getElementById('newQuizDueDate').value,
+                    points: parseInt(document.getElementById('newQuizPoints').value),
+                    status: 'available',
+                    instructions: document.getElementById('newQuizInstructions').value.trim()
+                };
+                sub.quizzes.push(quiz);
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                modal.remove();
+            });
+        } else {
+            const modalId = `add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            document.getElementById(`${type}SubjectIndex`).value = subjectIndex;
+            modal.style.display = 'block';
+        }
+    }
+
+    // -------------------------
+    // OPEN EDIT ITEM MODAL
+    // -------------------------
+    function openEditItemModal(subjectIndex, type, itemIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const item = sub[`${type}s`][itemIndex];
+        if (!item) return;
+
+        if (type === 'quiz') {
+            // Custom edit modal for quiz
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'editQuizModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <div class="modal-body">
+                        <h2>Edit Quiz</h2>
+                        <form id="editQuizForm">
+                            <input type="hidden" id="editQuizIndex" value="${itemIndex}" />
+                            <input type="hidden" id="editQuizSubjectIndex" value="${subjectIndex}" />
+                            <div class="form-group">
+                                <label>Quiz Title</label>
+                                <input type="text" id="editQuizTitle" required value="${item.title}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="editQuizDueDate" required value="${item.dueDate}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Points</label>
+                                <input type="number" id="editQuizPoints" required value="${item.points}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <textarea id="editQuizInstructions" rows="4">${item.instructions}</textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save">Save Changes</button>
+                                <button type="button" class="btn-delete" id="deleteQuizBtn">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'block';
+
+            modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+            modal.querySelector('#editQuizForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                sub.quizzes[itemIndex] = {
+                    title: document.getElementById('editQuizTitle').value.trim(),
+                    dueDate: document.getElementById('editQuizDueDate').value,
+                    points: parseInt(document.getElementById('editQuizPoints').value),
+                    status: item.status,
+                    instructions: document.getElementById('editQuizInstructions').value.trim()
+                };
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                modal.remove();
+            });
+
+            modal.querySelector('#deleteQuizBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to delete this quiz?')) {
+                    sub.quizzes.splice(itemIndex, 1);
+                    saveSubjects();
+                    renderSubjectDetails(subjectIndex);
+                    modal.remove();
+                }
+            });
+        } else {
+            const modalId = `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            document.getElementById(`edit${type.charAt(0).toUpperCase() + type.slice(1)}Index`).value = itemIndex;
+            document.getElementById(`edit${type.charAt(0).toUpperCase() + type.slice(1)}SubjectIndex`).value = subjectIndex;
+
+            // Populate form fields based on type
+            if (type === 'task') {
+                document.getElementById('editTaskTitle').value = item.title;
+                document.getElementById('editTaskDueDate').value = item.dueDate;
+                document.getElementById('editTaskPriority').value = item.priority;
+                document.getElementById('editTaskStatus').value = item.status;
+                document.getElementById('editTaskDescription').value = item.description;
+            } else if (type === 'assignment') {
+                document.getElementById('editAssignmentTitle').value = item.title;
+                document.getElementById('editAssignmentDueDate').value = item.dueDate;
+                document.getElementById('editAssignmentPoints').value = item.points;
+                document.getElementById('editAssignmentStatus').value = item.status;
+                document.getElementById('editAssignmentInstructions').value = item.instructions;
+            } else if (type === 'lesson') {
+                document.getElementById('editLessonTitle').value = item.title;
+                document.getElementById('editLessonDuration').value = item.duration;
+                document.getElementById('editLessonStatus').value = item.status;
+                document.getElementById('editLessonContent').value = item.content;
+            }
+
+            modal.style.display = 'block';
+        }
+    }
+
+    // -------------------------
+    // OPEN SUBMIT ASSIGNMENT MODAL
+    // -------------------------
+    function openSubmitAssignmentModal(subjectIndex, assignmentIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const assignment = sub.assignments[assignmentIndex];
+        if (!assignment) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'submitAssignmentModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submit Assignment: ${assignment.title}</h2>
+                    <form id="submitAssignmentForm">
+                        <input type="hidden" id="submitSubjectIndex" value="${subjectIndex}" />
+                        <input type="hidden" id="submitAssignmentIndex" value="${assignmentIndex}" />
+                        <div class="form-group">
+                            <label>Upload Your Submission</label>
+                            <input type="file" id="submitFile" required />
+                        </div>
+                        <button type="submit" class="btn-add-subject">Submit Assignment</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+        modal.querySelector('#submitAssignmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('submitFile');
+            if (!fileInput.files[0]) {
+                alert('Please select a file to submit.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            console.log('Uploading file:', file.name);
+            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/submissions/${userData.id}/`);
+            console.log('Upload result:', fileUrl);
+
+            if (!fileUrl) {
+                alert('File upload failed. Please try again.');
+                return;
+            }
+
+            if (!assignment.submissions) assignment.submissions = [];
+            assignment.submissions.push({
+                studentId: userData.id,
+                fileName: file.name,
+                fileUrl: fileUrl,
+                submittedAt: new Date().toISOString()
+            });
+
+            saveSubjects();
+            renderSubjectDetails(subjectIndex);
+            alert('Assignment submitted successfully!');
+            modal.remove();
+        });
+    }
+
+    // -------------------------
+    // VIEW SUBMISSIONS
+    // -------------------------
+    function viewSubmissions(subjectIndex, assignmentIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const assignment = sub.assignments[assignmentIndex];
+        if (!assignment || !assignment.submissions) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'viewSubmissionsModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submissions for: ${assignment.title}</h2>
+                    <div class="submissions-list">
+                        ${assignment.submissions.map(submission => `
+                            <div class="submission-item">
+                                <p><strong>Student ID:</strong> ${submission.studentId}</p>
+                                <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
+                                <p><strong>Submitted At:</strong> ${new Date(submission.submittedAt).toLocaleString()}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    }
+
+    // -------------------------
+    // DELETE ITEM
+    // -------------------------
+    function deleteItem(subjectIndex, type, itemIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const arrayName = `${type}s`;
+        if (!sub[arrayName] || !sub[arrayName][itemIndex]) return;
+
+        if (confirm(`Are you sure you want to delete this ${type}?`)) {
+            sub[arrayName].splice(itemIndex, 1);
+            saveSubjects();
+            renderSubjectDetails(subjectIndex);
+        }
+    }
+
+    // -------------------------
+    // SAVE TO LOCALSTORAGE
+    // -------------------------
+    function saveSubjects(autoSync = true) {
+        localStorage.setItem('subjects', JSON.stringify(subjects));
+        console.log('Saving subjects to localStorage:', subjects);
+        // Auto-sync to Firestore for all users
+        if (autoSync && userData && userData.course) {
+            console.log('Auto-syncing to Firestore for course:', userData.course);
+            saveSubjectsToFirestore();
+        } else {
+            console.log('Not syncing to Firestore: autoSync=', autoSync, 'userData.course=', userData?.course);
+        }
+    }
+
+    // -------------------------
+    // LOAD SUBJECTS FROM FIRESTORE
+    // -------------------------
+    async function loadSubjectsFromFirestore(courseId) {
+        try {
+            const docRef = doc(db, "subjects", courseId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                subjects = docSnap.data().subjects || subjects;
+                saveSubjects(); // Sync to localStorage
+                renderSubjects();
+            } else {
+                // If no Firestore data, save local data to Firestore for first time
+                saveSubjectsToFirestore();
+            }
+        } catch (error) {
+            console.error("Error loading subjects from Firestore:", error);
+        }
+    }
+
+    // -------------------------
+    // SAVE SUBJECTS TO FIRESTORE
+    // -------------------------
+    async function saveSubjectsToFirestore() {
+        if (!userData || !userData.course) {
+            console.log("No course data, skipping Firestore save.");
+            return;
+        }
+
+        try {
+            await setDoc(doc(db, "subjects", userData.course), {
+                subjects: subjects,
+                lastUpdated: serverTimestamp()
+            });
+            console.log("Subjects synced to cloud successfully!");
+        } catch (error) {
+            console.error("Error saving subjects to Firestore:", error);
+            // Don't show alert to avoid spam, just log
+        }
+    }
+
+
+
+    // Initial Render
+    console.log("Initializing subjects page, initial subjects:", subjects);
+    renderSubjects();
 }
 
-// Function to stop only task listeners
-export function stopTaskListeners() {
-    Object.values(tasksListeners).forEach(unsubscribe => unsubscribe());
-    tasksListeners = {};
+// =========================
+// PROFILE PAGE FUNCTIONALITY
+// =========================
+function initializeProfile() {
+    const editBtn = document.getElementById('editProfileBtn');
+    const modal = document.getElementById('editProfileModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const cancelBtn = document.getElementById('cancelModalBtn');
+    const editForm = document.getElementById('editForm');
+
+    if (!editBtn || !modal || !editForm) return;
+
+    // Load saved profile data
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+        const data = JSON.parse(savedProfile);
+        updateProfileUI(data);
+    }
+
+    // Open Modal
+    editBtn.addEventListener('click', () => {
+        // Populate form with current values
+        document.getElementById('editName').value = document.getElementById('fullName').textContent;
+        document.getElementById('editEmail').value = document.getElementById('infoEmail').textContent;
+        document.getElementById('editPhone').value = document.getElementById('infoPhone').textContent;
+        document.getElementById('editGender').value = document.getElementById('infoGender').textContent;
+        
+        // Handle Date (Convert "March 15, 2003" to "2003-03-15")
+        const dobText = document.getElementById('infoDOB').textContent;
+        const dateObj = new Date(dobText);
+        if (!isNaN(dateObj.getTime())) {
+             document.getElementById('editDOB').value = dateObj.toISOString().split('T')[0];
+        }
+        
+        modal.style.display = 'block';
+    });
+
+    // Close Modal
+    const closeModal = () => modal.style.display = 'none';
+    if(closeBtn) closeBtn.addEventListener('click', closeModal);
+    if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Save Changes
+    editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const newData = {
+            fullName: document.getElementById('editName').value,
+            email: document.getElementById('editEmail').value,
+            phone: document.getElementById('editPhone').value,
+            dob: document.getElementById('editDOB').value,
+            gender: document.getElementById('editGender').value
+        };
+
+        // Format Date for display (YYYY-MM-DD to Month DD, YYYY)
+        const dateObj = new Date(newData.dob);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const displayDate = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('en-US', options) : newData.dob;
+        
+        const uiData = { ...newData, dob: displayDate };
+
+        updateProfileUI(uiData);
+        localStorage.setItem('userProfile', JSON.stringify(uiData));
+        
+        // Update main user data for dashboard greeting
+        const userData = JSON.parse(localStorage.getItem('userData')) || {};
+        userData.name = newData.fullName;
+        localStorage.setItem('userData', JSON.stringify(userData));
+
+        closeModal();
+    });
 }
 
-// Function to handle UI updates when subjects change
-export function handleSubjectsRealtimeUpdate(subjects) {
-    // This function can be called to update the UI
-    // Assuming there's a global function or way to update subjects list
-    if (window.updateSubjectsUI) {
-        window.updateSubjectsUI(subjects);
-    } else {
-        console.warn('updateSubjectsUI function not found. Please implement it in your main script.');
+function updateProfileUI(data) {
+    if(data.fullName) {
+        document.getElementById('fullName').textContent = data.fullName;
+        const displayName = document.getElementById('displayName');
+        if(displayName) displayName.textContent = data.fullName;
+    }
+    if(data.email) {
+        document.getElementById('infoEmail').textContent = data.email;
+        const displayEmail = document.getElementById('displayEmail');
+        if(displayEmail) displayEmail.textContent = data.email;
+    }
+    if(data.phone) document.getElementById('infoPhone').textContent = data.phone;
+    if(data.dob) document.getElementById('infoDOB').textContent = data.dob;
+    if(data.gender) document.getElementById('infoGender').textContent = data.gender;
+}
+
+// =========================
+// GRADES PAGE FUNCTIONALITY
+// =========================
+function initializeGradesTable() {
+    const rows = document.querySelectorAll('.grades-table .table-row');
+    
+    rows.forEach(row => {
+        row.addEventListener('click', () => {
+            // Close other rows (accordion style)
+            rows.forEach(r => {
+                if (r !== row) r.classList.remove('active');
+            });
+            row.classList.toggle('active');
+        });
+    });
+}
+
+function initializeGradesFilter() {
+    const controls = document.querySelector('.grades-controls');
+    if (!controls) return;
+
+    const table = document.querySelector('.grades-table');
+    if (!table) return;
+
+    const buttons = controls.querySelectorAll('button[data-term]');
+
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            const term = button.dataset.term;
+
+            // Remove all term-specific classes from the table
+            table.classList.remove('show-prelim', 'show-midterm', 'show-final');
+
+            // Add the specific class if not 'all'
+            if (term !== 'all') {
+                table.classList.add(`show-${term}`);
+            }
+        });
+    });
+}
+
+
+
+// =========================
+// MENU FILTER FUNCTIONALITY
+// =========================
+function initializeMenuFilter() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const menuItems = document.querySelectorAll('.subject-card');
+
+    if (!filterButtons.length || !menuItems.length) return;
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            button.classList.add('active');
+
+            const cuisine = button.dataset.cuisine;
+
+            // Show/hide menu items based on cuisine
+            menuItems.forEach(item => {
+                if (cuisine === 'all' || item.classList.contains(cuisine)) {
+                    item.classList.remove('hide');
+                } else {
+                    item.classList.add('hide');
+                }
+            });
+        });
+    });
+}
+
+// =========================
+// HAMBURGER TOGGLE FUNCTIONALITY
+// =========================
+function initializeHamburger() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebar = document.querySelector('.sidebar');
+
+    console.log("Initializing hamburger menu, button found:", !!hamburgerBtn, "sidebar found:", !!sidebar);
+
+    if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener('click', () => {
+            console.log("Hamburger clicked, toggling classes");
+            sidebar.classList.toggle('mobile-open');
+            hamburgerBtn.classList.toggle('mobile-open');
+            console.log("Sidebar classes:", sidebar.classList);
+            console.log("Hamburger classes:", hamburgerBtn.classList);
+        });
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
+            if (!openModal || !openModal.contains(e.target)) {
+                console.log("Clicking outside, closing sidebar");
+                sidebar.classList.remove('mobile-open');
+                hamburgerBtn.classList.remove('mobile-open');
+            }
+        }
+    });
+
+    // Close sidebar when clicking a nav item on mobile
+    const navItems = sidebar.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+                console.log("Nav item clicked, closing sidebar");
+                sidebar.classList.remove('mobile-open');
+                hamburgerBtn.classList.remove('mobile-open');
+            }
+        });
+    });
+}
+
+// =========================
+// SIDEBAR TOGGLE FUNCTIONALITY
+// =========================
+function initializeSidebarToggle() {
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebar = document.querySelector('.sidebar');
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+
+    if (sidebarToggleBtn && sidebar) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            const icon = sidebarToggleBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-chevron-right');
+                // Show hamburger on mobile when collapsed
+                if (window.innerWidth < 768 && hamburgerBtn) {
+                    hamburgerBtn.style.display = 'flex';
+                }
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-bars');
+                // Hamburger display is controlled by open state on mobile
+            }
+        });
     }
 }
 
-// Function to handle UI updates when tasks change
-export function handleTasksRealtimeUpdate(subjectId, tasks) {
-    // This function can be called to update the UI for a specific subject
-    if (window.updateTasksUI) {
-        window.updateTasksUI(subjectId, tasks);
-    } else {
-        console.warn('updateTasksUI function not found. Please implement it in your main script.');
-    }
-}
+// =========================
+// INITIALIZE EVERYTHING ON DOM
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+    initializeTheme();
+    initializeLogin();
+    initializeSignup();
+    initializeRoleToggle();
+    initializePasswordToggles();
+    initializeForgotPassword();
+    initializeDashboard();
+    initializeHelp();
+    initializeSubjects();
+    initializeProfile();
+    initializeGradesTable();
+    initializeGradesFilter();
+    initializeMenuFilter();
+    initializeHamburger();
+    initializeSidebarToggle();
+
+    // THEME BUTTONS FOR MULTIPLE PAGES
+    const darkModeBtn = document.getElementById("darkModeBtn");
+    const lightModeBtn = document.getElementById("lightModeBtn");
+    const darkThemeBtn = document.getElementById("darkThemeBtn");
+    const lightThemeBtn = document.getElementById("lightThemeBtn");
+
+    if (darkModeBtn) darkModeBtn.addEventListener("click", () => applyTheme("dark"));
+    if (lightModeBtn) lightModeBtn.addEventListener("click", () => applyTheme("light"));
+    if (darkThemeBtn) darkThemeBtn.addEventListener("click", () => applyTheme("dark"));
+    if (lightThemeBtn) lightThemeBtn.addEventListener("click", () => applyTheme("light"));
+
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+});
+
+// =========================
+// EXPORT LOGOUT & THEME
+// =========================
+export { logout, applyTheme };
+
+window.submitStudentFile = async function(subjectId, taskId, file) {
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    alert("Please login first");
+    return;
+  }
+
+  const userId = session.user.id;
+
+  const path = `${subjectId}/${taskId}/submissions/${userId}/${file.name}`;
+
+  try {
+
+    const { error } = await supabase
+      .storage
+      .from("files")
+      .upload(path, file, { upsert: true });
+
+    if (error) throw error;
+
+    const fileUrl = supabase.storage.from('files').getPublicUrl(path).data.publicUrl;
+
+    const taskRef = doc(db, "subjects", subjectId, "tasks", taskId);
+
+    await updateDoc(taskRef, {
+      submissions: arrayUnion({
+        userId,
+        name: file.name,
+        url: fileUrl,
+        time: new Date().toISOString()
+      }),
+      updatedAt: serverTimestamp()
+    });
+
+    alert("Submission successful!");
+
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed: " + err.message);
+  }
+};
