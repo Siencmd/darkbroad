@@ -1720,8 +1720,11 @@ function initializeHamburger() {
     // Close sidebar when clicking outside on mobile
     document.addEventListener('click', (e) => {
         if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-            sidebar.classList.remove('open');
-            hamburgerBtn.classList.remove('open');
+            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
+            if (!openModal || !openModal.contains(e.target)) {
+                sidebar.classList.remove('open');
+                hamburgerBtn.classList.remove('open');
+            }
         }
     });
 
