@@ -544,6 +544,51 @@
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
 
+      // Mobile navigation toggle
+      const hamburgerBtn = document.getElementById("hamburger-btn");
+      const sidebar = document.querySelector(".sidebar");
+
+      console.log("Hamburger button found:", hamburgerBtn);
+      console.log("Sidebar found:", sidebar);
+
+      if (hamburgerBtn && sidebar) {
+        console.log("Adding hamburger click listener");
+        hamburgerBtn.addEventListener("click", () => {
+          console.log("Hamburger clicked, toggling classes");
+          sidebar.classList.toggle("mobile-open");
+          hamburgerBtn.classList.toggle("mobile-open");
+          console.log("Sidebar classes:", sidebar.classList);
+          console.log("Hamburger classes:", hamburgerBtn.classList);
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+          if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
+            if (!openModal || !openModal.contains(e.target)) {
+              console.log("Clicking outside, closing sidebar");
+              sidebar.classList.remove('mobile-open');
+              hamburgerBtn.classList.remove('mobile-open');
+            }
+          }
+        });
+
+        // Close sidebar when clicking a nav item on mobile
+        const navItems = sidebar.querySelectorAll('.nav-item');
+        console.log("Nav items found:", navItems.length);
+        navItems.forEach(item => {
+          item.addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+              console.log("Nav item clicked, closing sidebar");
+              sidebar.classList.remove('mobile-open');
+              hamburgerBtn.classList.remove('mobile-open');
+            }
+          });
+        });
+      } else {
+        console.log("Hamburger button or sidebar not found");
+      }
+
       // Add animation on the web page using ScrollReveal
       ScrollReveal().reveal(".subjects-section", {
         delay: 1000,
