@@ -74,6 +74,30 @@
           <p id="forgotMessage" class="form-message" style="display: none"></p>
         </div>
 
+        <!-- Forgot Password Modal -->
+        <div id="forgotPasswordModal" class="modal">
+          <div class="modal-content">
+            <span class="close" id="closeForgotModal">&times;</span>
+            <div class="modal-body">
+              <h2>Reset Password</h2>
+              <p>Enter your email address and we'll send you a link to reset your password.</p>
+              <form id="forgotPasswordForm">
+                <div class="form-group">
+                  <label for="resetEmail">Email</label>
+                  <input
+                    type="email"
+                    id="resetEmail"
+                    placeholder="your.email@icct.edu.ph"
+                    required
+                  />
+                </div>
+                <button type="submit" class="btn-submit">Send Reset Link</button>
+              </form>
+              <p id="forgotModalMessage" class="form-message" style="display: none"></p>
+            </div>
+          </div>
+        </div>
+
         <div class="login-info">
           <h2>Your Academic Hub</h2>
           <ul class="features">
