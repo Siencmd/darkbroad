@@ -554,7 +554,13 @@
         console.log('handleAddSubject called');
         
         // Get current subjects from localStorage
-        let subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        let subjects = JSON.parse(localStorage.getItem('subjects'));
+        console.log('Current subjects from localStorage:', subjects);
+        
+        if (!subjects) {
+            subjects = [];
+            console.log('Created new empty subjects array');
+        }
         
         const subject = {
             id: Date.now().toString(),
@@ -568,11 +574,12 @@
             quizzes: []
         };
         
-        console.log('Adding subject:', subject);
+        console.log('New subject to add:', subject);
         subjects.push(subject);
         
         // Save to localStorage
-        localStorage.setItem('subjects', JSON.stringify(subjects));
+        const saved = localStorage.setItem('subjects', JSON.stringify(subjects));
+        console.log('Subjects saved to localStorage:', subjects);
         
         // Close modal and reload page to reflect changes
         document.getElementById('addSubjectForm').reset();
@@ -580,8 +587,9 @@
         
         // Reload the page after a short delay to let the modal close
         setTimeout(() => {
+            console.log('Reloading page...');
             location.reload();
-        }, 300);
+        }, 500);
         
         console.log('Subject added successfully');
       };
