@@ -2,10 +2,10 @@
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
-import { setupRealtimeTasks, stopTaskListeners } from './realtime.js';
+import { setupRealtimeSubjects } from './realtime.js';
 
 const db = getFirestore();
 
@@ -46,25 +46,7 @@ let subjects = JSON.parse(localStorage.getItem('subjects')) || [
     }
 ];
 
-// Function to setup task listeners for all subjects
-function setupTaskListeners() {
-    subjects.forEach((subject, index) => {
-        if (subject.id) {
-            setupRealtimeTasks(subject.id, (subjectId, tasks) => {
-                // Find the subject in local array and update tasks
-                const localSubject = subjects.find(s => s.id === subjectId);
-                if (localSubject) {
-                    localSubject.tasks = tasks;
-                    // Re-render if this subject is currently active
-                    const activeItem = document.querySelector('.subject-list-item.active');
-                    if (activeItem && parseInt(activeItem.dataset.index) === index) {
-                        renderSubjectDetails(index);
-                    }
-                }
-            });
-        }
-    });
-}
+
 
 // Upload file to Supabase with enhanced error handling and logging
 async function uploadFileToSupabase(file, path) {
@@ -163,7 +145,7 @@ function initializeLogin() {
 
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            const {user} = userCredential;
 
             // Fetch user role and course from Firestore (check "users" first, then "students" for backward compatibility)
             let userDoc = await getDoc(doc(db, "users", user.uid));
@@ -228,16 +210,14 @@ function initializeSignup() {
             return;
         }
 
-        if (role === "instructor") {
-            if (accessCode !== "INSTRUCTOR2026") {
-                setMessage("signupMessage", "Invalid access code for Instructor");
-                return;
-            }
+if (role === "instructor" && accessCode !== "INSTRUCTOR2026") {
+              setMessage("signupMessage", "Invalid access code for Instructor");
+              return;
         }
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            const { user } = userCredential;
 
             await updateProfile(user, { displayName: fullName });
 
@@ -281,7 +261,7 @@ function initializeRoleToggle() {
 // PASSWORD TOGGLE
 // =========================
 function initializePasswordToggles() {
-    function togglePassword(inputId, iconId) {
+    const togglePassword = function(inputId, iconId) {
         const input = document.getElementById(inputId);
         const icon = document.querySelector(`#${iconId} i`);
         if (!input || !icon) return;
@@ -293,66 +273,6 @@ function initializePasswordToggles() {
     document.getElementById("togglePassword")?.addEventListener("click", () => togglePassword("password", "togglePassword"));
     document.getElementById("toggleSignupPassword")?.addEventListener("click", () => togglePassword("signupPassword", "toggleSignupPassword"));
     document.getElementById("toggleConfirmPassword")?.addEventListener("click", () => togglePassword("confirmPassword", "toggleConfirmPassword"));
-}
-
-// =========================
-// FORGOT PASSWORD FUNCTIONALITY
-// =========================
-function initializeForgotPassword() {
-    console.log("Initializing forgot password functionality");
-    const forgotBtn = document.getElementById("forgotPasswordBtn");
-    const modal = document.getElementById("forgotPasswordModal");
-    const closeBtn = document.getElementById("closeForgotModal");
-    const form = document.getElementById("forgotPasswordForm");
-
-    console.log("Forgot password elements found:", !!forgotBtn, !!modal, !!closeBtn, !!form);
-
-    // Open modal
-    forgotBtn?.addEventListener("click", () => {
-        console.log("Forgot password button clicked");
-        modal.style.display = "block";
-        document.getElementById("forgotPasswordForm").reset();
-        setMessage("forgotModalMessage", "", false);
-    });
-
-    // Close modal
-    closeBtn?.addEventListener("click", () => {
-        console.log("Close forgot password modal clicked");
-        modal.style.display = "none";
-    });
-
-    // Close modal when clicking outside
-    window.addEventListener("click", (e) => {
-        if (e.target === modal) {
-            console.log("Clicked outside forgot password modal");
-            modal.style.display = "none";
-        }
-    });
-
-    // Handle form submission
-    form?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("resetEmail").value.trim();
-        console.log("Forgot password form submitted with email:", email);
-
-        if (!email) {
-            setMessage("forgotModalMessage", "Please enter your email address");
-            return;
-        }
-
-        try {
-            console.log("Sending password reset email to:", email);
-            await sendPasswordResetEmail(auth, email);
-            console.log("Password reset email sent successfully");
-            setMessage("forgotModalMessage", "Password reset email sent! Check your inbox.", true);
-            setTimeout(() => {
-                modal.style.display = "none";
-            }, 3000);
-        } catch (err) {
-            console.error("Error sending password reset email:", err);
-            setMessage("forgotModalMessage", err.message);
-        }
-    });
 }
 
 // =========================
@@ -450,77 +370,25 @@ function initializeSubjects() {
 
     // subjects is now defined globally at the top of the file
 
-    // Load subjects from Firestore if user is logged in
-        if (userData && userData.course) {
-            console.log("Loading subjects from Firestore for course:", userData.course);
-            loadSubjectsFromFirestore(userData.course).then(() => {
-                console.log("Subjects loaded from Firestore, setting up realtime updates");
-                // Enable realtime updates for all users in the course
-                setupRealtimeSubjectsLocal(userData.course, (updatedSubjects) => {
-                    // When subjects update, stop existing task listeners and re-setup
-                    stopTaskListeners();
-                    subjects = updatedSubjects;
-                    saveSubjects(false); // Sync to localStorage without triggering another save
-                    renderSubjects();
-                    // Re-render current subject details if any
-                    const activeItem = document.querySelector('.subject-list-item.active');
-                    if (activeItem) {
-                        renderSubjectDetails(activeItem.dataset.index);
-                    }
-                    // Setup task listeners for all subjects
-                    setupTaskListeners();
-                    console.log("Realtime update: Subjects refreshed from cloud.");
-                });
-                // Setup task listeners after subjects are loaded
-                setupTaskListeners();
-            }).catch(err => {
-                console.error("Error loading subjects from Firestore:", err);
-            });
-        } else {
-            console.log("No user data or course, using default subjects");
-        }
 
-        // Ensure we have at least default subjects if none loaded
-        if (subjects.length === 0) {
-            console.log("No subjects loaded, using defaults");
-            subjects = [
-                {
-                    name: "Mathematics",
-                    teacher: "Mr. Anderson",
-                    time: "08:00 AM - 09:30 AM",
-                    description: "Advanced Calculus and Algebra",
-                    tasks: [
-                        { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
-                    ],
-                    assignments: [
-                        { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
-                    ],
-                    lessons: [],
-                    quizzes: []
-                },
-                {
-                    name: "Physics",
-                    teacher: "Ms. Curie",
-                    time: "10:00 AM - 11:30 AM",
-                    description: "Fundamentals of Physics",
-                    tasks: [],
-                    assignments: [],
-                    lessons: [],
-                    quizzes: []
-                },
-                {
-                    name: "Computer Science",
-                    teacher: "Mr. Turing",
-                    time: "01:00 PM - 02:30 PM",
-                    description: "Algorithms and Data Structures",
-                    tasks: [],
-                    assignments: [],
-                    lessons: [],
-                    quizzes: []
+
+    // Load subjects from Firestore if user is logged in
+    if (userData && userData.course) {
+        loadSubjectsFromFirestore(userData.course).then(() => {
+            // Enable realtime updates for all users in the course
+            setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                subjects = updatedSubjects;
+                saveSubjects(false); // Sync to localStorage without triggering another save
+                renderSubjects();
+                // Re-render current subject details if any
+                const activeItem = document.querySelector('.subject-list-item.active');
+                if (activeItem) {
+                    renderSubjectDetails(activeItem.dataset.index);
                 }
-            ];
-            saveSubjects(false);
-        }
+                console.log("Realtime update: Subjects refreshed from cloud.");
+            });
+        });
+    }
 
     // Dummy lessons data
     const dummyLessons = [
@@ -533,8 +401,7 @@ function initializeSubjects() {
     // -------------------------
     // RENDER SUBJECTS
     // -------------------------
-    function renderSubjects() {
-        console.log("Rendering subjects:", subjects);
+    const renderSubjects = () => {
         listContainer.innerHTML = subjects.map((sub, index) => `
             <div class="subject-list-item" data-index="${index}">
                 <h4>${sub.name}</h4>
@@ -545,7 +412,6 @@ function initializeSubjects() {
         // Add click listeners
         document.querySelectorAll('.subject-list-item').forEach(item => {
             item.addEventListener('click', () => {
-                console.log("Subject item clicked:", item.dataset.index);
                 // Remove active class from all
                 document.querySelectorAll('.subject-list-item').forEach(i => i.classList.remove('active'));
                 // Add active to clicked
@@ -559,7 +425,7 @@ function initializeSubjects() {
     // -------------------------
     // RENDER DETAILS
     // -------------------------
-    function renderSubjectDetails(index) {
+    const renderSubjectDetails = (index) => {
         const sub = subjects[index];
         if (!sub) return;
 
@@ -572,6 +438,9 @@ function initializeSubjects() {
         const isInstructor = userRole === 'instructor';
         console.log('User role in renderSubjectDetails:', userRole); // Debug log
         console.log('Rendering for instructor:', isInstructor); // Debug log
+
+        // Preserve active tab
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'tasks';
 
         detailsContainer.innerHTML = `
             <div class="detail-header">
@@ -649,18 +518,18 @@ function initializeSubjects() {
                                     <p>Due: ${assignment.dueDate} | Points: ${assignment.points} | Status: ${assignment.status}</p>
                                     <p>${assignment.instructions}</p>
                                     ${assignment.file ? `<p><i class="fas fa-paperclip"></i> <a href="${assignment.fileUrl}" target="_blank">${assignment.file}</a></p>` : ''}
-                                    ${!isInstructor ? `
+                                    ${isInstructor ? `
+                                    <div class="instructor-actions">
+                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}">
+                                            <i class="fas fa-eye"></i> View Submissions (${assignment.submissions ? assignment.submissions.length : 0})
+                                        </button>
+                                    </div>
+                                    ` : `
                                     <div class="student-actions">
                                         <button class="btn-submit-assignment" data-assignment-index="${i}" data-subject-index="${index}">
                                             <i class="fas fa-upload"></i> Submit Assignment
                                         </button>
                                         ${assignment.submissions && assignment.submissions.find(s => s.studentId === userData.id) ? '<p><i class="fas fa-check"></i> Submitted</p>' : ''}
-                                    </div>
-                                    ` : `
-                                    <div class="instructor-actions">
-                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}">
-                                            <i class="fas fa-eye"></i> View Submissions (${assignment.submissions ? assignment.submissions.length : 0})
-                                        </button>
                                     </div>
                                     `}
                                 </div>
@@ -765,29 +634,24 @@ function initializeSubjects() {
         // Add click listeners for Add Item buttons
         document.querySelectorAll('.btn-add-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const type = btn.dataset.type;
-                const subjectIndex = parseInt(btn.dataset.subjectIndex);
-                openAddItemModal(subjectIndex, type);
+                const { type, subjectIndex } = btn.dataset;
+                openAddItemModal(parseInt(subjectIndex), type);
             });
         });
 
         // Add click listeners for Edit Item buttons
         document.querySelectorAll('.btn-edit-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const type = btn.dataset.type;
-                const itemIndex = parseInt(btn.dataset.itemIndex);
-                const subjectIndex = parseInt(btn.dataset.subjectIndex);
-                openEditItemModal(subjectIndex, type, itemIndex);
+                const { type, itemIndex, subjectIndex } = btn.dataset;
+                openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
             });
         });
 
         // Add click listeners for Delete Item buttons
         document.querySelectorAll('.btn-delete-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const type = btn.dataset.type;
-                const itemIndex = parseInt(btn.dataset.itemIndex);
-                const subjectIndex = parseInt(btn.dataset.subjectIndex);
-                deleteItem(subjectIndex, type, itemIndex);
+                const { type, itemIndex, subjectIndex } = btn.dataset;
+                deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
             });
         });
 
@@ -816,20 +680,91 @@ function initializeSubjects() {
                 saveSubjectsToFirestore();
             });
         });
+
+        // Re-attach listeners for dynamically added buttons
+        attachDynamicListeners();
+    }
+
+    // Function to attach listeners for buttons that are added dynamically
+    const attachDynamicListeners = function() {
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // Add click listeners for Add Item buttons
+        document.querySelectorAll('.btn-add-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const { type, subjectIndex } = btn.dataset;
+                openAddItemModal(parseInt(subjectIndex), type);
+            });
+        });
+
+        // Add click listeners for Edit Item buttons
+        document.querySelectorAll('.btn-edit-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const { type, itemIndex, subjectIndex } = btn.dataset;
+                openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
+            });
+        });
+
+        // Add click listeners for Delete Item buttons
+        document.querySelectorAll('.btn-delete-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const { type, itemIndex, subjectIndex } = btn.dataset;
+                deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
+            });
+        });
+
+        // Add click listeners for Submit Assignment buttons
+        document.querySelectorAll('.btn-submit-assignment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                openSubmitAssignmentModal(subjectIndex, assignmentIndex);
+            });
+        });
+
+        // Add click listeners for View Submissions buttons
+        document.querySelectorAll('.btn-view-submissions').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
+                const subjectIndex = parseInt(btn.dataset.subjectIndex);
+                viewSubmissions(subjectIndex, assignmentIndex);
+            });
+        });
+
+        // Add click listener for Edit button in details
+        document.querySelector('.btn-edit-subject')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditModal(e.target.closest('.btn-edit-subject').dataset.index);
+        });
+
+        // Add click listener for Sync to Cloud button
+        document.querySelectorAll('.btn-sync-cloud').forEach(btn => {
+            btn.addEventListener('click', () => {
+                saveSubjects(false); // Save without auto-sync to avoid double save
+                saveSubjectsToFirestore();
+            });
+        });
     }
 
     // -------------------------
     // OPEN ADD MODAL
     // -------------------------
     addBtn?.addEventListener('click', () => {
-        console.log("Add subject button clicked");
         addModal.style.display = 'block';
     });
 
     // -------------------------
     // OPEN EDIT MODAL
     // -------------------------
-    function openEditModal(index) {
+    const openEditModal = function(index) {
         const sub = subjects[index];
         if (!sub) return;
 
@@ -849,7 +784,7 @@ function initializeSubjects() {
     // -------------------------
     // CLOSE MODALS
     // -------------------------
-    function closeAllModals() {
+    const closeAllModals = function() {
         document.querySelectorAll('.modal').forEach(modal => {
             modal.style.display = 'none';
         });
@@ -891,20 +826,7 @@ function initializeSubjects() {
         saveSubjects();
         renderSubjects();
 
-        // Setup task listener for the new subject
-        setupRealtimeTasks(subject.id, (subjectId, tasks) => {
-            // Find the subject in local array and update tasks
-            const localSubject = subjects.find(s => s.id === subjectId);
-            if (localSubject) {
-                localSubject.tasks = tasks;
-                // Re-render if this subject is currently active
-                const activeItem = document.querySelector('.subject-list-item.active');
-                const subjectIndex = subjects.findIndex(s => s.id === subjectId);
-                if (activeItem && parseInt(activeItem.dataset.index) === subjectIndex) {
-                    renderSubjectDetails(subjectIndex);
-                }
-            }
-        });
+
 
         addForm.reset();
         addModal.style.display = 'none';
@@ -990,6 +912,12 @@ function initializeSubjects() {
         saveSubjects();
         renderSubjectDetails(subjectIndex);
 
+        // Switch to tasks tab
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('.tab-btn[data-tab="tasks"]').classList.add('active');
+        document.getElementById('tasks-tab').classList.add('active');
+
         addTaskForm.reset();
         document.getElementById('addTaskModal').style.display = 'none';
     });
@@ -1007,13 +935,12 @@ function initializeSubjects() {
         if (!sub || !sub.tasks[itemIndex]) return;
 
         const fileInput = document.getElementById('editTaskFile');
-        let fileName = sub.tasks[itemIndex].file;
-        let fileUrl = sub.tasks[itemIndex].fileUrl;
+        const { file: fileName, fileUrl, id: taskId } = sub.tasks[itemIndex];
 
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.tasks[itemIndex].id}/`);
+            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${taskId}/`);
         }
 
         sub.tasks[itemIndex] = {
@@ -1094,13 +1021,14 @@ function initializeSubjects() {
         if (!sub || !sub.assignments[itemIndex]) return;
 
         const fileInput = document.getElementById('editAssignmentFile');
-        let fileName = sub.assignments[itemIndex].file;
-        let fileUrl = sub.assignments[itemIndex].fileUrl;
+        const { file, fileUrl, id: assignmentId } = sub.assignments[itemIndex];
+        let fileName = file;
+        let updatedFileUrl = fileUrl;
 
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
             fileName = file.name;
-            fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${sub.assignments[itemIndex].id}/`);
+            updatedFileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignmentId}/`);
         }
 
         sub.assignments[itemIndex] = {
@@ -1110,7 +1038,7 @@ function initializeSubjects() {
             status: document.getElementById('editAssignmentStatus').value,
             instructions: document.getElementById('editAssignmentInstructions').value.trim(),
             file: fileName,
-            fileUrl: fileUrl,
+            fileUrl: updatedFileUrl,
             submissions: sub.assignments[itemIndex].submissions || []
         };
 
@@ -1180,8 +1108,7 @@ function initializeSubjects() {
         if (!sub || !sub.lessons[itemIndex]) return;
 
         const fileInput = document.getElementById('editLessonFile');
-        let fileName = sub.lessons[itemIndex].file;
-        let fileUrl = sub.lessons[itemIndex].fileUrl;
+        let { file: fileName, fileUrl } = sub.lessons[itemIndex];
 
         if (fileInput.files[0]) {
             const file = fileInput.files[0];
@@ -1217,7 +1144,7 @@ function initializeSubjects() {
     // -------------------------
     // OPEN ADD ITEM MODAL
     // -------------------------
-    function openAddItemModal(subjectIndex, type) {
+    const openAddItemModal = function(subjectIndex, type) {
         if (type === 'quiz') {
             // Custom modal for quiz
             const modal = document.createElement('div');
@@ -1284,7 +1211,7 @@ function initializeSubjects() {
     // -------------------------
     // OPEN EDIT ITEM MODAL
     // -------------------------
-    function openEditItemModal(subjectIndex, type, itemIndex) {
+    const openEditItemModal = function(subjectIndex, type, itemIndex) {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
@@ -1390,7 +1317,7 @@ function initializeSubjects() {
     // -------------------------
     // OPEN SUBMIT ASSIGNMENT MODAL
     // -------------------------
-    function openSubmitAssignmentModal(subjectIndex, assignmentIndex) {
+    const openSubmitAssignmentModal = function(subjectIndex, assignmentIndex) {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
@@ -1458,7 +1385,7 @@ function initializeSubjects() {
     // -------------------------
     // VIEW SUBMISSIONS
     // -------------------------
-    function viewSubmissions(subjectIndex, assignmentIndex) {
+    const viewSubmissions = function(subjectIndex, assignmentIndex) {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
@@ -1489,12 +1416,12 @@ function initializeSubjects() {
         modal.style.display = 'block';
 
         modal.querySelector('.close').addEventListener('click', () => modal.remove());
-    }
+    };
 
     // -------------------------
     // DELETE ITEM
     // -------------------------
-    function deleteItem(subjectIndex, type, itemIndex) {
+    const deleteItem = function(subjectIndex, type, itemIndex) {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
@@ -1506,12 +1433,12 @@ function initializeSubjects() {
             saveSubjects();
             renderSubjectDetails(subjectIndex);
         }
-    }
+    };
 
     // -------------------------
     // SAVE TO LOCALSTORAGE
     // -------------------------
-    function saveSubjects(autoSync = true) {
+    const saveSubjects = function(autoSync = true) {
         localStorage.setItem('subjects', JSON.stringify(subjects));
         console.log('Saving subjects to localStorage:', subjects);
         // Auto-sync to Firestore for all users
@@ -1526,7 +1453,7 @@ function initializeSubjects() {
     // -------------------------
     // LOAD SUBJECTS FROM FIRESTORE
     // -------------------------
-    async function loadSubjectsFromFirestore(courseId) {
+    const loadSubjectsFromFirestore = async function(courseId) {
         try {
             const docRef = doc(db, "subjects", courseId);
             const docSnap = await getDoc(docRef);
@@ -1547,7 +1474,7 @@ function initializeSubjects() {
     // -------------------------
     // SAVE SUBJECTS TO FIRESTORE
     // -------------------------
-    async function saveSubjectsToFirestore() {
+    const saveSubjectsToFirestore = async function() {
         if (!userData || !userData.course) {
             console.log("No course data, skipping Firestore save.");
             return;
@@ -1565,10 +1492,33 @@ function initializeSubjects() {
         }
     }
 
-
+    // -------------------------
+    // SETUP REALTIME SUBJECTS
+    // -------------------------
+    const setupRealtimeSubjects = function(courseId, onSubjectsUpdate) {
+        const docRef = doc(db, "subjects", courseId);
+        onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                subjects = docSnap.data().subjects || subjects;
+                saveSubjects(false); // Sync to localStorage without triggering another save
+                renderSubjects();
+                // Re-render current subject details if any
+                const activeItem = document.querySelector('.subject-list-item.active');
+                if (activeItem) {
+                    renderSubjectDetails(activeItem.dataset.index);
+                }
+                // Call the callback if provided
+                if (onSubjectsUpdate) {
+                    onSubjectsUpdate(subjects);
+                }
+                console.log("Realtime update: Subjects refreshed from cloud.");
+            }
+        }, (error) => {
+            console.error("Realtime listener error:", error);
+        });
+    }
 
     // Initial Render
-    console.log("Initializing subjects page, initial subjects:", subjects);
     renderSubjects();
 }
 
@@ -1632,7 +1582,7 @@ function initializeProfile() {
         // Format Date for display (YYYY-MM-DD to Month DD, YYYY)
         const dateObj = new Date(newData.dob);
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        const displayDate = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('en-US', options) : newData.dob;
+        const displayDate = isNaN(dateObj.getTime()) ? newData.dob : dateObj.toLocaleDateString('en-US', options);
         
         const uiData = { ...newData, dob: displayDate };
 
@@ -1696,7 +1646,7 @@ function initializeGradesFilter() {
             buttons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
-            const term = button.dataset.term;
+            const { term } = button.dataset;
 
             // Remove all term-specific classes from the table
             table.classList.remove('show-prelim', 'show-midterm', 'show-final');
@@ -1727,7 +1677,7 @@ function initializeMenuFilter() {
             // Add active class to clicked button
             button.classList.add('active');
 
-            const cuisine = button.dataset.cuisine;
+            const { cuisine } = button.dataset;
 
             // Show/hide menu items based on cuisine
             menuItems.forEach(item => {
@@ -1747,70 +1697,39 @@ function initializeMenuFilter() {
 function initializeHamburger() {
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const sidebar = document.querySelector('.sidebar');
-
-    console.log("Initializing hamburger menu, button found:", !!hamburgerBtn, "sidebar found:", !!sidebar);
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
 
     if (hamburgerBtn && sidebar) {
         hamburgerBtn.addEventListener('click', () => {
-            console.log("Hamburger clicked, toggling classes");
-            sidebar.classList.toggle('mobile-open');
-            hamburgerBtn.classList.toggle('mobile-open');
-            console.log("Sidebar classes:", sidebar.classList);
-            console.log("Hamburger classes:", hamburgerBtn.classList);
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('mobile-open');
+                hamburgerBtn.classList.toggle('mobile-open');
+            }
+        });
+    }
+
+    if (sidebarCloseBtn && sidebar) {
+        sidebarCloseBtn.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            if (hamburgerBtn) hamburgerBtn.classList.remove('mobile-open');
         });
     }
 
     // Close sidebar when clicking outside on mobile
     document.addEventListener('click', (e) => {
         if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
-            if (!openModal || !openModal.contains(e.target)) {
-                console.log("Clicking outside, closing sidebar");
-                sidebar.classList.remove('mobile-open');
-                hamburgerBtn.classList.remove('mobile-open');
-            }
+            sidebar.classList.remove('mobile-open');
+            if (hamburgerBtn) hamburgerBtn.classList.remove('mobile-open');
         }
     });
 
-    // Close sidebar when clicking a nav item on mobile
-    const navItems = sidebar.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-                console.log("Nav item clicked, closing sidebar");
-                sidebar.classList.remove('mobile-open');
-                hamburgerBtn.classList.remove('mobile-open');
-            }
-        });
+    // Close sidebar on resize to desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+            sidebar.classList.remove('mobile-open');
+            if (hamburgerBtn) hamburgerBtn.classList.remove('mobile-open');
+        }
     });
-}
-
-// =========================
-// SIDEBAR TOGGLE FUNCTIONALITY
-// =========================
-function initializeSidebarToggle() {
-    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-    const sidebar = document.querySelector('.sidebar');
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-
-    if (sidebarToggleBtn && sidebar) {
-        sidebarToggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            const icon = sidebarToggleBtn.querySelector('i');
-            if (sidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-chevron-right');
-                // Show hamburger on mobile when collapsed
-                if (window.innerWidth < 768 && hamburgerBtn) {
-                    hamburgerBtn.style.display = 'flex';
-                }
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-bars');
-                // Hamburger display is controlled by open state on mobile
-            }
-        });
-    }
 }
 
 // =========================
@@ -1822,7 +1741,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeSignup();
     initializeRoleToggle();
     initializePasswordToggles();
-    initializeForgotPassword();
     initializeDashboard();
     initializeHelp();
     initializeSubjects();
@@ -1831,7 +1749,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeGradesFilter();
     initializeMenuFilter();
     initializeHamburger();
-    initializeSidebarToggle();
 
     // THEME BUTTONS FOR MULTIPLE PAGES
     const darkModeBtn = document.getElementById("darkModeBtn");
