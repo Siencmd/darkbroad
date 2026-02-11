@@ -123,7 +123,7 @@
           <span class="close" onclick="closeModal('addSubjectModal')">&times;</span>
           <div class="modal-body">
             <h2>Add New Subject</h2>
-            <form id="addSubjectForm">
+            <form id="addSubjectForm" onsubmit="return handleAddSubject(event)">
               <div class="form-group">
                 <label>Subject Name</label>
                 <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
@@ -194,7 +194,7 @@
     
     <!-- Modal Functions -->
     <script>
-      // Modal functions (non-module for immediate availability)
+      // Modal functions
       function openModal(modalId) {
         var modal = document.getElementById(modalId);
         if (modal) {
@@ -209,22 +209,15 @@
         }
       }
       
-      // Close modal when clicking outside
-      window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) {
-          event.target.style.display = 'none';
-        }
-      };
-      
-      // Add Subject Modal Handler
+      // Add Subject Modal
       document.getElementById('addSubjectBtn')?.addEventListener('click', function() {
         openModal('addSubjectModal');
       });
       
-      document.getElementById('addSubjectForm')?.addEventListener('submit', function(e) {
+      // Handle Add Subject Form
+      window.handleAddSubject = function(e) {
         e.preventDefault();
-        alert('Form submitted! Adding subject...');
-        console.log('Add subject form submitted');
+        alert('Adding subject...');
         
         var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
         var subject = {
@@ -241,12 +234,14 @@
         
         subjects.push(subject);
         localStorage.setItem('subjects', JSON.stringify(subjects));
-        console.log('Subject added:', subject);
+        alert('Subject added successfully!');
         
-        this.reset();
+        document.getElementById('addSubjectForm').reset();
         closeModal('addSubjectModal');
-        setTimeout(function() { location.reload(); }, 300);
-      });
+        setTimeout(function() { location.reload(); }, 500);
+        
+        return false;
+      };
     </script>
     
     <script type="module">
