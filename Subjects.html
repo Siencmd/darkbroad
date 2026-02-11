@@ -152,7 +152,7 @@
                     <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
                   </div>
 
-                  <button type="submit" class="btn-add-subject">
+                  <button type="button" class="btn-add-subject" onclick="handleAddSubject(event)">
                     <i class="fas fa-check"></i> Save Subject
                   </button>
                 </form>
@@ -553,6 +553,13 @@
         e.preventDefault();
         console.log('handleAddSubject called');
         
+        // Check if window.subjects exists
+        if (!window.subjects) {
+            console.error('window.subjects is not defined!');
+            // Try to get it from the module
+            window.subjects = window.subjects || JSON.parse(localStorage.getItem('subjects')) || [];
+        }
+        
         const subject = {
             id: Date.now().toString(),
             name: document.getElementById('newSubjectName').value.trim(),
@@ -567,8 +574,17 @@
         
         console.log('Adding subject:', subject);
         window.subjects.push(subject);
-        window.saveSubjects();
-        window.renderSubjects();
+        
+        // Save to localStorage
+        localStorage.setItem('subjects', JSON.stringify(window.subjects));
+        
+        // Re-render if renderSubjects is available
+        if (window.renderSubjects) {
+            window.renderSubjects();
+        } else {
+            console.warn('renderSubjects not available, reloading page');
+            location.reload();
+        }
         
         document.getElementById('addSubjectForm').reset();
         document.getElementById('addSubjectModal').style.display = 'none';
