@@ -9,6 +9,8 @@ import { supabase } from './supabase.js';
 // Load realtime helpers lazily so a 404 on realtime.js does not break the whole app.
 let setupRealtimeSubjects = () => null;
 let stopTaskListeners = () => {};
+let subjectsRealtimeUnsubscribe = null;
+let disableSubjectsRealtime = false;
 
 import('./realtime.js')
     .then((mod) => {
@@ -252,7 +254,7 @@ function initializeSignup() {
         const confirmPassword = document.getElementById("confirmPassword").value;
         const phone = document.getElementById("phone").value.trim();
         const course = document.getElementById("course").value.trim();
-        const role = document.querySelector('input[name="role"]:checked').value;
+        const role = document.querySelector('input[name="role"]:checked').value.toLowerCase();
         const accessCode = document.getElementById("accessCode").value.trim();
 
         if (!fullName || !email || !password || !confirmPassword || !course) {
@@ -418,10 +420,21 @@ async function saveSubjectsToFirestore() {
             subjects: subjects,
             lastUpdated: serverTimestamp()
         });
+        disableSubjectsRealtime = false;
         console.log("Subjects synced to cloud successfully!");
+        return true;
     } catch (error) {
         console.error("Error saving subjects to Firestore:", error);
-        // Don't show alert to avoid spam, just log
+        if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+            // Prevent cloud snapshot from rolling back local instructor edits.
+            disableSubjectsRealtime = true;
+            if (typeof subjectsRealtimeUnsubscribe === 'function') {
+                subjectsRealtimeUnsubscribe();
+                subjectsRealtimeUnsubscribe = null;
+            }
+            console.warn("Cloud write denied. Continuing in local mode.");
+        }
+        return false;
     }
 }
 
@@ -575,8 +588,14 @@ function initializeSubjects() {
                     renderSubjects();
                     return;
                 }
+                // Hybrid mode: prioritize local-first editing for instructor accounts.
+                if (isInstructorRole) {
+                    renderSubjects();
+                    return;
+                }
                 // Enable realtime updates for all users in the course
-                setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                    if (disableSubjectsRealtime) return;
                     // When subjects update, stop existing task listeners and re-setup
                     stopTaskListeners();
                     subjects = updatedSubjects;
