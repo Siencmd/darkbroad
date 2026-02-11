@@ -5,7 +5,23 @@ import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
-import { setupRealtimeSubjects, setupRealtimeTasks, stopTaskListeners } from './realtime.js';
+
+// Load realtime helpers lazily so a 404 on realtime.js does not break the whole app.
+let setupRealtimeSubjects = () => null;
+let stopTaskListeners = () => {};
+
+import('./realtime.js')
+    .then((mod) => {
+        if (typeof mod.setupRealtimeSubjects === 'function') {
+            setupRealtimeSubjects = mod.setupRealtimeSubjects;
+        }
+        if (typeof mod.stopTaskListeners === 'function') {
+            stopTaskListeners = mod.stopTaskListeners;
+        }
+    })
+    .catch((error) => {
+        console.warn('Realtime module unavailable. Continuing without realtime sync:', error.message);
+    });
 
 const db = getFirestore();
 
