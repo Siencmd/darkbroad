@@ -619,10 +619,10 @@ function initializeSubjects() {
                 <p class="detail-description">${sub.description || "No description available."}</p>
             ${isInstructor ? `
             <div class="detail-actions">
-                <button class="btn-edit-subject" data-index="${index}">
+                <button class="btn-edit-subject" data-index="${index}" onclick="window.subjectsOpenEditModal(${index})">
                     <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn-sync-cloud" data-index="${index}">
+                <button class="btn-sync-cloud" data-index="${index}" onclick="window.subjectsSyncToCloud()">
                     <i class="fas fa-cloud-upload-alt"></i> Sync to Cloud
                 </button>
             </div>
@@ -630,17 +630,17 @@ function initializeSubjects() {
             </div>
 
             <div class="subject-tabs">
-                <button class="tab-btn active" data-tab="tasks">Tasks</button>
-                <button class="tab-btn" data-tab="assignments">Assignments</button>
-                <button class="tab-btn" data-tab="lessons">Lessons</button>
-                <button class="tab-btn" data-tab="quizzes">Quizzes</button>
+                <button class="tab-btn active" data-tab="tasks" onclick="window.subjectsSwitchTab('tasks')">Tasks</button>
+                <button class="tab-btn" data-tab="assignments" onclick="window.subjectsSwitchTab('assignments')">Assignments</button>
+                <button class="tab-btn" data-tab="lessons" onclick="window.subjectsSwitchTab('lessons')">Lessons</button>
+                <button class="tab-btn" data-tab="quizzes" onclick="window.subjectsSwitchTab('quizzes')">Quizzes</button>
             </div>
 
             <div class="tab-content active" id="tasks-tab">
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-tasks"></i> Tasks</h3>
-                        ${isInstructor ? `<button class="btn-add-item" data-type="task" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="task" data-subject-index="${index}" onclick="window.subjectsOpenAddItemModal(${index}, 'task')">
                             <i class="fas fa-plus"></i> Add Task
                         </button>` : ''}
                     </div>
@@ -655,10 +655,10 @@ function initializeSubjects() {
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
-                                    <button class="btn-edit-item" data-type="task" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-edit-item" data-type="task" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'task', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-delete-item" data-type="task" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-delete-item" data-type="task" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'task', ${i})">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -673,7 +673,7 @@ function initializeSubjects() {
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-clipboard-list"></i> Assignments</h3>
-                        ${isInstructor ? `<button class="btn-add-item" data-type="assignment" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="assignment" data-subject-index="${index}" onclick="window.subjectsOpenAddItemModal(${index}, 'assignment')">
                             <i class="fas fa-plus"></i> Add Assignment
                         </button>` : ''}
                     </div>
@@ -687,13 +687,13 @@ function initializeSubjects() {
                                     ${assignment.file ? `<p><i class="fas fa-paperclip"></i> <a href="${assignment.fileUrl}" target="_blank">${assignment.file}</a></p>` : ''}
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
-                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}">
+                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewSubmissions(${index}, ${i})">
                                             <i class="fas fa-eye"></i> View Submissions (${assignment.submissions ? assignment.submissions.length : 0})
                                         </button>
                                     </div>
                                     ` : `
                                     <div class="student-actions">
-                                        <button class="btn-submit-assignment" data-assignment-index="${i}" data-subject-index="${index}">
+                                        <button class="btn-submit-assignment" data-assignment-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitAssignmentModal(${index}, ${i})">
                                             <i class="fas fa-upload"></i> Submit Assignment
                                         </button>
                                         ${assignment.submissions && assignment.submissions.find(s => s.studentId === userData.id) ? '<p><i class="fas fa-check"></i> Submitted</p>' : ''}
@@ -702,10 +702,10 @@ function initializeSubjects() {
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
-                                    <button class="btn-edit-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-edit-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'assignment', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-delete-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-delete-item" data-type="assignment" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'assignment', ${i})">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -720,7 +720,7 @@ function initializeSubjects() {
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-book-open"></i> Lessons</h3>
-                        ${isInstructor ? `<button class="btn-add-item" data-type="lesson" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="lesson" data-subject-index="${index}" onclick="window.subjectsOpenAddItemModal(${index}, 'lesson')">
                             <i class="fas fa-plus"></i> Add Lesson
                         </button>` : ''}
                     </div>
@@ -735,10 +735,10 @@ function initializeSubjects() {
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
-                                    <button class="btn-edit-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-edit-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'lesson', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-delete-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-delete-item" data-type="lesson" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'lesson', ${i})">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -753,7 +753,7 @@ function initializeSubjects() {
                 <div class="items-container">
                     <div class="items-header">
                         <h3><i class="fas fa-question-circle"></i> Quizzes</h3>
-                        ${isInstructor ? `<button class="btn-add-item" data-type="quiz" data-subject-index="${index}">
+                        ${isInstructor ? `<button class="btn-add-item" data-type="quiz" data-subject-index="${index}" onclick="window.subjectsOpenAddItemModal(${index}, 'quiz')">
                             <i class="fas fa-plus"></i> Add Quiz
                         </button>` : ''}
                     </div>
@@ -767,10 +767,10 @@ function initializeSubjects() {
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
-                                    <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'quiz', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
+                                    <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'quiz', ${i})">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -782,70 +782,8 @@ function initializeSubjects() {
             </div>
         `;
 
-        // Add click listener for Edit button in details
-        document.querySelector('.btn-edit-subject')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openEditModal(e.target.closest('.btn-edit-subject').dataset.index);
-        });
-
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
-            });
-        });
-
-        // Add click listeners for Add Item buttons
-        document.querySelectorAll('.btn-add-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { type, subjectIndex } = btn.dataset;
-                openAddItemModal(parseInt(subjectIndex), type);
-            });
-        });
-
-        // Add click listeners for Edit Item buttons
-        document.querySelectorAll('.btn-edit-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { type, itemIndex, subjectIndex } = btn.dataset;
-                openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
-            });
-        });
-
-        // Add click listeners for Delete Item buttons
-        document.querySelectorAll('.btn-delete-item').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const { type, itemIndex, subjectIndex } = btn.dataset;
-                deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
-            });
-        });
-
-        // Add click listeners for Submit Assignment buttons
-        document.querySelectorAll('.btn-submit-assignment').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const { assignmentIndex, subjectIndex } = btn.dataset;
-                openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
-            });
-        });
-
-        // Add click listeners for View Submissions buttons
-        document.querySelectorAll('.btn-view-submissions').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const assignmentIndex = parseInt(btn.dataset.assignmentIndex);
-                const subjectIndex = parseInt(btn.dataset.subjectIndex);
-                viewSubmissions(subjectIndex, assignmentIndex);
-            });
-        });
-
-        // Add click listener for Sync to Cloud button
-        document.querySelectorAll('.btn-sync-cloud').forEach(btn => {
-            btn.addEventListener('click', () => {
-                saveSubjects(false); // Save without auto-sync to avoid double save
-                saveSubjectsToFirestore();
-            });
-        });
+        // Keep a default visible tab state after each render.
+        switchTab('tasks');
     };
 
 
@@ -886,6 +824,15 @@ function initializeSubjects() {
         document.querySelectorAll('.modal').forEach(modal => {
             modal.style.display = 'none';
         });
+    }
+
+    const switchTab = function(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+        const tabContent = document.getElementById(`${tab}-tab`);
+        if (tabBtn) tabBtn.classList.add('active');
+        if (tabContent) tabContent.classList.add('active');
     }
 
     document.querySelectorAll('.modal .close').forEach(btn => {
@@ -1614,6 +1561,23 @@ function initializeSubjects() {
             saveSubjects();
             renderSubjectDetails(subjectIndex);
         }
+    };
+
+    // Expose handlers for inline onclick in Subjects page.
+    window.subjectsOpenAddSubjectModal = () => {
+        if (addModal) addModal.style.display = 'block';
+    };
+    window.subjectsCloseAllModals = closeAllModals;
+    window.subjectsOpenEditModal = (index) => openEditModal(parseInt(index));
+    window.subjectsOpenAddItemModal = (subjectIndex, type) => openAddItemModal(parseInt(subjectIndex), type);
+    window.subjectsOpenEditItemModal = (subjectIndex, type, itemIndex) => openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
+    window.subjectsDeleteItem = (subjectIndex, type, itemIndex) => deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
+    window.subjectsOpenSubmitAssignmentModal = (subjectIndex, assignmentIndex) => openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
+    window.subjectsViewSubmissions = (subjectIndex, assignmentIndex) => viewSubmissions(parseInt(subjectIndex), parseInt(assignmentIndex));
+    window.subjectsSwitchTab = (tab) => switchTab(tab);
+    window.subjectsSyncToCloud = () => {
+        saveSubjects(false);
+        saveSubjectsToFirestore();
     };
 
     // -------------------------
