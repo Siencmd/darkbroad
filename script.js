@@ -389,6 +389,8 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
 // SUBJECTS PAGE FUNCTIONALITY
 // =========================
 function initializeSubjects() {
+    console.log('initializeSubjects called');
+    
     const listContainer = document.getElementById('subjectsList');
     const detailsContainer = document.getElementById('subjectDetailsPanel');
     const addBtn = document.getElementById('addSubjectBtn');
@@ -397,6 +399,17 @@ function initializeSubjects() {
     const editModal = document.getElementById('editSubjectModal');
     const editForm = document.getElementById('editSubjectForm');
     const deleteBtn = document.getElementById('deleteSubjectBtn');
+
+    console.log('DOM elements found:', {
+        listContainer: !!listContainer,
+        detailsContainer: !!detailsContainer,
+        addBtn: !!addBtn,
+        addModal: !!addModal,
+        addForm: !!addForm,
+        editModal: !!editModal,
+        editForm: !!editForm,
+        deleteBtn: !!deleteBtn
+    });
 
     if (!listContainer || !detailsContainer) return;
 
@@ -790,7 +803,13 @@ function initializeSubjects() {
     // OPEN ADD MODAL
     // -------------------------
     addBtn?.addEventListener('click', () => {
-        addModal.style.display = 'block';
+        console.log('Add Subject button clicked');
+        console.log('addModal exists:', !!addModal);
+        if (addModal) {
+            addModal.style.display = 'block';
+        } else {
+            console.error('addModal not found');
+        }
     });
 
     // -------------------------
@@ -839,30 +858,36 @@ function initializeSubjects() {
     // -------------------------
     // ADD SUBJECT (FORM)
     // -------------------------
-    addForm?.addEventListener('submit', async e => {
-        e.preventDefault();
+    if (addForm) {
+        console.log('addForm found, attaching submit listener');
+        addForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            console.log('Add subject form submitted');
 
-        const subject = {
-            id: Date.now().toString(), // Unique ID for subject
-            name: document.getElementById('newSubjectName').value.trim(),
-            teacher: document.getElementById('newTeacherName').value.trim(),
-            time: document.getElementById('newSubjectTime').value.trim(),
-            description: document.getElementById('newSubjectDescription').value.trim(),
-            lessons: [],
-            tasks: [],
-            assignments: [],
-            quizzes: []
-        };
+            const subject = {
+                id: Date.now().toString(), // Unique ID for subject
+                name: document.getElementById('newSubjectName').value.trim(),
+                teacher: document.getElementById('newTeacherName').value.trim(),
+                time: document.getElementById('newSubjectTime').value.trim(),
+                description: document.getElementById('newSubjectDescription').value.trim(),
+                lessons: [],
+                tasks: [],
+                assignments: [],
+                quizzes: []
+            };
 
-        subjects.push(subject);
-        saveSubjects();
-        renderSubjects();
+            console.log('New subject data:', subject);
+            subjects.push(subject);
+            saveSubjects();
+            renderSubjects();
 
-
-
-        addForm.reset();
-        addModal.style.display = 'none';
-    });
+            addForm.reset();
+            addModal.style.display = 'none';
+            console.log('Subject added successfully');
+        });
+    } else {
+        console.error('addForm not found!');
+    }
 
     // -------------------------
     // EDIT SUBJECT (FORM)
