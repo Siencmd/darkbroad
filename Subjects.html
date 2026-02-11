@@ -538,7 +538,15 @@
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
     <script type="module">
-      import { logout } from "./script.js"; // Make sure logout function is exported
+      import { logout, initializeSubjects } from "./script.js";
+
+      // Initialize subjects page functionality
+      if (typeof initializeSubjects === 'function') {
+        initializeSubjects();
+        console.log('Subjects page initialized successfully');
+      } else {
+        console.error('initializeSubjects function not found');
+      }
 
       // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
