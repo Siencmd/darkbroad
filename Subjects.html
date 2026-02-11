@@ -89,8 +89,6 @@
         </nav>
       </aside>
 
-
-
       <!-- Main Content -->
       <main class="content">
         <section class="subjects-section">
@@ -99,16 +97,32 @@
             <p>Track your school subjects and grades</p>
           </div>
 
-          <!-- New Split Layout -->
+          <!-- Split Layout -->
           <div class="subjects-content-wrapper">
             <!-- Left Sidebar: List -->
             <div class="subjects-sidebar">
               <div class="sidebar-header">
                 <h3>Subject List</h3>
-                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject">
+                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject" onclick="showAddSubjectInline()">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
+              
+              <!-- Inline Add Subject Form -->
+              <div id="inlineAddSubjectForm" style="display: none; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin: 10px; border-radius: 10px;">
+                <h4 style="color: var(--accent); margin-bottom: 10px;"><i class="fas fa-plus"></i> Add Subject</h4>
+                <form onsubmit="return handleAddSubjectInline(event)">
+                  <input type="text" id="inlineSubjectName" placeholder="Subject Name" required style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary);" />
+                  <input type="text" id="inlineTeacherName" placeholder="Teacher" required style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary);" />
+                  <input type="text" id="inlineSubjectTime" placeholder="Time (e.g. 08:00 AM - 09:30 AM)" required style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary);" />
+                  <textarea id="inlineSubjectDesc" placeholder="Description" rows="2" style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary); resize: vertical;"></textarea>
+                  <div style="display: flex; gap: 5px;">
+                    <button type="submit" style="flex: 1; padding: 8px; background: var(--accent); border: none; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold;">Save</button>
+                    <button type="button" onclick="hideAddSubjectInline()" style="padding: 8px; background: #666; border: none; border-radius: 5px; cursor: pointer; color: #fff;">Cancel</button>
+                  </div>
+                </form>
+              </div>
+              
               <div class="subjects-list" id="subjectsList">
                 <!-- List items will be injected here -->
               </div>
@@ -122,412 +136,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Add Subject Modal -->
-          <div class="modal" id="addSubjectModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2>Add New Subject</h2>
-
-                <form id="addSubjectForm" onsubmit="return handleAddSubject(event)">
-                  <div class="form-group">
-                    <label>Subject Name</label>
-                    <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Teacher</label>
-                    <input type="text" id="newTeacherName" required placeholder="e.g. Mr. Anderson" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Time</label>
-                    <input type="text" id="newSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
-                  </div>
-
-                  <button type="submit" class="btn-add-subject">
-                    <i class="fas fa-check"></i> Save Subject
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Subject Modal -->
-          <div class="modal" id="editSubjectModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2>Edit Subject</h2>
-
-                <form id="editSubjectForm">
-                  <input type="hidden" id="editSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Subject Name</label>
-                    <input type="text" id="editSubjectName" required placeholder="e.g. Mathematics" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Teacher</label>
-                    <input type="text" id="editTeacherName" required placeholder="e.g. Mr. Anderson" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Time</label>
-                    <input type="text" id="editSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="editSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
-                  </div>
-
-                  <div class="form-actions">
-                    <button type="submit" class="btn-save">
-                      <i class="fas fa-check"></i> Save Changes
-                    </button>
-                    <button type="button" class="btn-delete" id="deleteSubjectBtn">
-                      <i class="fas fa-trash"></i> Delete
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add Task Modal -->
-          <div class="modal" id="addTaskModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2><i class="fas fa-tasks"></i> Add New Task</h2>
-
-                <form id="addTaskForm">
-                  <input type="hidden" id="taskSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Task Title</label>
-                    <input type="text" id="newTaskTitle" required placeholder="e.g. Complete Chapter 5 Exercises" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Due Date</label>
-                    <input type="date" id="newTaskDueDate" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Priority</label>
-                    <select id="newTaskPriority">
-                      <option value="low">Low</option>
-                      <option value="medium" selected>Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="newTaskDescription" rows="3" placeholder="Task details..."></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label><i class="fas fa-upload"></i> Upload File (Optional)</label>
-                    <input type="file" id="newTaskFile" />
-                  </div>
-
-                  <button type="submit" class="btn-add-subject">
-                    <i class="fas fa-plus"></i> Add Task
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Task Modal -->
-          <div class="modal" id="editTaskModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2><i class="fas fa-edit"></i> Edit Task</h2>
-
-                <form id="editTaskForm">
-                  <input type="hidden" id="editTaskIndex" />
-                  <input type="hidden" id="editTaskSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Task Title</label>
-                    <input type="text" id="editTaskTitle" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Due Date</label>
-                    <input type="date" id="editTaskDueDate" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Priority</label>
-                    <select id="editTaskPriority">
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="editTaskStatus">
-                      <option value="pending">Pending</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="editTaskDescription" rows="3"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
-                    <input type="file" id="editTaskFile" />
-                  </div>
-
-                  <div class="form-actions">
-                    <button type="submit" class="btn-save">
-                      <i class="fas fa-check"></i> Save Changes
-                    </button>
-                    <button type="button" class="btn-delete" id="deleteTaskBtn">
-                      <i class="fas fa-trash"></i> Delete
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add Assignment Modal -->
-          <div class="modal" id="addAssignmentModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2><i class="fas fa-clipboard-list"></i> Add New Assignment</h2>
-
-                <form id="addAssignmentForm">
-                  <input type="hidden" id="assignmentSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Assignment Title</label>
-                    <input type="text" id="newAssignmentTitle" required placeholder="e.g. Research Paper" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Due Date</label>
-                    <input type="date" id="newAssignmentDueDate" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Points</label>
-                    <input type="number" id="newAssignmentPoints" required placeholder="e.g. 100" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="newAssignmentStatus">
-                      <option value="pending" selected>Pending</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="graded">Graded</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Instructions</label>
-                    <textarea id="newAssignmentInstructions" rows="4" placeholder="Assignment instructions..."></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label><i class="fas fa-upload"></i> Upload File (Optional)</label>
-                    <input type="file" id="newAssignmentFile" />
-                  </div>
-
-                  <button type="submit" class="btn-add-subject">
-                    <i class="fas fa-plus"></i> Add Assignment
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Assignment Modal -->
-          <div class="modal" id="editAssignmentModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2><i class="fas fa-edit"></i> Edit Assignment</h2>
-
-                <form id="editAssignmentForm">
-                  <input type="hidden" id="editAssignmentIndex" />
-                  <input type="hidden" id="editAssignmentSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Assignment Title</label>
-                    <input type="text" id="editAssignmentTitle" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Due Date</label>
-                    <input type="date" id="editAssignmentDueDate" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Points</label>
-                    <input type="number" id="editAssignmentPoints" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="editAssignmentStatus">
-                      <option value="pending">Pending</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="graded">Graded</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Instructions</label>
-                    <textarea id="editAssignmentInstructions" rows="4"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
-                    <input type="file" id="editAssignmentFile" />
-                  </div>
-
-                  <div class="form-actions">
-                    <button type="submit" class="btn-save">
-                      <i class="fas fa-check"></i> Save Changes
-                    </button>
-                    <button type="button" class="btn-delete" id="deleteAssignmentBtn">
-                      <i class="fas fa-trash"></i> Delete
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add Lesson Modal -->
-          <div class="modal" id="addLessonModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2><i class="fas fa-book-open"></i> Add New Lesson</h2>
-
-                <form id="addLessonForm">
-                  <input type="hidden" id="lessonSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Lesson Title</label>
-                    <input type="text" id="newLessonTitle" required placeholder="e.g. Introduction to Algebra" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Duration</label>
-                    <input type="text" id="newLessonDuration" required placeholder="e.g. 45 mins" />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="newLessonStatus">
-                      <option value="locked">Locked</option>
-                      <option value="available" selected>Available</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Content</label>
-                    <textarea id="newLessonContent" rows="4" placeholder="Lesson content or topics covered..."></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label><i class="fas fa-plus"></i> Add Lesson Material (Optional)</label>
-                    <input type="file" id="newLessonFile" />
-                  </div>
-
-                  <button type="submit" class="btn-add-subject">
-                    <i class="fas fa-plus"></i> Add Lesson
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Lesson Modal -->
-          <div class="modal" id="editLessonModal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-
-              <div class="modal-body">
-                <h2><i class="fas fa-edit"></i> Edit Lesson</h2>
-
-                <form id="editLessonForm">
-                  <input type="hidden" id="editLessonIndex" />
-                  <input type="hidden" id="editLessonSubjectIndex" />
-
-                  <div class="form-group">
-                    <label>Lesson Title</label>
-                    <input type="text" id="editLessonTitle" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Duration</label>
-                    <input type="text" id="editLessonDuration" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select id="editLessonStatus">
-                      <option value="locked">Locked</option>
-                      <option value="available">Available</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Content</label>
-                    <textarea id="editLessonContent" rows="4"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
-                    <input type="file" id="editLessonFile" />
-                  </div>
-
-                  <div class="form-actions">
-                    <button type="submit" class="btn-save">
-                      <i class="fas fa-check"></i> Save Changes
-                    </button>
-                    <button type="button" class="btn-delete" id="deleteLessonBtn">
-                      <i class="fas fa-trash"></i> Delete
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
         </section>
       </main>
     </div>
@@ -537,6 +145,73 @@
     <script type="module" src="script.js"></script>
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
+    
+    <!-- Inline JavaScript for Add Subject (No Module) -->
+    <script>
+      // Show inline add subject form
+      function showAddSubjectInline() {
+        var form = document.getElementById('inlineAddSubjectForm');
+        if (form) {
+          form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+      }
+      
+      // Hide inline add subject form
+      function hideAddSubjectInline() {
+        var form = document.getElementById('inlineAddSubjectForm');
+        if (form) {
+          form.style.display = 'none';
+        }
+      }
+      
+      // Handle add subject form submission
+      window.handleAddSubjectInline = function(e) {
+        e.preventDefault();
+        console.log('handleAddSubjectInline called');
+        
+        // Get current subjects from localStorage
+        let subjects = JSON.parse(localStorage.getItem('subjects'));
+        console.log('Current subjects from localStorage:', subjects);
+        
+        if (!subjects) {
+          subjects = [];
+          console.log('Created new empty subjects array');
+        }
+        
+        const subject = {
+          id: Date.now().toString(),
+          name: document.getElementById('inlineSubjectName').value.trim(),
+          teacher: document.getElementById('inlineTeacherName').value.trim(),
+          time: document.getElementById('inlineSubjectTime').value.trim(),
+          description: document.getElementById('inlineSubjectDesc').value.trim(),
+          lessons: [],
+          tasks: [],
+          assignments: [],
+          quizzes: []
+        };
+        
+        console.log('New subject to add:', subject);
+        subjects.push(subject);
+        
+        // Save to localStorage
+        localStorage.setItem('subjects', JSON.stringify(subjects));
+        console.log('Subjects saved to localStorage:', subjects);
+        
+        // Hide form and clear inputs
+        hideAddSubjectInline();
+        e.target.reset();
+        
+        // Reload the page after a short delay
+        setTimeout(function() {
+          console.log('Reloading page...');
+          location.reload();
+        }, 300);
+        
+        console.log('Subject added successfully');
+        return false;
+      };
+    </script>
+    
     <script type="module">
       import { logout, initializeSubjects } from "./script.js";
 
@@ -547,53 +222,6 @@
       } else {
         console.error('initializeSubjects function not found');
       }
-
-      // Inline handler for add subject form
-      window.handleAddSubject = function(e) {
-        e.preventDefault();
-        console.log('handleAddSubject called');
-        
-        // Get current subjects from localStorage
-        let subjects = JSON.parse(localStorage.getItem('subjects'));
-        console.log('Current subjects from localStorage:', subjects);
-        
-        if (!subjects) {
-            subjects = [];
-            console.log('Created new empty subjects array');
-        }
-        
-        const subject = {
-            id: Date.now().toString(),
-            name: document.getElementById('newSubjectName').value.trim(),
-            teacher: document.getElementById('newTeacherName').value.trim(),
-            time: document.getElementById('newSubjectTime').value.trim(),
-            description: document.getElementById('newSubjectDescription').value.trim(),
-            lessons: [],
-            tasks: [],
-            assignments: [],
-            quizzes: []
-        };
-        
-        console.log('New subject to add:', subject);
-        subjects.push(subject);
-        
-        // Save to localStorage
-        localStorage.setItem('subjects', JSON.stringify(subjects));
-        console.log('Subjects saved to localStorage:', subjects);
-        
-        // Close modal and reload page to reflect changes
-        document.getElementById('addSubjectForm').reset();
-        document.getElementById('addSubjectModal').style.display = 'none';
-        
-        // Reload the page after a short delay to let the modal close
-        setTimeout(() => {
-            console.log('Reloading page...');
-            location.reload();
-        }, 500);
-        
-        console.log('Subject added successfully');
-        return false; // Prevent form submission
-      };
 
       // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
@@ -608,15 +236,15 @@
 
       if (hamburgerBtn && sidebar) {
         console.log("Adding hamburger click listener");
-      hamburgerBtn.addEventListener("click", () => {
-        if (window.innerWidth < 768) {
-          console.log("Hamburger clicked, toggling classes");
-          sidebar.classList.toggle("mobile-open");
-          hamburgerBtn.classList.toggle("mobile-open");
-          console.log("Sidebar classes:", sidebar.classList);
-          console.log("Hamburger classes:", hamburgerBtn.classList);
-        }
-      });
+        hamburgerBtn.addEventListener("click", () => {
+          if (window.innerWidth < 768) {
+            console.log("Hamburger clicked, toggling classes");
+            sidebar.classList.toggle("mobile-open");
+            hamburgerBtn.classList.toggle("mobile-open");
+            console.log("Sidebar classes:", sidebar.classList);
+            console.log("Hamburger classes:", hamburgerBtn.classList);
+          }
+        });
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
