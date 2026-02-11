@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grades - Darkboard</title>
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Mobile Sidebar Toggle -->
+    <button id="hamburger-btn" class="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <!-- Right Side User Menu -->
+    <div class="user-menu-right">
+      <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User" class="user-avatar">
+      <span id="headerUserName">Ace</span>
+    </div>
+
+    <div class="app-container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a href="index.html" class="brand">DARKBOARD</a>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="index.html" class="nav-item">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="Subjects.html" class="nav-item">
+            <i class="fas fa-book"></i>
+            <span>Subjects</span>
+          </a>
+          <a href="Grades.html" class="nav-item active">
+            <i class="fas fa-chart-bar"></i>
+            <span>Grades</span>
+          </a>
+          <a href="Schedule.html" class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Schedule</span>
+          </a>
+          <a href="Announcements.html" class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span>Announcements</span>
+          </a>
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+              margin: 10px 0;
+            "
+          />
+          <a href="Profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+          </a>
+          <a href="Settings.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+          <a href="Help.html" class="nav-item">
+            <i class="fas fa-question-circle"></i>
+            <span>Help</span>
+          </a>
+          <a href="#" id="logoutBtn" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </nav>
+      </aside>
+
+
+
+      <!-- Main Content -->
+      <main class="content">
+        <section class="grades-section">
+          <div class="section-header">
+            <h1><i class="fas fa-chart-bar"></i> My Grades</h1>
+            <p>Track your academic performance</p>
+          </div>
+
+          <div class="grades-container">
+            <!-- Overall Stats -->
+            <div class="grades-stats">
+              <div class="stat-card">
+                <div class="stat-value">3.85</div>
+                <div class="stat-name">Overall GPA</div>
+                <div class="stat-bar">
+                  <div class="stat-fill" style="width: 96%"></div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">A+</div>
+                <div class="stat-name">Best Grade</div>
+                <div class="stat-bar">
+                  <div
+                    class="stat-fill"
+                    style="width: 100%; background: #4ade80"
+                  ></div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">A-</div>
+                <div class="stat-name">Lowest Grade</div>
+                <div class="stat-bar">
+                  <div
+                    class="stat-fill"
+                    style="width: 90%; background: #fbbf24"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+                <!-- Grades by Subject -->
+                <div class="dashboard-card full-width">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list"></i> Grades by Subject</h2>
+                    </div>
+                    <div class="grades-table">
+                        <div class="table-header">
+                            <div class="col-subject">Subject</div>
+                            <div class="col-prelim">Prelim</div>
+                            <div class="col-midterm">Midterm</div>
+                            <div class="col-final">Final</div>
+                            <div class="col-overall">Overall</div>
+                            <div class="col-status">Status</div>
+                        </div>
+                        <div class="table-body">
+                            <div class="table-row">
+                                <div class="col-subject">Mathematics</div>
+                                <div class="col-prelim" data-label="Prelim">89</div>
+                                <div class="col-midterm" data-label="Midterm">92</div>
+                                <div class="col-final" data-label="Final">98</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A+</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge excellent">Excellent</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">English Literature</div>
+                                <div class="col-prelim" data-label="Prelim">92</div>
+                                <div class="col-midterm" data-label="Midterm">95</div>
+                                <div class="col-final" data-label="Final">99</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A+</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge excellent">Excellent</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">Physics</div>
+                                <div class="col-prelim" data-label="Prelim">85</div>
+                                <div class="col-midterm" data-label="Midterm">88</div>
+                                <div class="col-final" data-label="Final">96</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge good">Very Good</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">Chemistry</div>
+                                <div class="col-prelim" data-label="Prelim">88</div>
+                                <div class="col-midterm" data-label="Midterm">90</div>
+                                <div class="col-final" data-label="Final">94</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge good">Very Good</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">History</div>
+                                <div class="col-prelim" data-label="Prelim">89</div>
+                                <div class="col-midterm" data-label="Midterm">91</div>
+                                <div class="col-final" data-label="Final">92</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A-</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge good">Very Good</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">Computer Science</div>
+                                <div class="col-prelim" data-label="Prelim">95</div>
+                                <div class="col-midterm" data-label="Midterm">97</div>
+                                <div class="col-final" data-label="Final">99</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A+</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge excellent">Excellent</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">Art & Design</div>
+                                <div class="col-prelim" data-label="Prelim">82</div>
+                                <div class="col-midterm" data-label="Midterm">85</div>
+                                <div class="col-final" data-label="Final">88</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">B+</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge average">Good</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="col-subject">Physical Education</div>
+                                <div class="col-prelim" data-label="Prelim">90</div>
+                                <div class="col-midterm" data-label="Midterm">93</div>
+                                <div class="col-final" data-label="Final">95</div>
+                                <div class="col-overall" data-label="Overall"><span class="grade-badge">A</span></div>
+                                <div class="col-status" data-label="Status"><span class="status-badge good">Very Good</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Grade Distribution -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <h2><i class="fas fa-chart-pie"></i> Grade Distribution</h2>
+              </div>
+              <div class="grade-distribution">
+                <div class="distribution-item">
+                  <div class="distribution-label">A+ (90-100)</div>
+                  <div class="distribution-bar">
+                    <div class="distribution-fill" style="width: 50%"></div>
+                  </div>
+                  <div class="distribution-count">4 subjects</div>
+                </div>
+                <div class="distribution-item">
+                  <div class="distribution-label">A (85-89)</div>
+                  <div class="distribution-bar">
+                    <div class="distribution-fill" style="width: 37.5%"></div>
+                  </div>
+                  <div class="distribution-count">3 subjects</div>
+                </div>
+                <div class="distribution-item">
+                  <div class="distribution-label">B+ (80-84)</div>
+                  <div class="distribution-bar">
+                    <div class="distribution-fill" style="width: 12.5%"></div>
+                  </div>
+                  <div class="distribution-count">1 subject</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trend -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <h2><i class="fas fa-line-chart"></i> Grade Trend</h2>
+              </div>
+              <div class="trend-chart">
+                <div class="trend-item">
+                  <div class="trend-month">Jan</div>
+                  <div class="trend-bar" style="height: 60%"></div>
+                  <div class="trend-value">85</div>
+                </div>
+                <div class="trend-item">
+                  <div class="trend-month">Feb</div>
+                  <div class="trend-bar" style="height: 72%"></div>
+                  <div class="trend-value">88</div>
+                </div>
+                <div class="trend-item">
+                  <div class="trend-month">Mar</div>
+                  <div class="trend-bar" style="height: 80%"></div>
+                  <div class="trend-value">92</div>
+                </div>
+                <div class="trend-item">
+                  <div class="trend-month">Apr</div>
+                  <div class="trend-bar" style="height: 85%"></div>
+                  <div class="trend-value">94</div>
+                </div>
+                <div class="trend-item">
+                  <div class="trend-month">May</div>
+                  <div class="trend-bar" style="height: 88%"></div>
+                  <div class="trend-value">96</div>
+                </div>
+                <div class="trend-item">
+                  <div class="trend-month">Jun</div>
+                  <div class="trend-bar" style="height: 96%"></div>
+                  <div class="trend-value">98</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
+    <script type="module">
+      import { logout } from "./script.js"; // Make sure logout function is exported
+
+      // Logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Mobile navigation toggle
+      const hamburgerBtn = document.getElementById("hamburger-btn");
+      const sidebar = document.querySelector(".sidebar");
+
+      if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener("click", () => {
+          sidebar.classList.toggle("mobile-open");
+          hamburgerBtn.classList.toggle("mobile-open");
+        });
+      }
+
+      // Add animation on the web page using ScrollReveal
+      ScrollReveal().reveal(".grades-section", {
+        delay: 1000,
+      });
+
+      ScrollReveal().reveal(".grades-stats", {
+        delay: 1200,
+      });
+
+      ScrollReveal().reveal(".grades-table", {
+        delay: 1400,
+      });
+
+      ScrollReveal().reveal(".grade-distribution", {
+        delay: 1600,
+      });
+
+      ScrollReveal().reveal(".trend-chart", {
+        delay: 1800,
+      });
+    </script>
+
+  </body>
+</html>

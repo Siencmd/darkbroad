@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Darkboard</title>
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <section class="login-section">
+      <div class="login-container">
+        <div class="login-box">
+          <div class="login-header">
+            <div class="login-icon">
+              <i class="fas fa-user-plus"></i>
+            </div>
+            <h1>Create Account</h1>
+            <p>Join Darkboard and track your academic journey</p>
+          </div>
+
+          <form class="login-form" id="signupForm">
+            <div
+              id="signupMessage"
+              style="display: none; margin-bottom: 10px"
+            ></div>
+
+            <div class="form-group">
+              <label for="fullName"
+                ><i class="fas fa-user"></i> Full Name</label
+              >
+              <input
+                type="text"
+                id="fullName"
+                placeholder="Full Name"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="signupEmail"
+                ><i class="fas fa-envelope"></i> Email</label
+              >
+              <input
+                type="email"
+                id="signupEmail"
+                placeholder="Email"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="phone"
+                ><i class="fas fa-phone"></i> Phone Number</label
+              >
+              <input type="tel" id="phone" placeholder="Number" />
+            </div>
+
+            <div class="form-group">
+              <label for="course"
+                ><i class="fas fa-graduation-cap"></i> Course/Program</label
+              >
+              <input type="text" id="course" placeholder="Course" required />
+            </div>
+
+            <div class="form-group">
+              <label for="role"
+                ><i class="fas fa-user"></i> Role </label>
+              <div class="role-selection">
+                <label class="role-option">
+                  <input type="radio" name="role" value="student" checked />
+                  <span class="role-label">Student</span>
+                </label>
+                <label class="role-option">
+                  <input type="radio" name="role" value="instructor" />
+                  <span class="role-label">Instructor</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group" id="accessCodeGroup" style="display: none;">
+              <label for="accessCode"
+                ><i class="fas fa-key"></i> Access Code</label
+              >
+              <input
+                type="text"
+                id="accessCode"
+                placeholder="Enter access code"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="signupPassword"
+                ><i class="fas fa-lock"></i> Password</label
+              >
+              <input
+                type="password"
+                id="signupPassword"
+                placeholder="••••••••"
+                required
+              />
+              <span class="toggle-password" id="toggleSignupPassword"
+                ><i class="fas fa-eye-slash"></i
+              ></span>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword"
+                ><i class="fas fa-lock"></i> Confirm Password</label
+              >
+              <input
+                type="password"
+                id="confirmPassword"
+                placeholder="••••••••"
+                required
+              />
+              <span class="toggle-password" id="toggleConfirmPassword"
+                ><i class="fas fa-eye-slash"></i
+              ></span>
+            </div>
+
+            <button type="submit" class="login-btn">Create Account</button>
+          </form>
+
+          <div class="login-footer">
+            <p>
+              Already have an account?
+              <a href="Login.html" class="signup-link">Sign in here</a>
+            </p>
+          </div>
+        </div>
+
+        <div class="login-info">
+          <h2>Get Started Today</h2>
+          <ul class="features">
+            <li>
+              <i class="fas fa-check-circle"></i> Quick and easy account
+              creation
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> Track all your subjects and
+              grades
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> Monitor your academic progress
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> Access class schedules and
+              assignments
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i> Stay connected with your
+              school
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
