@@ -389,6 +389,8 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
 // SUBJECTS PAGE FUNCTIONALITY
 // =========================
 function initializeSubjects() {
+    console.log('initializeSubjects called');
+    
     const listContainer = document.getElementById('subjectsList');
     const detailsContainer = document.getElementById('subjectDetailsPanel');
     const addBtn = document.getElementById('addSubjectBtn');
@@ -398,7 +400,21 @@ function initializeSubjects() {
     const editForm = document.getElementById('editSubjectForm');
     const deleteBtn = document.getElementById('deleteSubjectBtn');
 
-    if (!listContainer || !detailsContainer) return;
+    console.log('Elements found:', {
+        listContainer: !!listContainer,
+        detailsContainer: !!detailsContainer,
+        addBtn: !!addBtn,
+        addModal: !!addModal,
+        addForm: !!addForm,
+        editModal: !!editModal,
+        editForm: !!editForm,
+        deleteBtn: !!deleteBtn
+    });
+
+    if (!listContainer || !detailsContainer) {
+        console.error('Missing required elements, exiting');
+        return;
+    }
 
     // Get user role
     let userData = JSON.parse(localStorage.getItem("userData"));
