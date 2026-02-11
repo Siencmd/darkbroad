@@ -863,6 +863,169 @@ function initializeSubjects() {
         if (tabContent) tabContent.classList.add('active');
     }
 
+    // Hybrid/failsafe modal submit handler.
+    // Captures submits before per-form listeners so core actions always work.
+    document.addEventListener('submit', async (e) => {
+        const form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+
+        try {
+            if (form.id === 'addSubjectForm') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const subject = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('newSubjectName').value.trim(),
+                    teacher: document.getElementById('newTeacherName').value.trim(),
+                    time: document.getElementById('newSubjectTime').value.trim(),
+                    description: document.getElementById('newSubjectDescription').value.trim(),
+                    lessons: [],
+                    tasks: [],
+                    assignments: [],
+                    quizzes: []
+                };
+
+                subjects.push(subject);
+                saveSubjects();
+                renderSubjects();
+                form.reset();
+                if (addModal) addModal.style.display = 'none';
+                return;
+            }
+
+            if (form.id === 'editSubjectForm') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const index = parseInt(document.getElementById('editSubjectIndex').value);
+                if (Number.isNaN(index) || !subjects[index]) return;
+
+                subjects[index] = {
+                    ...subjects[index],
+                    name: document.getElementById('editSubjectName').value.trim(),
+                    teacher: document.getElementById('editTeacherName').value.trim(),
+                    time: document.getElementById('editSubjectTime').value.trim(),
+                    description: document.getElementById('editSubjectDescription').value.trim()
+                };
+
+                saveSubjects();
+                renderSubjects();
+                renderSubjectDetails(index);
+                closeAllModals();
+                return;
+            }
+
+            if (form.id === 'addTaskForm') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const subjectIndex = parseInt(document.getElementById('taskSubjectIndex').value);
+                const sub = subjects[subjectIndex];
+                if (!sub) return;
+
+                const task = {
+                    id: Date.now().toString(),
+                    title: document.getElementById('newTaskTitle').value.trim(),
+                    dueDate: document.getElementById('newTaskDueDate').value,
+                    priority: document.getElementById('newTaskPriority').value,
+                    status: 'pending',
+                    description: document.getElementById('newTaskDescription').value.trim(),
+                    file: null,
+                    fileUrl: null
+                };
+
+                const fileInput = document.getElementById('newTaskFile');
+                if (fileInput?.files?.[0]) {
+                    const file = fileInput.files[0];
+                    task.file = file.name;
+                    task.fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${task.id}/`);
+                }
+
+                sub.tasks.push(task);
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                form.reset();
+                const modal = document.getElementById('addTaskModal');
+                if (modal) modal.style.display = 'none';
+                return;
+            }
+
+            if (form.id === 'addAssignmentForm') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const subjectIndex = parseInt(document.getElementById('assignmentSubjectIndex').value);
+                const sub = subjects[subjectIndex];
+                if (!sub) return;
+
+                const assignment = {
+                    id: Date.now().toString(),
+                    title: document.getElementById('newAssignmentTitle').value.trim(),
+                    dueDate: document.getElementById('newAssignmentDueDate').value,
+                    points: parseInt(document.getElementById('newAssignmentPoints').value),
+                    status: document.getElementById('newAssignmentStatus').value,
+                    instructions: document.getElementById('newAssignmentInstructions').value.trim(),
+                    file: null,
+                    fileUrl: null,
+                    submissions: []
+                };
+
+                const fileInput = document.getElementById('newAssignmentFile');
+                if (fileInput?.files?.[0]) {
+                    const file = fileInput.files[0];
+                    assignment.file = file.name;
+                    assignment.fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/`);
+                }
+
+                sub.assignments.push(assignment);
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                form.reset();
+                const modal = document.getElementById('addAssignmentModal');
+                if (modal) modal.style.display = 'none';
+                return;
+            }
+
+            if (form.id === 'addLessonForm') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const subjectIndex = parseInt(document.getElementById('lessonSubjectIndex').value);
+                const sub = subjects[subjectIndex];
+                if (!sub) return;
+
+                const lesson = {
+                    id: Date.now().toString(),
+                    title: document.getElementById('newLessonTitle').value.trim(),
+                    duration: document.getElementById('newLessonDuration').value.trim(),
+                    status: document.getElementById('newLessonStatus').value,
+                    content: document.getElementById('newLessonContent').value.trim(),
+                    file: null,
+                    fileUrl: null
+                };
+
+                const fileInput = document.getElementById('newLessonFile');
+                if (fileInput?.files?.[0]) {
+                    const file = fileInput.files[0];
+                    lesson.file = file.name;
+                    lesson.fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${lesson.id}/`);
+                }
+
+                sub.lessons.push(lesson);
+                saveSubjects();
+                renderSubjectDetails(subjectIndex);
+                form.reset();
+                const modal = document.getElementById('addLessonModal');
+                if (modal) modal.style.display = 'none';
+                return;
+            }
+        } catch (err) {
+            console.error('Subjects form submit failed:', err);
+            alert(err.message || 'Action failed. Check console for details.');
+        }
+    }, true);
+
     // Event delegation for dynamic details buttons (robust across re-renders).
     detailsContainer.addEventListener('click', (e) => {
         const tabBtn = e.target.closest('.tab-btn');
