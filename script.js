@@ -1202,6 +1202,7 @@ function initializeSubjects() {
     // OPEN ADD ITEM MODAL
     // -------------------------
     const openAddItemModal = function(subjectIndex, type) {
+        console.log('openAddItemModal called:', subjectIndex, type);
         if (type === 'quiz') {
             // Custom modal for quiz
             const modal = document.createElement('div');
@@ -1258,12 +1259,21 @@ function initializeSubjects() {
         } else {
             const modalId = `add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
             const modal = document.getElementById(modalId);
-            if (!modal) return;
+            if (!modal) {
+                console.error('Modal not found:', modalId);
+                return;
+            }
 
-            document.getElementById(`${type}SubjectIndex`).value = subjectIndex;
+            const subjectIndexInput = document.getElementById(`${type}SubjectIndex`);
+            if (subjectIndexInput) {
+                subjectIndexInput.value = subjectIndex;
+            }
             modal.style.display = 'block';
         }
     }
+    
+    // Make globally accessible
+    window.openAddItemModal = openAddItemModal;
 
     // -------------------------
     // OPEN EDIT ITEM MODAL
@@ -1370,6 +1380,10 @@ function initializeSubjects() {
             modal.style.display = 'block';
         }
     }
+    
+    // Make globally accessible
+    window.openAddItemModal = openAddItemModal;
+    window.openEditItemModal = openEditItemModal;
 
     // -------------------------
     // OPEN SUBMIT ASSIGNMENT MODAL
