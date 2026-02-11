@@ -23,20 +23,20 @@
   </head>
 
   <body>
-    <!-- Mobile Sidebar Toggle -->
-    <button id="hamburger-btn" class="hamburger-btn">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-
-    <!-- Right Side User Menu -->
-    <div class="user-menu-right">
-      <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User" class="user-avatar">
-      <span id="headerUserName">Ace</span>
-    </div>
-
     <div class="app-container">
+      <!-- Mobile Sidebar Toggle - Inside app-container for proper z-index -->
+      <button id="hamburger-btn" class="hamburger-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Right Side User Menu -->
+      <div class="user-menu-right">
+        <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User" class="user-avatar">
+        <span id="headerUserName">Ace</span>
+      </div>
+
       <!-- Sidebar Navigation -->
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -553,13 +553,15 @@
 
       if (hamburgerBtn && sidebar) {
         console.log("Adding hamburger click listener");
-        hamburgerBtn.addEventListener("click", () => {
+      hamburgerBtn.addEventListener("click", () => {
+        if (window.innerWidth < 768) {
           console.log("Hamburger clicked, toggling classes");
           sidebar.classList.toggle("mobile-open");
           hamburgerBtn.classList.toggle("mobile-open");
           console.log("Sidebar classes:", sidebar.classList);
           console.log("Hamburger classes:", hamburgerBtn.classList);
-        });
+        }
+      });
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
