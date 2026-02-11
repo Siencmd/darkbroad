@@ -469,9 +469,11 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
             subjects = normalizeSubjects(docSnap.data().subjects || subjects);
             localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage
             if (onLoad) onLoad();
+            return true;
         } else {
             // If no Firestore data, save local data to Firestore for first time
             saveSubjectsToFirestore();
+            return true;
         }
     } catch (error) {
         // Only log permission errors as warnings, other errors as errors
@@ -480,6 +482,7 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
         } else {
             console.warn("Error loading from Firestore:", error.message);
         }
+        return false;
     }
 }
 
@@ -566,7 +569,12 @@ function initializeSubjects() {
         const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
         
         if (isLoggedIn) {
-            loadSubjectsFromFirestore(userData.course, renderSubjects).then(() => {
+            loadSubjectsFromFirestore(userData.course, renderSubjects).then((loadedFromCloud) => {
+                if (!loadedFromCloud) {
+                    // No cloud access: keep page fully usable from local data.
+                    renderSubjects();
+                    return;
+                }
                 // Enable realtime updates for all users in the course
                 setupRealtimeSubjects(userData.course, (updatedSubjects) => {
                     // When subjects update, stop existing task listeners and re-setup
