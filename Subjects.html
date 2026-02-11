@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"/>
 
     <!-- Icons -->
@@ -23,37 +23,46 @@
   </head>
 
   <body>
-    <div class="dashboard-wrapper">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <a href="index.html" class="brand">DARKBOARD</a>
+    <div class="app-container">
+      <!-- Mobile Sidebar Toggle - Inside app-container for proper z-index -->
+      <button id="hamburger-btn" class="hamburger-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
+      <!-- Right Side User Menu -->
+      <div class="user-menu-right">
+        <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User" class="user-avatar">
+        <span id="headerUserName">Ace</span>
+      </div>
+
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a href="index.html" class="brand">DARKBOARD</a>
+        </div>
         <nav class="sidebar-nav">
           <a href="index.html" class="nav-item">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
           </a>
-
           <a href="Subjects.html" class="nav-item active">
             <i class="fas fa-book"></i>
             <span>Subjects</span>
           </a>
-
           <a href="Grades.html" class="nav-item">
             <i class="fas fa-chart-bar"></i>
             <span>Grades</span>
           </a>
-
           <a href="Schedule.html" class="nav-item">
             <i class="fas fa-calendar-alt"></i>
             <span>Schedule</span>
           </a>
-
           <a href="Announcements.html" class="nav-item">
             <i class="fas fa-bell"></i>
             <span>Announcements</span>
           </a>
-
           <hr
             style="
               border: 0;
@@ -61,22 +70,18 @@
               margin: 10px 0;
             "
           />
-
           <a href="Profile.html" class="nav-item">
             <i class="fas fa-user"></i>
             <span>Profile</span>
           </a>
-
           <a href="Settings.html" class="nav-item">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
           </a>
-
           <a href="Help.html" class="nav-item">
             <i class="fas fa-question-circle"></i>
             <span>Help</span>
           </a>
-
           <a href="#" id="logoutBtn" class="nav-item">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
@@ -84,8 +89,10 @@
         </nav>
       </aside>
 
+
+
       <!-- Main Content -->
-      <main class="dashboard-content">
+      <main class="content">
         <section class="subjects-section">
           <div class="subjects-header">
             <h1>My Subjects</h1>
@@ -525,9 +532,82 @@
       </main>
     </div>
 
-    <!-- Scripts -->
     <script type="module" src="firebase.js"></script>
     <script type="module" src="supabase.js"></script>
     <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
+    <script type="module">
+      import { logout } from "./script.js"; // Make sure logout function is exported
+
+      // Logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Mobile navigation toggle
+      const hamburgerBtn = document.getElementById("hamburger-btn");
+      const sidebar = document.querySelector(".sidebar");
+
+      console.log("Hamburger button found:", hamburgerBtn);
+      console.log("Sidebar found:", sidebar);
+
+      if (hamburgerBtn && sidebar) {
+        console.log("Adding hamburger click listener");
+      hamburgerBtn.addEventListener("click", () => {
+        if (window.innerWidth < 768) {
+          console.log("Hamburger clicked, toggling classes");
+          sidebar.classList.toggle("mobile-open");
+          hamburgerBtn.classList.toggle("mobile-open");
+          console.log("Sidebar classes:", sidebar.classList);
+          console.log("Hamburger classes:", hamburgerBtn.classList);
+        }
+      });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+          if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
+            if (!openModal || !openModal.contains(e.target)) {
+              console.log("Clicking outside, closing sidebar");
+              sidebar.classList.remove('mobile-open');
+              hamburgerBtn.classList.remove('mobile-open');
+            }
+          }
+        });
+
+        // Close sidebar when clicking a nav item on mobile
+        const navItems = sidebar.querySelectorAll('.nav-item');
+        console.log("Nav items found:", navItems.length);
+        navItems.forEach(item => {
+          item.addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+              console.log("Nav item clicked, closing sidebar");
+              sidebar.classList.remove('mobile-open');
+              hamburgerBtn.classList.remove('mobile-open');
+            }
+          });
+        });
+      } else {
+        console.log("Hamburger button or sidebar not found");
+      }
+
+      // Add animation on the web page using ScrollReveal
+      ScrollReveal().reveal(".subjects-section", {
+        delay: 1000,
+      });
+
+      ScrollReveal().reveal(".subjects-content-wrapper", {
+        delay: 1200,
+      });
+
+      ScrollReveal().reveal(".subjects-list", {
+        delay: 1400,
+      });
+
+      ScrollReveal().reveal(".subject-details", {
+        delay: 1600,
+      });
+    </script>
+
   </body>
 </html>
