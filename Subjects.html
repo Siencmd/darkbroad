@@ -5,85 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Subjects - Darkboard</title>
 
-    <!-- Main CSS -->
     <link rel="stylesheet" href="Darkboard.css" />
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"/>
-
-    <!-- Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" />
   </head>
 
   <body>
     <div class="app-container">
-      <!-- Mobile Sidebar Toggle -->
       <button id="hamburger-btn" class="hamburger-btn">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
       </button>
 
-      <!-- Right Side User Menu -->
       <div class="user-menu-right">
         <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User" class="user-avatar">
         <span id="headerUserName">Ace</span>
       </div>
 
-      <!-- Sidebar Navigation -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <a href="index.html" class="brand">DARKBOARD</a>
         </div>
         <nav class="sidebar-nav">
-          <a href="index.html" class="nav-item">
-            <i class="fas fa-th-large"></i>
-            <span>Dashboard</span>
-          </a>
-          <a href="Subjects.html" class="nav-item active">
-            <i class="fas fa-book"></i>
-            <span>Subjects</span>
-          </a>
-          <a href="Grades.html" class="nav-item">
-            <i class="fas fa-chart-bar"></i>
-            <span>Grades</span>
-          </a>
-          <a href="Schedule.html" class="nav-item">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Schedule</span>
-          </a>
-          <a href="Announcements.html" class="nav-item">
-            <i class="fas fa-bell"></i>
-            <span>Announcements</span>
-          </a>
-          <hr style="border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 10px 0;" />
-          <a href="Profile.html" class="nav-item">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-          </a>
-          <a href="Settings.html" class="nav-item">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
-          </a>
-          <a href="Help.html" class="nav-item">
-            <i class="fas fa-question-circle"></i>
-            <span>Help</span>
-          </a>
-          <a href="#" id="logoutBtn" class="nav-item">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-          </a>
+          <a href="index.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+          <a href="Subjects.html" class="nav-item active"><i class="fas fa-book"></i><span>Subjects</span></a>
+          <a href="Grades.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Grades</span></a>
+          <a href="Schedule.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a>
+          <a href="Announcements.html" class="nav-item"><i class="fas fa-bell"></i><span>Announcements</span></a>
+          <hr style="border:0;border-top:1px solid rgba(255,255,255,0.1);margin:10px 0;" />
+          <a href="Profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+          <a href="Settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a>
+          <a href="Help.html" class="nav-item"><i class="fas fa-question-circle"></i><span>Help</span></a>
+          <a href="#" id="logoutBtn" class="nav-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="main-content">
         <section class="subjects-section">
           <div class="subjects-header">
@@ -91,100 +48,148 @@
             <p>Track your school subjects and grades</p>
           </div>
 
-          <!-- Split Layout -->
           <div class="subjects-content-wrapper">
-            <!-- Left Sidebar: List -->
             <div class="subjects-sidebar">
               <div class="sidebar-header">
                 <h3>Subject List</h3>
-                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject">
+                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject" onclick="toggleInlineForm('addSubjectInline')">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
-              <div class="subjects-list" id="subjectsList">
-                <!-- List items will be injected here -->
+              
+              <!-- Add Subject Inline Form -->
+              <div id="addSubjectInline" class="inline-form" style="display:none;">
+                <h4 style="color:var(--accent);margin-bottom:10px;"><i class="fas fa-plus"></i> Add Subject</h4>
+                <form onsubmit="return addSubjectInline(event)">
+                  <input type="text" id="sName" placeholder="Subject Name" required />
+                  <input type="text" id="sTeacher" placeholder="Teacher" required />
+                  <input type="text" id="sTime" placeholder="Time" required />
+                  <textarea id="sDesc" placeholder="Description" rows="2"></textarea>
+                  <div class="btn-group">
+                    <button type="submit">Save</button>
+                    <button type="button" onclick="toggleInlineForm('addSubjectInline')">Cancel</button>
+                  </div>
+                </form>
               </div>
+              
+              <div class="subjects-list" id="subjectsList"></div>
             </div>
 
-            <!-- Right Panel: Details -->
             <div class="subject-details" id="subjectDetailsPanel">
               <div class="empty-state">
                 <i class="fas fa-book-open"></i>
-                <p>Select a subject from the list to view details, tasks, assignments, and lessons.</p>
+                <p>Select a subject to view details</p>
               </div>
             </div>
           </div>
         </section>
       </main>
+    </div>
 
-      <!-- Add Subject Modal -->
-      <div class="modal" id="addSubjectModal">
-        <div class="modal-content">
-          <span class="close" onclick="closeModal('addSubjectModal')">&times;</span>
-          <div class="modal-body">
-            <h2>Add New Subject</h2>
-            <form id="addSubjectForm" onsubmit="return handleAddSubject(event)">
-              <div class="form-group">
-                <label>Subject Name</label>
-                <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
-              </div>
-              <div class="form-group">
-                <label>Teacher</label>
-                <input type="text" id="newTeacherName" required placeholder="e.g. Mr. Anderson" />
-              </div>
-              <div class="form-group">
-                <label>Time</label>
-                <input type="text" id="newSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
-              </div>
-              <button type="submit" class="btn-add-subject">
-                <i class="fas fa-check"></i> Save Subject
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Edit Subject Modal -->
-      <div class="modal" id="editSubjectModal">
-        <div class="modal-content">
-          <span class="close" onclick="closeModal('editSubjectModal')">&times;</span>
-          <div class="modal-body">
-            <h2>Edit Subject</h2>
-            <form id="editSubjectForm">
-              <input type="hidden" id="editSubjectIndex" />
-              <div class="form-group">
-                <label>Subject Name</label>
-                <input type="text" id="editSubjectName" required />
-              </div>
-              <div class="form-group">
-                <label>Teacher</label>
-                <input type="text" id="editTeacherName" required />
-              </div>
-              <div class="form-group">
-                <label>Time</label>
-                <input type="text" id="editSubjectTime" required />
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <textarea id="editSubjectDescription" rows="5"></textarea>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn-save">
-                  <i class="fas fa-check"></i> Save Changes
-                </button>
-                <button type="button" class="btn-delete" id="deleteSubjectBtn">
-                  <i class="fas fa-trash"></i> Delete
-                </button>
-              </div>
-            </form>
-          </div>
+    <!-- Modals Outside App Container -->
+    <!-- Add Task Modal -->
+    <div class="modal" id="addTaskModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('addTaskModal')">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-tasks"></i> Add New Task</h2>
+          <form id="addTaskForm" onsubmit="return addTaskInline(event)">
+            <input type="hidden" id="taskSubjectIndex" />
+            <input type="text" id="newTaskTitle" placeholder="Task Title" required />
+            <input type="date" id="newTaskDueDate" required />
+            <select id="newTaskPriority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+            <textarea id="newTaskDescription" placeholder="Task details" rows="3"></textarea>
+            <input type="file" id="newTaskFile" />
+            <button type="submit" class="btn-add-subject"><i class="fas fa-plus"></i> Add Task</button>
+          </form>
         </div>
       </div>
     </div>
+
+    <!-- Add Assignment Modal -->
+    <div class="modal" id="addAssignmentModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('addAssignmentModal')">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-clipboard-list"></i> Add Assignment</h2>
+          <form id="addAssignmentForm" onsubmit="return addAssignmentInline(event)">
+            <input type="hidden" id="assignmentSubjectIndex" />
+            <input type="text" id="newAssignmentTitle" placeholder="Title" required />
+            <input type="date" id="newAssignmentDueDate" required />
+            <input type="number" id="newAssignmentPoints" placeholder="Points" required />
+            <textarea id="newAssignmentInstructions" placeholder="Instructions" rows="4"></textarea>
+            <input type="file" id="newAssignmentFile" />
+            <button type="submit" class="btn-add-subject"><i class="fas fa-plus"></i> Add Assignment</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Lesson Modal -->
+    <div class="modal" id="addLessonModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('addLessonModal')">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-book-open"></i> Add Lesson</h2>
+          <form id="addLessonForm" onsubmit="return addLessonInline(event)">
+            <input type="hidden" id="lessonSubjectIndex" />
+            <input type="text" id="newLessonTitle" placeholder="Title" required />
+            <input type="text" id="newLessonDuration" placeholder="Duration" required />
+            <select id="newLessonStatus">
+              <option value="locked">Locked</option>
+              <option value="available" selected>Available</option>
+              <option value="completed">Completed</option>
+            </select>
+            <textarea id="newLessonContent" placeholder="Content" rows="4"></textarea>
+            <input type="file" id="newLessonFile" />
+            <button type="submit" class="btn-add-subject"><i class="fas fa-plus"></i> Add Lesson</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .inline-form {
+        padding: 15px;
+        background: rgba(0, 240, 255, 0.05);
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        margin: 10px;
+      }
+      .inline-form input, .inline-form select, .inline-form textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 5px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+      }
+      .inline-form .btn-group {
+        display: flex;
+        gap: 5px;
+      }
+      .inline-form button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .inline-form button[type="submit"] {
+        background: var(--accent);
+        color: #000;
+        font-weight: bold;
+      }
+      .inline-form button[type="button"] {
+        background: #666;
+        color: #fff;
+      }
+    </style>
 
     <script type="module" src="firebase.js"></script>
     <script type="module" src="supabase.js"></script>
@@ -192,88 +197,138 @@
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
     
-    <!-- Modal Functions -->
+    <!-- Inline CRUD Functions -->
     <script>
+      // Toggle inline forms
+      function toggleInlineForm(formId) {
+        var form = document.getElementById(formId);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      }
+      
       // Modal functions
       function openModal(modalId) {
-        var modal = document.getElementById(modalId);
-        if (modal) {
-          modal.style.display = 'block';
-        }
+        document.getElementById(modalId).style.display = 'block';
       }
-      
       function closeModal(modalId) {
-        var modal = document.getElementById(modalId);
-        if (modal) {
-          modal.style.display = 'none';
+        document.getElementById(modalId).style.display = 'none';
+      }
+      
+      // Close modal on outside click
+      window.onclick = function(e) {
+        if (e.target.classList.contains('modal')) {
+          e.target.style.display = 'none';
         }
-      }
-      
-      // Add Subject Modal
-      document.getElementById('addSubjectBtn')?.addEventListener('click', function() {
-        openModal('addSubjectModal');
-      });
-      
-      // Handle Add Subject Form
-      window.handleAddSubject = function(e) {
-        e.preventDefault();
-        alert('Adding subject...');
-        
-        var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
-        var subject = {
-          id: Date.now().toString(),
-          name: document.getElementById('newSubjectName').value.trim(),
-          teacher: document.getElementById('newTeacherName').value.trim(),
-          time: document.getElementById('newSubjectTime').value.trim(),
-          description: document.getElementById('newSubjectDescription').value.trim(),
-          lessons: [],
-          tasks: [],
-          assignments: [],
-          quizzes: []
-        };
-        
-        subjects.push(subject);
-        localStorage.setItem('subjects', JSON.stringify(subjects));
-        alert('Subject added successfully!');
-        
-        document.getElementById('addSubjectForm').reset();
-        closeModal('addSubjectModal');
-        setTimeout(function() { location.reload(); }, 500);
-        
-        return false;
       };
-    </script>
-    
-    <script type="module">
-      import { logout, initializeSubjects } from "./script.js";
-
-      // Initialize subjects page
-      if (typeof initializeSubjects === 'function') {
-        initializeSubjects();
+      
+      // Add Subject Inline
+      function addSubjectInline(e) {
+        e.preventDefault();
+        var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        subjects.push({
+          id: Date.now().toString(),
+          name: document.getElementById('sName').value.trim(),
+          teacher: document.getElementById('sTeacher').value.trim(),
+          time: document.getElementById('sTime').value.trim(),
+          description: document.getElementById('sDesc').value.trim(),
+          lessons: [], tasks: [], assignments: [], quizzes: []
+        });
+        localStorage.setItem('subjects', JSON.stringify(subjects));
+        e.target.reset();
+        toggleInlineForm('addSubjectInline');
+        location.reload();
+        return false;
       }
-
-      // Logout button
-      const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn?.addEventListener("click", (e) => logout(e));
-
-      // Mobile navigation
-      const hamburgerBtn = document.getElementById("hamburger-btn");
-      const sidebar = document.querySelector(".sidebar");
-
-      if (hamburgerBtn && sidebar) {
-        hamburgerBtn.addEventListener("click", () => {
+      
+      // Add Task
+      function addTaskInline(e) {
+        e.preventDefault();
+        var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        var idx = parseInt(document.getElementById('taskSubjectIndex').value);
+        subjects[idx].tasks.push({
+          id: Date.now().toString(),
+          title: document.getElementById('newTaskTitle').value.trim(),
+          dueDate: document.getElementById('newTaskDueDate').value,
+          priority: document.getElementById('newTaskPriority').value,
+          status: 'pending',
+          description: document.getElementById('newTaskDescription').value.trim(),
+          file: null, fileUrl: null
+        });
+        localStorage.setItem('subjects', JSON.stringify(subjects));
+        e.target.reset();
+        closeModal('addTaskModal');
+        location.reload();
+        return false;
+      }
+      
+      // Add Assignment
+      function addAssignmentInline(e) {
+        e.preventDefault();
+        var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        var idx = parseInt(document.getElementById('assignmentSubjectIndex').value);
+        subjects[idx].assignments.push({
+          id: Date.now().toString(),
+          title: document.getElementById('newAssignmentTitle').value.trim(),
+          dueDate: document.getElementById('newAssignmentDueDate').value,
+          points: parseInt(document.getElementById('newAssignmentPoints').value),
+          status: 'pending',
+          instructions: document.getElementById('newAssignmentInstructions').value.trim(),
+          file: null, fileUrl: null, submissions: []
+        });
+        localStorage.setItem('subjects', JSON.stringify(subjects));
+        e.target.reset();
+        closeModal('addAssignmentModal');
+        location.reload();
+        return false;
+      }
+      
+      // Add Lesson
+      function addLessonInline(e) {
+        e.preventDefault();
+        var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        var idx = parseInt(document.getElementById('lessonSubjectIndex').value);
+        subjects[idx].lessons.push({
+          id: Date.now().toString(),
+          title: document.getElementById('newLessonTitle').value.trim(),
+          duration: document.getElementById('newLessonDuration').value.trim(),
+          status: document.getElementById('newLessonStatus').value,
+          content: document.getElementById('newLessonContent').value.trim(),
+          file: null, fileUrl: null
+        });
+        localStorage.setItem('subjects', JSON.stringify(subjects));
+        e.target.reset();
+        closeModal('addLessonModal');
+        location.reload();
+        return false;
+      }
+      
+      // Initialize
+      document.addEventListener('DOMContentLoaded', function() {
+        // Logout
+        document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+          e.preventDefault();
+          localStorage.clear();
+          location.href = 'Login.html';
+        });
+        
+        // Mobile nav
+        var hamburger = document.getElementById('hamburger-btn');
+        var sidebar = document.querySelector('.sidebar');
+        hamburger?.addEventListener('click', function() {
           if (window.innerWidth < 768) {
-            sidebar.classList.toggle("mobile-open");
-            hamburgerBtn.classList.toggle("mobile-open");
+            sidebar?.classList.toggle('mobile-open');
+            hamburger?.classList.toggle('mobile-open');
           }
         });
-      }
-
-      // Animations
-      ScrollReveal().reveal(".subjects-section", { delay: 1000 });
-      ScrollReveal().reveal(".subjects-content-wrapper", { delay: 1200 });
-      ScrollReveal().reveal(".subjects-list", { delay: 1400 });
-      ScrollReveal().reveal(".subject-details", { delay: 1600 });
+        
+        // Load module functions
+        import('./script.js').then(function(m) {
+          if (typeof m.initializeSubjects === 'function') m.initializeSubjects();
+        });
+        
+        // Animations
+        ScrollReveal().reveal('.subjects-section', { delay: 1000 });
+        ScrollReveal().reveal('.subjects-content-wrapper', { delay: 1200 });
+      });
     </script>
   </body>
 </html>
