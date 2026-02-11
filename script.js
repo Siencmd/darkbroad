@@ -1695,9 +1695,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================
 export { logout, applyTheme };
 
-// Make logout globally accessible for non-module scripts
-window.logout = logout;
-
 window.submitStudentFile = async function(subjectId, taskId, file) {
 
   const { data: { session } } = await supabase.auth.getSession();
