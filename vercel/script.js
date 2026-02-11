@@ -792,6 +792,53 @@ function initializeSubjects() {
 
         // Keep a default visible tab state after each render.
         switchTab('tasks');
+
+        // JS listeners for dynamic controls (works even if inline onclick is blocked by CSP).
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        document.querySelectorAll('.btn-add-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const { type, subjectIndex } = btn.dataset;
+                openAddItemModal(parseInt(subjectIndex), type);
+            });
+        });
+
+        document.querySelectorAll('.btn-edit-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const { type, subjectIndex, itemIndex } = btn.dataset;
+                openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
+            });
+        });
+
+        document.querySelectorAll('.btn-delete-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const { type, subjectIndex, itemIndex } = btn.dataset;
+                deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
+            });
+        });
+
+        document.querySelectorAll('.btn-submit-assignment').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const { subjectIndex, assignmentIndex } = btn.dataset;
+                openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
+            });
+        });
+
+        document.querySelectorAll('.btn-view-submissions').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const { subjectIndex, assignmentIndex } = btn.dataset;
+                viewSubmissions(parseInt(subjectIndex), parseInt(assignmentIndex));
+            });
+        });
+
+        document.querySelectorAll('.btn-sync-cloud').forEach(btn => {
+            btn.addEventListener('click', () => {
+                saveSubjects(false);
+                saveSubjectsToFirestore();
+            });
+        });
     };
 
 
@@ -1273,7 +1320,8 @@ function initializeSubjects() {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
-        const item = sub[`${type}s`][itemIndex];
+        const arrayName = type === 'quiz' ? 'quizzes' : `${type}s`;
+        const item = sub[arrayName]?.[itemIndex];
         if (!item) return;
 
         if (type === 'quiz') {
