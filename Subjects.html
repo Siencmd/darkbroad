@@ -559,13 +559,21 @@
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
-          if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+          if (window.innerWidth < 768 && sidebar && sidebar.classList.contains('mobile-open')) {
+            // Check if click is inside sidebar or hamburger - don't close
+            if (sidebar.contains(e.target) || hamburgerBtn.contains(e.target)) {
+              return;
+            }
+            
             // Check if any modal is open
             const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
             // Also check if clicking on a button that will open a modal
-            const willOpenModal = e.target.closest('#addSubjectBtn, #editSubjectBtn, .btn-edit-subject');
-            if ((!openModal || !openModal.contains(e.target)) && !willOpenModal) {
-              console.log("Clicking outside, closing sidebar");
+            const willOpenModal = e.target.closest('#addSubjectBtn, .btn-add-mini, #editSubjectBtn, .btn-edit-subject, .btn-add-item');
+            // Don't close if clicking on main content buttons
+            const mainContentClick = e.target.closest('.content, .subjects-content-wrapper, .subject-details, .subjects-list');
+            
+            if ((!openModal || !openModal.contains(e.target)) && !willOpenModal && !mainContentClick) {
+              console.log("Clicking outside sidebar, closing it");
               sidebar.classList.remove('mobile-open');
               hamburgerBtn.classList.remove('mobile-open');
             }
