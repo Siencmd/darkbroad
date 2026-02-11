@@ -131,7 +131,7 @@
               <div class="modal-body">
                 <h2>Add New Subject</h2>
 
-                <form id="addSubjectForm">
+                <form id="addSubjectForm" onsubmit="handleAddSubject(event)">
                   <div class="form-group">
                     <label>Subject Name</label>
                     <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
@@ -547,6 +547,33 @@
       } else {
         console.error('initializeSubjects function not found');
       }
+
+      // Inline handler for add subject form (backup for when module event listener fails)
+      window.handleAddSubject = function(e) {
+        e.preventDefault();
+        console.log('handleAddSubject called');
+        
+        const subject = {
+            id: Date.now().toString(),
+            name: document.getElementById('newSubjectName').value.trim(),
+            teacher: document.getElementById('newTeacherName').value.trim(),
+            time: document.getElementById('newSubjectTime').value.trim(),
+            description: document.getElementById('newSubjectDescription').value.trim(),
+            lessons: [],
+            tasks: [],
+            assignments: [],
+            quizzes: []
+        };
+        
+        console.log('Adding subject:', subject);
+        window.subjects.push(subject);
+        window.saveSubjects();
+        window.renderSubjects();
+        
+        document.getElementById('addSubjectForm').reset();
+        document.getElementById('addSubjectModal').style.display = 'none';
+        console.log('Subject added successfully');
+      };
 
       // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
