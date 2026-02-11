@@ -405,8 +405,8 @@ function initializeSubjects() {
     const userRole = userData ? userData.role : 'student';
     console.log('User role:', userRole); // Debug log
 
-    // Hide add subject button for students
-    if (userRole !== 'instructor') {
+    // Hide add subject button for students (but don't break if addBtn is null)
+    if (addBtn && userRole !== 'instructor') {
         addBtn.style.display = 'none';
     }
 
