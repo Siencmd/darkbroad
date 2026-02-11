@@ -5,16 +5,28 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userExists() {
+    function hasUsersProfile() {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function hasStudentsProfile() {
+      return exists(/databases/$(database)/documents/students/$(request.auth.uid));
+    }
+
+    function userExists() {
+      return hasUsersProfile() || hasStudentsProfile();
+    }
+
     function userCourse() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.course;
+      return hasUsersProfile()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.course
+        : get(/databases/$(database)/documents/students/$(request.auth.uid)).data.course;
     }
 
     function userRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return hasUsersProfile()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : get(/databases/$(database)/documents/students/$(request.auth.uid)).data.role;
     }
 
     function inCourse(courseId) {
@@ -22,10 +34,21 @@ service cloud.firestore {
     }
 
     function isInstructor(courseId) {
-      return inCourse(courseId) && userRole() == "instructor";
+      return inCourse(courseId) &&
+        (userRole() == "instructor" ||
+         userRole() == "Instructor" ||
+         userRole() == "teacher" ||
+         userRole() == "Teacher" ||
+         userRole() == "admin" ||
+         userRole() == "Admin");
     }
 
     match /users/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    // Backward compatibility for old account profiles.
+    match /students/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
