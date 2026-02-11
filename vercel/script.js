@@ -1836,6 +1836,15 @@ function initializeSubjects() {
         saveSubjects(false);
         saveSubjectsToFirestore();
     };
+    window.subjectsSaveSubjectFromModal = () => {
+        const form = document.getElementById('addSubjectForm');
+        if (!form) return;
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
+    };
 
     // -------------------------
     // SAVE TO LOCALSTORAGE
