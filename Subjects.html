@@ -86,7 +86,8 @@
       </main>
     </div>
 
-    <!-- Modals Outside App Container -->
+    <!-- All Modals Outside App Container -->
+    
     <!-- Add Task Modal -->
     <div class="modal" id="addTaskModal">
       <div class="modal-content">
@@ -105,6 +106,38 @@
             <textarea id="newTaskDescription" placeholder="Task details" rows="3"></textarea>
             <input type="file" id="newTaskFile" />
             <button type="submit" class="btn-add-subject"><i class="fas fa-plus"></i> Add Task</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal" id="editTaskModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('editTaskModal')">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-edit"></i> Edit Task</h2>
+          <form id="editTaskForm">
+            <input type="hidden" id="editTaskIndex" />
+            <input type="hidden" id="editTaskSubjectIndex" />
+            <input type="text" id="editTaskTitle" required />
+            <input type="date" id="editTaskDueDate" required />
+            <select id="editTaskPriority">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <select id="editTaskStatus">
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            <textarea id="editTaskDescription" rows="3"></textarea>
+            <input type="file" id="editTaskFile" />
+            <div class="form-actions">
+              <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save</button>
+              <button type="button" class="btn-delete" id="deleteTaskBtn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
           </form>
         </div>
       </div>
@@ -129,6 +162,34 @@
       </div>
     </div>
 
+    <!-- Edit Assignment Modal -->
+    <div class="modal" id="editAssignmentModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('editAssignmentModal')">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-edit"></i> Edit Assignment</h2>
+          <form id="editAssignmentForm">
+            <input type="hidden" id="editAssignmentIndex" />
+            <input type="hidden" id="editAssignmentSubjectIndex" />
+            <input type="text" id="editAssignmentTitle" required />
+            <input type="date" id="editAssignmentDueDate" required />
+            <input type="number" id="editAssignmentPoints" required />
+            <select id="editAssignmentStatus">
+              <option value="pending">Pending</option>
+              <option value="submitted">Submitted</option>
+              <option value="graded">Graded</option>
+            </select>
+            <textarea id="editAssignmentInstructions" rows="4"></textarea>
+            <input type="file" id="editAssignmentFile" />
+            <div class="form-actions">
+              <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save</button>
+              <button type="button" class="btn-delete" id="deleteAssignmentBtn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Add Lesson Modal -->
     <div class="modal" id="addLessonModal">
       <div class="modal-content">
@@ -147,6 +208,54 @@
             <textarea id="newLessonContent" placeholder="Content" rows="4"></textarea>
             <input type="file" id="newLessonFile" />
             <button type="submit" class="btn-add-subject"><i class="fas fa-plus"></i> Add Lesson</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Lesson Modal -->
+    <div class="modal" id="editLessonModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('editLessonModal')">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-edit"></i> Edit Lesson</h2>
+          <form id="editLessonForm">
+            <input type="hidden" id="editLessonIndex" />
+            <input type="hidden" id="editLessonSubjectIndex" />
+            <input type="text" id="editLessonTitle" required />
+            <input type="text" id="editLessonDuration" required />
+            <select id="editLessonStatus">
+              <option value="locked">Locked</option>
+              <option value="available">Available</option>
+              <option value="completed">Completed</option>
+            </select>
+            <textarea id="editLessonContent" rows="4"></textarea>
+            <input type="file" id="editLessonFile" />
+            <div class="form-actions">
+              <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save</button>
+              <button type="button" class="btn-delete" id="deleteLessonBtn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Subject Modal -->
+    <div class="modal" id="editSubjectModal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('editSubjectModal')">&times;</span>
+        <div class="modal-body">
+          <h2>Edit Subject</h2>
+          <form id="editSubjectForm">
+            <input type="hidden" id="editSubjectIndex" />
+            <input type="text" id="editSubjectName" required />
+            <input type="text" id="editTeacherName" required />
+            <input type="text" id="editSubjectTime" required />
+            <textarea id="editSubjectDescription" rows="5"></textarea>
+            <div class="form-actions">
+              <button type="submit" class="btn-save"><i class="fas fa-check"></i> Save</button>
+              <button type="button" class="btn-delete" id="deleteSubjectBtn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
           </form>
         </div>
       </div>
@@ -220,7 +329,7 @@
         }
       };
       
-      // Add Subject Inline
+      // Add Subject
       function addSubjectInline(e) {
         e.preventDefault();
         var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
