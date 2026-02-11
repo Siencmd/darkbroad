@@ -1685,11 +1685,11 @@ function initializeSubjects() {
         const currentUserData = JSON.parse(localStorage.getItem("userData"));
         
         // Auto-sync to Firestore for all users
-        if (autoSync && currentUserData && currentUserData.course) {
+        if (autoSync && currentUserData && currentUserData.course && !disableSubjectsRealtime) {
             console.log('Auto-syncing to Firestore for course:', currentUserData.course);
             saveSubjectsToFirestore();
         } else {
-            console.log('Not syncing to Firestore: autoSync=', autoSync, 'userData.course=', currentUserData?.course);
+            console.log('Not syncing to Firestore: autoSync=', autoSync, 'userData.course=', currentUserData?.course, 'localMode=', disableSubjectsRealtime);
         }
     }
 
