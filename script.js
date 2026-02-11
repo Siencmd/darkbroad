@@ -1482,31 +1482,7 @@ function initializeSubjects() {
         }
     }
 
-    // -------------------------
-    // SETUP REALTIME SUBJECTS
-    // -------------------------
-    const setupRealtimeSubjects = function(courseId, onSubjectsUpdate) {
-        const docRef = doc(db, "subjects", courseId);
-        onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                subjects = docSnap.data().subjects || subjects;
-                saveSubjects(false); // Sync to localStorage without triggering another save
-                renderSubjects();
-                // Re-render current subject details if any
-                const activeItem = document.querySelector('.subject-list-item.active');
-                if (activeItem) {
-                    renderSubjectDetails(activeItem.dataset.index);
-                }
-                // Call the callback if provided
-                if (onSubjectsUpdate) {
-                    onSubjectsUpdate(subjects);
-                }
-                console.log("Realtime update: Subjects refreshed from cloud.");
-            }
-        }, (error) => {
-            console.error("Realtime listener error:", error);
-        });
-    }
+
 
     // Initial Render
     renderSubjects();
