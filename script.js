@@ -1718,13 +1718,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================
 // EXPORT LOGOUT, THEME & SUBJECTS INIT
 // =========================
-export { logout, applyTheme, initializeSubjects, saveSubjects, renderSubjects };
+export { logout, applyTheme, initializeSubjects };
 
-// Make globally accessible for inline scripts
+// Make globally accessible
 window.initializeSubjects = initializeSubjects;
-window.saveSubjects = saveSubjects;
-window.renderSubjects = renderSubjects;
-window.subjects = subjects;
 
 window.submitStudentFile = async function(subjectId, taskId, file) {
 
