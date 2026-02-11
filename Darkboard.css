@@ -391,7 +391,7 @@ body.light-mode .theme-toggle-btn:hover {
 
 @media (min-width: 768px) {
     .hamburger-btn {
-        display: none;
+        display: none !important;
     }
 }
 
@@ -1980,7 +1980,6 @@ body.light-mode .theme-toggle-btn:hover {
     animation: slideIn var(--anim-normal) ease;
     opacity: 1;
     position: relative;
-    overflow: hidden;
     z-index: 2001;
 }
 
