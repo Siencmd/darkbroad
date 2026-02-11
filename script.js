@@ -374,7 +374,7 @@ async function loadSubjectsFromFirestore(courseId) {
 
         if (docSnap.exists()) {
             subjects = docSnap.data().subjects || subjects;
-            saveSubjects(); // Sync to localStorage
+            localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage
             renderSubjects();
         } else {
             // If no Firestore data, save local data to Firestore for first time
