@@ -1691,9 +1691,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =========================
-// EXPORT LOGOUT & THEME
+// EXPORT LOGOUT, THEME & SUBJECTS INIT
 // =========================
-export { logout, applyTheme };
+export { logout, applyTheme, initializeSubjects };
+
+window.initializeSubjects = initializeSubjects; // Make globally accessible for inline scripts
 
 window.submitStudentFile = async function(subjectId, taskId, file) {
 
