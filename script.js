@@ -367,7 +367,7 @@ async function saveSubjectsToFirestore() {
 // =========================
 // LOAD SUBJECTS FROM FIRESTORE
 // =========================
-async function loadSubjectsFromFirestore(courseId) {
+async function loadSubjectsFromFirestore(courseId, onLoad) {
     try {
         const docRef = doc(db, "subjects", courseId);
         const docSnap = await getDoc(docRef);
@@ -375,7 +375,7 @@ async function loadSubjectsFromFirestore(courseId) {
         if (docSnap.exists()) {
             subjects = docSnap.data().subjects || subjects;
             localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage
-            renderSubjects();
+            if (onLoad) onLoad();
         } else {
             // If no Firestore data, save local data to Firestore for first time
             saveSubjectsToFirestore();
@@ -412,38 +412,10 @@ function initializeSubjects() {
 
     // subjects is now defined globally at the top of the file
 
-
-
-    // Load subjects from Firestore if user is logged in
-    if (userData && userData.course) {
-        loadSubjectsFromFirestore(userData.course).then(() => {
-            // Enable realtime updates for all users in the course
-            setupRealtimeSubjects(userData.course, (updatedSubjects) => {
-                subjects = updatedSubjects;
-                saveSubjects(false); // Sync to localStorage without triggering another save
-                renderSubjects();
-                // Re-render current subject details if any
-                const activeItem = document.querySelector('.subject-list-item.active');
-                if (activeItem) {
-                    renderSubjectDetails(activeItem.dataset.index);
-                }
-                console.log("Realtime update: Subjects refreshed from cloud.");
-            });
-        });
-    }
-
-    // Dummy lessons data
-    const dummyLessons = [
-        { title: "Introduction to the Course", duration: "45 mins", status: "Completed" },
-        { title: "Chapter 1: Fundamentals", duration: "1 hr 20 mins", status: "In Progress" },
-        { title: "Chapter 2: Advanced Concepts", duration: "55 mins", status: "Locked" },
-        { title: "Midterm Review", duration: "2 hrs", status: "Locked" }
-    ];
-
     // -------------------------
     // RENDER SUBJECTS
     // -------------------------
-    const renderSubjects = () => {
+    function renderSubjects() {
         listContainer.innerHTML = subjects.map((sub, index) => `
             <div class="subject-list-item" data-index="${index}">
                 <h4>${sub.name}</h4>
@@ -460,6 +432,24 @@ function initializeSubjects() {
                 item.classList.add('active');
                 // Show details
                 renderSubjectDetails(item.dataset.index);
+            });
+        });
+    }
+
+    // Load subjects from Firestore if user is logged in
+    if (userData && userData.course) {
+        loadSubjectsFromFirestore(userData.course, renderSubjects).then(() => {
+            // Enable realtime updates for all users in the course
+            setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                subjects = updatedSubjects;
+                saveSubjects(false); // Sync to localStorage without triggering another save
+                renderSubjects();
+                // Re-render current subject details if any
+                const activeItem = document.querySelector('.subject-list-item.active');
+                if (activeItem) {
+                    renderSubjectDetails(activeItem.dataset.index);
+                }
+                console.log("Realtime update: Subjects refreshed from cloud.");
             });
         });
     }
