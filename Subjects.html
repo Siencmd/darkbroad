@@ -548,17 +548,13 @@
         console.error('initializeSubjects function not found');
       }
 
-      // Inline handler for add subject form (backup for when module event listener fails)
+      // Inline handler for add subject form
       window.handleAddSubject = function(e) {
         e.preventDefault();
         console.log('handleAddSubject called');
         
-        // Check if window.subjects exists
-        if (!window.subjects) {
-            console.error('window.subjects is not defined!');
-            // Try to get it from the module
-            window.subjects = window.subjects || JSON.parse(localStorage.getItem('subjects')) || [];
-        }
+        // Get current subjects from localStorage
+        let subjects = JSON.parse(localStorage.getItem('subjects')) || [];
         
         const subject = {
             id: Date.now().toString(),
@@ -573,21 +569,20 @@
         };
         
         console.log('Adding subject:', subject);
-        window.subjects.push(subject);
+        subjects.push(subject);
         
         // Save to localStorage
-        localStorage.setItem('subjects', JSON.stringify(window.subjects));
+        localStorage.setItem('subjects', JSON.stringify(subjects));
         
-        // Re-render if renderSubjects is available
-        if (window.renderSubjects) {
-            window.renderSubjects();
-        } else {
-            console.warn('renderSubjects not available, reloading page');
-            location.reload();
-        }
-        
+        // Close modal and reload page to reflect changes
         document.getElementById('addSubjectForm').reset();
         document.getElementById('addSubjectModal').style.display = 'none';
+        
+        // Reload the page after a short delay to let the modal close
+        setTimeout(() => {
+            location.reload();
+        }, 300);
+        
         console.log('Subject added successfully');
       };
 
