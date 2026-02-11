@@ -1681,46 +1681,7 @@ function initializeMenuFilter() {
     });
 }
 
-// =========================
-// HAMBURGER TOGGLE FUNCTIONALITY
-// =========================
-function initializeHamburger() {
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-    const sidebar = document.querySelector('.sidebar');
-    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
 
-    if (hamburgerBtn && sidebar) {
-        hamburgerBtn.addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-                sidebar.classList.toggle('mobile-open');
-                hamburgerBtn.classList.toggle('mobile-open');
-            }
-        });
-    }
-
-    if (sidebarCloseBtn && sidebar) {
-        sidebarCloseBtn.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-open');
-            if (hamburgerBtn) hamburgerBtn.classList.remove('mobile-open');
-        });
-    }
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-            sidebar.classList.remove('mobile-open');
-            if (hamburgerBtn) hamburgerBtn.classList.remove('mobile-open');
-        }
-    });
-
-    // Close sidebar on resize to desktop
-    window.addEventListener('resize', () => {
-        if (window.innerWidth >= 768) {
-            sidebar.classList.remove('mobile-open');
-            if (hamburgerBtn) hamburgerBtn.classList.remove('mobile-open');
-        }
-    });
-}
 
 // =========================
 // INITIALIZE EVERYTHING ON DOM
@@ -1738,7 +1699,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeGradesTable();
     initializeGradesFilter();
     initializeMenuFilter();
-    initializeHamburger();
 
     // THEME BUTTONS FOR MULTIPLE PAGES
     const darkModeBtn = document.getElementById("darkModeBtn");
