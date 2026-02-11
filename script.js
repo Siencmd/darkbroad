@@ -458,20 +458,35 @@ function initializeSubjects() {
 
     // Load subjects from Firestore if user is logged in
     if (userData && userData.course) {
-        loadSubjectsFromFirestore(userData.course, renderSubjects).then(() => {
-            // Enable realtime updates for all users in the course
-            setupRealtimeSubjects(userData.course, (updatedSubjects) => {
-                subjects = updatedSubjects;
-                saveSubjects(false); // Sync to localStorage without triggering another save
-                renderSubjects();
-                // Re-render current subject details if any
-                const activeItem = document.querySelector('.subject-list-item.active');
-                if (activeItem) {
-                    renderSubjectDetails(activeItem.dataset.index);
-                }
-                console.log("Realtime update: Subjects refreshed from cloud.");
+        // Check if user is logged in via localStorage
+        const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+        
+        if (isLoggedIn) {
+            loadSubjectsFromFirestore(userData.course, renderSubjects).then(() => {
+                // Enable realtime updates for all users in the course
+                setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                    subjects = updatedSubjects;
+                    saveSubjects(false); // Sync to localStorage without triggering another save
+                    renderSubjects();
+                    // Re-render current subject details if any
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem) {
+                        renderSubjectDetails(activeItem.dataset.index);
+                    }
+                    console.log("Realtime update: Subjects refreshed from cloud.");
+                }, (error) => {
+                    console.warn("Realtime connection failed, using local data only:", error.message);
+                });
+            }).catch((error) => {
+                console.warn("Firestore load failed, using local data:", error.message);
+                renderSubjects(); // Fallback to localStorage
             });
-        });
+        } else {
+            console.log("User not authenticated, using localStorage data only");
+            renderSubjects();
+        }
+    } else {
+        renderSubjects();
     }
 
     // -------------------------
