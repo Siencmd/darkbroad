@@ -24,7 +24,7 @@
 
   <body>
     <div class="app-container">
-      <!-- Mobile Sidebar Toggle - Inside app-container for proper z-index -->
+      <!-- Mobile Sidebar Toggle -->
       <button id="hamburger-btn" class="hamburger-btn">
         <span></span>
         <span></span>
@@ -63,13 +63,7 @@
             <i class="fas fa-bell"></i>
             <span>Announcements</span>
           </a>
-          <hr
-            style="
-              border: 0;
-              border-top: 1px solid rgba(255, 255, 255, 0.1);
-              margin: 10px 0;
-            "
-          />
+          <hr style="border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 10px 0;" />
           <a href="Profile.html" class="nav-item">
             <i class="fas fa-user"></i>
             <span>Profile</span>
@@ -90,7 +84,7 @@
       </aside>
 
       <!-- Main Content -->
-      <main class="content">
+      <main class="main-content">
         <section class="subjects-section">
           <div class="subjects-header">
             <h1>My Subjects</h1>
@@ -103,26 +97,10 @@
             <div class="subjects-sidebar">
               <div class="sidebar-header">
                 <h3>Subject List</h3>
-                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject" onclick="showAddSubjectInline()">
+                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
-              
-              <!-- Inline Add Subject Form -->
-              <div id="inlineAddSubjectForm" style="display: none; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin: 10px; border-radius: 10px;">
-                <h4 style="color: var(--accent); margin-bottom: 10px;"><i class="fas fa-plus"></i> Add Subject</h4>
-                <form onsubmit="return handleAddSubjectInline(event)">
-                  <input type="text" id="inlineSubjectName" placeholder="Subject Name" required style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary);" />
-                  <input type="text" id="inlineTeacherName" placeholder="Teacher" required style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary);" />
-                  <input type="text" id="inlineSubjectTime" placeholder="Time (e.g. 08:00 AM - 09:30 AM)" required style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary);" />
-                  <textarea id="inlineSubjectDesc" placeholder="Description" rows="2" style="width: 100%; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-primary); resize: vertical;"></textarea>
-                  <div style="display: flex; gap: 5px;">
-                    <button type="submit" style="flex: 1; padding: 8px; background: var(--accent); border: none; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold;">Save</button>
-                    <button type="button" onclick="hideAddSubjectInline()" style="padding: 8px; background: #666; border: none; border-radius: 5px; cursor: pointer; color: #fff;">Cancel</button>
-                  </div>
-                </form>
-              </div>
-              
               <div class="subjects-list" id="subjectsList">
                 <!-- List items will be injected here -->
               </div>
@@ -138,6 +116,74 @@
           </div>
         </section>
       </main>
+
+      <!-- Add Subject Modal -->
+      <div class="modal" id="addSubjectModal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal('addSubjectModal')">&times;</span>
+          <div class="modal-body">
+            <h2>Add New Subject</h2>
+            <form id="addSubjectForm">
+              <div class="form-group">
+                <label>Subject Name</label>
+                <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
+              </div>
+              <div class="form-group">
+                <label>Teacher</label>
+                <input type="text" id="newTeacherName" required placeholder="e.g. Mr. Anderson" />
+              </div>
+              <div class="form-group">
+                <label>Time</label>
+                <input type="text" id="newSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
+              </div>
+              <button type="submit" class="btn-add-subject">
+                <i class="fas fa-check"></i> Save Subject
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Subject Modal -->
+      <div class="modal" id="editSubjectModal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal('editSubjectModal')">&times;</span>
+          <div class="modal-body">
+            <h2>Edit Subject</h2>
+            <form id="editSubjectForm">
+              <input type="hidden" id="editSubjectIndex" />
+              <div class="form-group">
+                <label>Subject Name</label>
+                <input type="text" id="editSubjectName" required />
+              </div>
+              <div class="form-group">
+                <label>Teacher</label>
+                <input type="text" id="editTeacherName" required />
+              </div>
+              <div class="form-group">
+                <label>Time</label>
+                <input type="text" id="editSubjectTime" required />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="editSubjectDescription" rows="5"></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-save">
+                  <i class="fas fa-check"></i> Save Changes
+                </button>
+                <button type="button" class="btn-delete" id="deleteSubjectBtn">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="firebase.js"></script>
@@ -146,151 +192,92 @@
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
     
-    <!-- Inline JavaScript for Add Subject (No Module) -->
+    <!-- Modal Functions -->
     <script>
-      // Show inline add subject form
-      function showAddSubjectInline() {
-        var form = document.getElementById('inlineAddSubjectForm');
-        if (form) {
-          form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      // Modal functions (non-module for immediate availability)
+      function openModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+          modal.style.display = 'block';
         }
       }
       
-      // Hide inline add subject form
-      function hideAddSubjectInline() {
-        var form = document.getElementById('inlineAddSubjectForm');
-        if (form) {
-          form.style.display = 'none';
+      function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+          modal.style.display = 'none';
         }
       }
       
-      // Handle add subject form submission
-      window.handleAddSubjectInline = function(e) {
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
+        }
+      };
+      
+      // Add Subject Modal Handler
+      document.getElementById('addSubjectBtn')?.addEventListener('click', function() {
+        openModal('addSubjectModal');
+      });
+      
+      document.getElementById('addSubjectForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log('handleAddSubjectInline called');
+        console.log('Add subject form submitted');
         
-        // Get current subjects from localStorage
-        let subjects = JSON.parse(localStorage.getItem('subjects'));
-        console.log('Current subjects from localStorage:', subjects);
-        
-        if (!subjects) {
-          subjects = [];
-          console.log('Created new empty subjects array');
-        }
-        
-        const subject = {
+        var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        var subject = {
           id: Date.now().toString(),
-          name: document.getElementById('inlineSubjectName').value.trim(),
-          teacher: document.getElementById('inlineTeacherName').value.trim(),
-          time: document.getElementById('inlineSubjectTime').value.trim(),
-          description: document.getElementById('inlineSubjectDesc').value.trim(),
+          name: document.getElementById('newSubjectName').value.trim(),
+          teacher: document.getElementById('newTeacherName').value.trim(),
+          time: document.getElementById('newSubjectTime').value.trim(),
+          description: document.getElementById('newSubjectDescription').value.trim(),
           lessons: [],
           tasks: [],
           assignments: [],
           quizzes: []
         };
         
-        console.log('New subject to add:', subject);
         subjects.push(subject);
-        
-        // Save to localStorage
         localStorage.setItem('subjects', JSON.stringify(subjects));
-        console.log('Subjects saved to localStorage:', subjects);
+        console.log('Subject added:', subject);
         
-        // Hide form and clear inputs
-        hideAddSubjectInline();
-        e.target.reset();
-        
-        // Reload the page after a short delay
-        setTimeout(function() {
-          console.log('Reloading page...');
-          location.reload();
-        }, 300);
-        
-        console.log('Subject added successfully');
-        return false;
-      };
+        this.reset();
+        closeModal('addSubjectModal');
+        setTimeout(function() { location.reload(); }, 300);
+      });
     </script>
     
     <script type="module">
       import { logout, initializeSubjects } from "./script.js";
 
-      // Initialize subjects page functionality
+      // Initialize subjects page
       if (typeof initializeSubjects === 'function') {
         initializeSubjects();
-        console.log('Subjects page initialized successfully');
-      } else {
-        console.error('initializeSubjects function not found');
       }
 
       // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", (e) => logout(e));
+      logoutBtn?.addEventListener("click", (e) => logout(e));
 
-      // Mobile navigation toggle
+      // Mobile navigation
       const hamburgerBtn = document.getElementById("hamburger-btn");
       const sidebar = document.querySelector(".sidebar");
 
-      console.log("Hamburger button found:", hamburgerBtn);
-      console.log("Sidebar found:", sidebar);
-
       if (hamburgerBtn && sidebar) {
-        console.log("Adding hamburger click listener");
         hamburgerBtn.addEventListener("click", () => {
           if (window.innerWidth < 768) {
-            console.log("Hamburger clicked, toggling classes");
             sidebar.classList.toggle("mobile-open");
             hamburgerBtn.classList.toggle("mobile-open");
-            console.log("Sidebar classes:", sidebar.classList);
-            console.log("Hamburger classes:", hamburgerBtn.classList);
           }
         });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-          if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
-            const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
-            if (!openModal || !openModal.contains(e.target)) {
-              console.log("Clicking outside, closing sidebar");
-              sidebar.classList.remove('mobile-open');
-              hamburgerBtn.classList.remove('mobile-open');
-            }
-          }
-        });
-
-        // Close sidebar when clicking a nav item on mobile
-        const navItems = sidebar.querySelectorAll('.nav-item');
-        console.log("Nav items found:", navItems.length);
-        navItems.forEach(item => {
-          item.addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-              console.log("Nav item clicked, closing sidebar");
-              sidebar.classList.remove('mobile-open');
-              hamburgerBtn.classList.remove('mobile-open');
-            }
-          });
-        });
-      } else {
-        console.log("Hamburger button or sidebar not found");
       }
 
-      // Add animation on the web page using ScrollReveal
-      ScrollReveal().reveal(".subjects-section", {
-        delay: 1000,
-      });
-
-      ScrollReveal().reveal(".subjects-content-wrapper", {
-        delay: 1200,
-      });
-
-      ScrollReveal().reveal(".subjects-list", {
-        delay: 1400,
-      });
-
-      ScrollReveal().reveal(".subject-details", {
-        delay: 1600,
-      });
+      // Animations
+      ScrollReveal().reveal(".subjects-section", { delay: 1000 });
+      ScrollReveal().reveal(".subjects-content-wrapper", { delay: 1200 });
+      ScrollReveal().reveal(".subjects-list", { delay: 1400 });
+      ScrollReveal().reveal(".subject-details", { delay: 1600 });
     </script>
-
   </body>
 </html>
