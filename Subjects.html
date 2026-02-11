@@ -538,8 +538,6 @@
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
     <script type="module">
-      import { logout } from "./script.js";
-
       // Mobile navigation toggle
       const hamburgerBtn = document.getElementById("hamburger-btn");
       const sidebar = document.querySelector(".sidebar");
@@ -562,8 +560,11 @@
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
           if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+            // Check if any modal is open
             const openModal = document.querySelector('.modal[style*="display: block"]') || document.querySelector('.modal.show');
-            if (!openModal || !openModal.contains(e.target)) {
+            // Also check if clicking on a button that will open a modal
+            const willOpenModal = e.target.closest('#addSubjectBtn, #editSubjectBtn, .btn-edit-subject');
+            if ((!openModal || !openModal.contains(e.target)) && !willOpenModal) {
               console.log("Clicking outside, closing sidebar");
               sidebar.classList.remove('mobile-open');
               hamburgerBtn.classList.remove('mobile-open');
