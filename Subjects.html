@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"/>
 
     <!-- Icons -->
@@ -23,46 +23,37 @@
   </head>
 
   <body>
-    <div class="app-container">
-      <!-- Mobile Sidebar Toggle - Inside app-container for proper z-index -->
-      <button id="hamburger-btn" class="hamburger-btn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <!-- Right Side User Menu -->
-      <div class="user-menu-right">
-        <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User" class="user-avatar">
-        <span id="headerUserName">Ace</span>
-      </div>
-
-      <!-- Sidebar Navigation -->
+    <div class="dashboard-wrapper">
+      <!-- Sidebar -->
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <a href="index.html" class="brand">DARKBOARD</a>
-        </div>
+        <a href="index.html" class="brand">DARKBOARD</a>
+
         <nav class="sidebar-nav">
           <a href="index.html" class="nav-item">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
           </a>
+
           <a href="Subjects.html" class="nav-item active">
             <i class="fas fa-book"></i>
             <span>Subjects</span>
           </a>
+
           <a href="Grades.html" class="nav-item">
             <i class="fas fa-chart-bar"></i>
             <span>Grades</span>
           </a>
+
           <a href="Schedule.html" class="nav-item">
             <i class="fas fa-calendar-alt"></i>
             <span>Schedule</span>
           </a>
+
           <a href="Announcements.html" class="nav-item">
             <i class="fas fa-bell"></i>
             <span>Announcements</span>
           </a>
+
           <hr
             style="
               border: 0;
@@ -70,18 +61,22 @@
               margin: 10px 0;
             "
           />
+
           <a href="Profile.html" class="nav-item">
             <i class="fas fa-user"></i>
             <span>Profile</span>
           </a>
+
           <a href="Settings.html" class="nav-item">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
           </a>
+
           <a href="Help.html" class="nav-item">
             <i class="fas fa-question-circle"></i>
             <span>Help</span>
           </a>
+
           <a href="#" id="logoutBtn" class="nav-item">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
@@ -89,10 +84,8 @@
         </nav>
       </aside>
 
-
-
       <!-- Main Content -->
-      <main class="content">
+      <main class="dashboard-content">
         <section class="subjects-section">
           <div class="subjects-header">
             <h1>My Subjects</h1>
@@ -133,22 +126,22 @@
 
                 <form id="addSubjectForm">
                   <div class="form-group">
-                    <label for="newSubjectName">Subject Name</label>
+                    <label>Subject Name</label>
                     <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newTeacherName">Teacher</label>
+                    <label>Teacher</label>
                     <input type="text" id="newTeacherName" required placeholder="e.g. Mr. Anderson" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newSubjectTime">Time</label>
+                    <label>Time</label>
                     <input type="text" id="newSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
                   </div>
                   
                   <div class="form-group">
-                    <label for="newSubjectDescription">Description</label>
+                    <label>Description</label>
                     <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
                   </div>
 
@@ -172,22 +165,22 @@
                   <input type="hidden" id="editSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="editSubjectName">Subject Name</label>
+                    <label>Subject Name</label>
                     <input type="text" id="editSubjectName" required placeholder="e.g. Mathematics" />
                   </div>
 
                   <div class="form-group">
-                    <label for="editTeacherName">Teacher</label>
+                    <label>Teacher</label>
                     <input type="text" id="editTeacherName" required placeholder="e.g. Mr. Anderson" />
                   </div>
 
                   <div class="form-group">
-                    <label for="editSubjectTime">Time</label>
+                    <label>Time</label>
                     <input type="text" id="editSubjectTime" required placeholder="e.g. 08:00 AM - 09:30 AM" />
                   </div>
                   
                   <div class="form-group">
-                    <label for="editSubjectDescription">Description</label>
+                    <label>Description</label>
                     <textarea id="editSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
                   </div>
 
@@ -216,17 +209,17 @@
                   <input type="hidden" id="taskSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="newTaskTitle">Task Title</label>
+                    <label>Task Title</label>
                     <input type="text" id="newTaskTitle" required placeholder="e.g. Complete Chapter 5 Exercises" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newTaskDueDate">Due Date</label>
+                    <label>Due Date</label>
                     <input type="date" id="newTaskDueDate" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="newTaskPriority">Priority</label>
+                    <label>Priority</label>
                     <select id="newTaskPriority">
                       <option value="low">Low</option>
                       <option value="medium" selected>Medium</option>
@@ -235,12 +228,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="newTaskDescription">Description</label>
+                    <label>Description</label>
                     <textarea id="newTaskDescription" rows="3" placeholder="Task details..."></textarea>
                   </div>
 
                   <div class="form-group">
-                    <label for="newTaskFile"><i class="fas fa-upload"></i> Upload File (Optional)</label>
+                    <label><i class="fas fa-upload"></i> Upload File (Optional)</label>
                     <input type="file" id="newTaskFile" />
                   </div>
 
@@ -265,17 +258,17 @@
                   <input type="hidden" id="editTaskSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="editTaskTitle">Task Title</label>
+                    <label>Task Title</label>
                     <input type="text" id="editTaskTitle" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editTaskDueDate">Due Date</label>
+                    <label>Due Date</label>
                     <input type="date" id="editTaskDueDate" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editTaskPriority">Priority</label>
+                    <label>Priority</label>
                     <select id="editTaskPriority">
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
@@ -284,7 +277,7 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="editTaskStatus">Status</label>
+                    <label>Status</label>
                     <select id="editTaskStatus">
                       <option value="pending">Pending</option>
                       <option value="in-progress">In Progress</option>
@@ -293,12 +286,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="editTaskDescription">Description</label>
+                    <label>Description</label>
                     <textarea id="editTaskDescription" rows="3"></textarea>
                   </div>
 
                   <div class="form-group">
-                    <label for="editTaskFile"><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
+                    <label><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
                     <input type="file" id="editTaskFile" />
                   </div>
 
@@ -327,22 +320,22 @@
                   <input type="hidden" id="assignmentSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="newAssignmentTitle">Assignment Title</label>
+                    <label>Assignment Title</label>
                     <input type="text" id="newAssignmentTitle" required placeholder="e.g. Research Paper" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newAssignmentDueDate">Due Date</label>
+                    <label>Due Date</label>
                     <input type="date" id="newAssignmentDueDate" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="newAssignmentPoints">Points</label>
+                    <label>Points</label>
                     <input type="number" id="newAssignmentPoints" required placeholder="e.g. 100" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newAssignmentStatus">Status</label>
+                    <label>Status</label>
                     <select id="newAssignmentStatus">
                       <option value="pending" selected>Pending</option>
                       <option value="submitted">Submitted</option>
@@ -351,12 +344,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="newAssignmentInstructions">Instructions</label>
+                    <label>Instructions</label>
                     <textarea id="newAssignmentInstructions" rows="4" placeholder="Assignment instructions..."></textarea>
                   </div>
 
                   <div class="form-group">
-                    <label for="newAssignmentFile"><i class="fas fa-upload"></i> Upload File (Optional)</label>
+                    <label><i class="fas fa-upload"></i> Upload File (Optional)</label>
                     <input type="file" id="newAssignmentFile" />
                   </div>
 
@@ -381,22 +374,22 @@
                   <input type="hidden" id="editAssignmentSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="editAssignmentTitle">Assignment Title</label>
+                    <label>Assignment Title</label>
                     <input type="text" id="editAssignmentTitle" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editAssignmentDueDate">Due Date</label>
+                    <label>Due Date</label>
                     <input type="date" id="editAssignmentDueDate" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editAssignmentPoints">Points</label>
+                    <label>Points</label>
                     <input type="number" id="editAssignmentPoints" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editAssignmentStatus">Status</label>
+                    <label>Status</label>
                     <select id="editAssignmentStatus">
                       <option value="pending">Pending</option>
                       <option value="submitted">Submitted</option>
@@ -405,12 +398,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="editAssignmentInstructions">Instructions</label>
+                    <label>Instructions</label>
                     <textarea id="editAssignmentInstructions" rows="4"></textarea>
                   </div>
 
                   <div class="form-group">
-                    <label for="editAssignmentFile"><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
+                    <label><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
                     <input type="file" id="editAssignmentFile" />
                   </div>
 
@@ -439,17 +432,17 @@
                   <input type="hidden" id="lessonSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="newLessonTitle">Lesson Title</label>
+                    <label>Lesson Title</label>
                     <input type="text" id="newLessonTitle" required placeholder="e.g. Introduction to Algebra" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newLessonDuration">Duration</label>
+                    <label>Duration</label>
                     <input type="text" id="newLessonDuration" required placeholder="e.g. 45 mins" />
                   </div>
 
                   <div class="form-group">
-                    <label for="newLessonStatus">Status</label>
+                    <label>Status</label>
                     <select id="newLessonStatus">
                       <option value="locked">Locked</option>
                       <option value="available" selected>Available</option>
@@ -458,12 +451,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="newLessonContent">Content</label>
+                    <label>Content</label>
                     <textarea id="newLessonContent" rows="4" placeholder="Lesson content or topics covered..."></textarea>
                   </div>
 
                   <div class="form-group">
-                    <label for="newLessonFile"><i class="fas fa-plus"></i> Add Lesson Material (Optional)</label>
+                    <label><i class="fas fa-plus"></i> Add Lesson Material (Optional)</label>
                     <input type="file" id="newLessonFile" />
                   </div>
 
@@ -488,17 +481,17 @@
                   <input type="hidden" id="editLessonSubjectIndex" />
 
                   <div class="form-group">
-                    <label for="editLessonTitle">Lesson Title</label>
+                    <label>Lesson Title</label>
                     <input type="text" id="editLessonTitle" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editLessonDuration">Duration</label>
+                    <label>Duration</label>
                     <input type="text" id="editLessonDuration" required />
                   </div>
 
                   <div class="form-group">
-                    <label for="editLessonStatus">Status</label>
+                    <label>Status</label>
                     <select id="editLessonStatus">
                       <option value="locked">Locked</option>
                       <option value="available">Available</option>
@@ -507,12 +500,12 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="editLessonContent">Content</label>
+                    <label>Content</label>
                     <textarea id="editLessonContent" rows="4"></textarea>
                   </div>
 
                   <div class="form-group">
-                    <label for="editLessonFile"><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
+                    <label><i class="fas fa-upload"></i> Upload/Replace File (Optional)</label>
                     <input type="file" id="editLessonFile" />
                   </div>
 
@@ -532,80 +525,9 @@
       </main>
     </div>
 
+    <!-- Scripts -->
     <script type="module" src="firebase.js"></script>
     <script type="module" src="supabase.js"></script>
     <script type="module" src="script.js"></script>
-    <script src="https://unpkg.com/scrollreveal"></script>
-    <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
-    <script type="module">
-      // Mobile navigation toggle
-      const hamburgerBtn = document.getElementById("hamburger-btn");
-      const sidebar = document.querySelector(".sidebar");
-
-      console.log("Hamburger button found:", hamburgerBtn);
-      console.log("Sidebar found:", sidebar);
-
-      if (hamburgerBtn && sidebar) {
-        console.log("Adding hamburger click listener");
-      hamburgerBtn.addEventListener("click", () => {
-        if (window.innerWidth < 768) {
-          console.log("Hamburger clicked, toggling classes");
-          sidebar.classList.toggle("mobile-open");
-          hamburgerBtn.classList.toggle("mobile-open");
-          console.log("Sidebar classes:", sidebar.classList);
-          console.log("Hamburger classes:", hamburgerBtn.classList);
-        }
-      });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-          if (window.innerWidth < 768 && sidebar && sidebar.classList.contains('mobile-open')) {
-            // Check if click is inside sidebar, hamburger, or ANY modal - don't close
-            if (sidebar.contains(e.target) || 
-                hamburgerBtn.contains(e.target) || 
-                e.target.closest('.modal')) {
-              return;
-            }
-            
-            console.log("Clicking outside sidebar and modals, closing it");
-            sidebar.classList.remove('mobile-open');
-            hamburgerBtn.classList.remove('mobile-open');
-          }
-        });
-
-        // Close sidebar when clicking a nav item on mobile
-        const navItems = sidebar.querySelectorAll('.nav-item');
-        console.log("Nav items found:", navItems.length);
-        navItems.forEach(item => {
-          item.addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-              console.log("Nav item clicked, closing sidebar");
-              sidebar.classList.remove('mobile-open');
-              hamburgerBtn.classList.remove('mobile-open');
-            }
-          });
-        });
-      } else {
-        console.log("Hamburger button or sidebar not found");
-      }
-
-      // Add animation on the web page using ScrollReveal
-      ScrollReveal().reveal(".subjects-section", {
-        delay: 1000,
-      });
-
-      ScrollReveal().reveal(".subjects-content-wrapper", {
-        delay: 1200,
-      });
-
-      ScrollReveal().reveal(".subjects-list", {
-        delay: 1400,
-      });
-
-      ScrollReveal().reveal(".subject-details", {
-        delay: 1600,
-      });
-    </script>
-
   </body>
 </html>
