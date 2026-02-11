@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Darkboard - Student Dashboard for College of Computer Studies</title>
+    <meta name="description" content="Access your personalized student dashboard at Darkboard. Manage subjects, grades, schedule, announcements, and more for College of Computer Studies students." />
+    <meta name="keywords" content="student dashboard, college management, subjects, grades, schedule, announcements, education platform" />
+    <meta name="author" content="Darkboard Team" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://darkboard.edu/index.html" />
+    <link rel="icon" href="favicon.png" type="image/png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://darkboard.edu/" />
+    <meta property="og:title" content="Darkboard - Student Dashboard" />
+    <meta property="og:description" content="Personalized student dashboard for managing academic activities at College of Computer Studies." />
+    <meta property="og:image" content="https://darkboard.edu/Gemini_Generated_Image_g3iakg3iakg3iakg.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://darkboard.edu/" />
+    <meta property="twitter:title" content="Darkboard - Student Dashboard" />
+    <meta property="twitter:description" content="Personalized student dashboard for managing academic activities at College of Computer Studies." />
+    <meta property="twitter:image" content="https://darkboard.edu/Gemini_Generated_Image_g3iakg3iakg3iakg.png" />
+
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Main Navigation - Horizontal for All -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-header">
+        <a href="index.html" class="brand">DARKBOARD</a>
+      </div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-item active" aria-current="page"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+        <li><a href="Subjects.html" class="nav-item"><i class="fas fa-book"></i><span>Subjects</span></a></li>
+        <li><a href="Grades.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Grades</span></a></li>
+        <li><a href="Schedule.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
+        <li><a href="Announcements.html" class="nav-item"><i class="fas fa-bell"></i><span>Announcements</span></a></li>
+        <li><a href="Profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a></li>
+        <li><a href="Settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li><a href="Help.html" class="nav-item"><i class="fas fa-question-circle"></i><span>Help</span></a></li>
+        <li><a href="#" id="logoutBtn" class="nav-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="user-menu-right">
+          <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
+          <span id="headerUserName">Ace</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content" role="main">
+        <!-- School Banner Section -->
+        <section class="card" aria-labelledby="school-banner-heading">
+          <div
+            class="school-banner"
+            style="background-image: url('Classroom Header-4 - Made with PosterMyWall.jpg');"
+            role="banner"
+          >
+            <div class="school-logo-container">
+              <img
+                src="Gemini_Generated_Image_g3iakg3iakg3iakg.png"
+                alt="College of Computer Studies logo"
+                class="school-logo"
+              />
+            </div>
+            <h2 id="school-banner-heading">College of Computer Studies</h2>
+          </div>
+        </section>
+
+        <!-- Welcome Section -->
+        <section class="card" aria-labelledby="welcome-heading">
+          <div class="welcome-section">
+            <div class="welcome-text">
+              <h1 id="welcome-heading">Welcome back, <span id="dashboardUserName">John</span>! 👋</h1>
+              <p>
+                <span class="greetingMessage" aria-live="polite"></span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick Stats Banner -->
+        <section class="card" aria-labelledby="stats-heading">
+          <h2 id="stats-heading" class="sr-only">Academic Statistics</h2>
+          <div class="grades-stats" style="margin-bottom: 0">
+            <div class="stat-card">
+              <div class="stat-value" aria-label="4 subjects enrolled">4</div>
+              <div class="stat-name">Subjects Enrolled</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: 80%"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" aria-label="Current average grade A minus">A-</div>
+              <div class="stat-name">Current Average</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100">
+                <div
+                  class="stat-fill"
+                  style="width: 90%; background: #4ade80"
+                ></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" aria-label="2 upcoming deadlines">2</div>
+              <div class="stat-name">Upcoming Deadlines</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                <div
+                  class="stat-fill"
+                  style="width: 50%; background: #fbbf24"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="card" aria-labelledby="actions-heading">
+          <div class="card-header">
+            <h2 id="actions-heading"><i class="fas fa-bolt" aria-hidden="true"></i> Quick Actions</h2>
+          </div>
+          <div class="quick-actions-grid">
+            <button class="action-card" aria-label="Submit assignment">
+              <i class="fas fa-file-upload" aria-hidden="true"></i>
+              <span>Submit Assignment</span>
+            </button>
+            <button class="action-card" aria-label="Message teacher">
+              <i class="fas fa-message" aria-hidden="true"></i>
+              <span>Message Teacher</span>
+            </button>
+            <button class="action-card" aria-label="Download materials">
+              <i class="fas fa-download" aria-hidden="true"></i>
+              <span>Download Materials</span>
+            </button>
+            <button class="action-card" aria-label="View results">
+              <i class="fas fa-eye" aria-hidden="true"></i>
+              <span>View Results</span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script src="https://unpkg.com/typed.js@3.0.0/dist/typed.umd.js"></script>
+    <script type="module">
+      import { logout } from "./script.js";
+
+      // Logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Add animation on the web page using ScrollReveal
+      ScrollReveal().reveal(".school-banner", {
+        delay: 1000,
+      });
+
+      ScrollReveal().reveal(".welcome-section", {
+        delay: 1500,
+      });
+
+      ScrollReveal().reveal(".stat-card", {
+        delay: 1700,
+        interval: 500,
+      });
+
+      ScrollReveal().reveal(".card", {
+        delay: 1000,
+      });
+
+      ScrollReveal().reveal(".action-card", {
+        interval: 200,
+        delay: 500,
+      });
+
+      // Typing animation in the user name
+      const typed = new Typed(".greetingMessage", {
+        strings: [
+          "Ready to master your studies?",
+          "Ready to level up your studies?",
+          "Ready to crush your studies?",
+        ],
+        typeSpeed: 50,
+        backSpeed: 50,
+        loop: true,
+      });
+
+      // Search functionality (commented out as no search bar exists in HTML)
+      // const searchInput = document.querySelector('.search-bar input');
+      // const clearSearchBtn = document.querySelector('.clear-search');
+
+      // if (searchInput) {
+      //   searchInput.addEventListener('input', (e) => {
+      //     const query = e.target.value.toLowerCase();
+      //     const actions = document.querySelectorAll('.action-card');
+      //     actions.forEach(action => {
+      //       const text = action.textContent.toLowerCase();
+      //       action.style.display = text.includes(query) ? 'block' : 'none';
+      //     });
+      //     // Show/hide clear button
+      //     if (clearSearchBtn) clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
+      //   });
+      // }
+
+      // // Clear search functionality
+      // if (clearSearchBtn) {
+      //   clearSearchBtn.addEventListener('click', () => {
+      //     if (searchInput) {
+      //       searchInput.value = '';
+      //       searchInput.dispatchEvent(new Event('input'));
+      //       searchInput.focus();
+      //     }
+      //   });
+      // }
+    </script>
+
+  </body>
+</html>
