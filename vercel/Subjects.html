@@ -62,7 +62,7 @@
             <div class="subjects-sidebar">
               <div class="sidebar-header">
                 <h3>Subject List</h3>
-                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject">
+                <button id="addSubjectBtn" class="btn-add-mini" title="Add Subject" onclick="window.subjectsOpenAddSubjectModal()">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
@@ -83,7 +83,7 @@
           <!-- Add Subject Modal -->
           <div class="modal" id="addSubjectModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2>Add New Subject</h2>
@@ -120,7 +120,7 @@
           <!-- Edit Subject Modal -->
           <div class="modal" id="editSubjectModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2>Edit Subject</h2>
@@ -164,7 +164,7 @@
           <!-- Add Task Modal -->
           <div class="modal" id="addTaskModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2><i class="fas fa-tasks"></i> Add New Task</h2>
@@ -212,7 +212,7 @@
           <!-- Edit Task Modal -->
           <div class="modal" id="editTaskModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2><i class="fas fa-edit"></i> Edit Task</h2>
@@ -275,7 +275,7 @@
           <!-- Add Assignment Modal -->
           <div class="modal" id="addAssignmentModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2><i class="fas fa-clipboard-list"></i> Add New Assignment</h2>
@@ -328,7 +328,7 @@
           <!-- Edit Assignment Modal -->
           <div class="modal" id="editAssignmentModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2><i class="fas fa-edit"></i> Edit Assignment</h2>
@@ -387,7 +387,7 @@
           <!-- Add Lesson Modal -->
           <div class="modal" id="addLessonModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2><i class="fas fa-book-open"></i> Add New Lesson</h2>
@@ -435,7 +435,7 @@
           <!-- Edit Lesson Modal -->
           <div class="modal" id="editLessonModal">
             <div class="modal-content">
-              <span class="close">&times;</span>
+              <span class="close" onclick="window.subjectsCloseAllModals()">&times;</span>
 
               <div class="modal-body">
                 <h2><i class="fas fa-edit"></i> Edit Lesson</h2>
