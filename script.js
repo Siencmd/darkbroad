@@ -403,11 +403,14 @@ function initializeSubjects() {
     // Get user role
     let userData = JSON.parse(localStorage.getItem("userData"));
     const userRole = userData ? userData.role : 'student';
-    console.log('User role:', userRole); // Debug log
+    console.log('User role:', userRole);
+    console.log('Add button element:', addBtn);
 
     // Hide add subject button for students (but don't break if addBtn is null)
     if (addBtn && userRole !== 'instructor') {
         addBtn.style.display = 'none';
+    } else if (addBtn) {
+        console.log('Add button is visible for instructor');
     }
 
     // subjects is now defined globally at the top of the file
