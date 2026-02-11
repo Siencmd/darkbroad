@@ -793,52 +793,6 @@ function initializeSubjects() {
         // Keep a default visible tab state after each render.
         switchTab('tasks');
 
-        // JS listeners for dynamic controls (works even if inline onclick is blocked by CSP).
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-        });
-
-        document.querySelectorAll('.btn-add-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { type, subjectIndex } = btn.dataset;
-                openAddItemModal(parseInt(subjectIndex), type);
-            });
-        });
-
-        document.querySelectorAll('.btn-edit-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { type, subjectIndex, itemIndex } = btn.dataset;
-                openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
-            });
-        });
-
-        document.querySelectorAll('.btn-delete-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { type, subjectIndex, itemIndex } = btn.dataset;
-                deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
-            });
-        });
-
-        document.querySelectorAll('.btn-submit-assignment').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { subjectIndex, assignmentIndex } = btn.dataset;
-                openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
-            });
-        });
-
-        document.querySelectorAll('.btn-view-submissions').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const { subjectIndex, assignmentIndex } = btn.dataset;
-                viewSubmissions(parseInt(subjectIndex), parseInt(assignmentIndex));
-            });
-        });
-
-        document.querySelectorAll('.btn-sync-cloud').forEach(btn => {
-            btn.addEventListener('click', () => {
-                saveSubjects(false);
-                saveSubjectsToFirestore();
-            });
-        });
     };
 
 
@@ -889,6 +843,71 @@ function initializeSubjects() {
         if (tabBtn) tabBtn.classList.add('active');
         if (tabContent) tabContent.classList.add('active');
     }
+
+    // Event delegation for dynamic details buttons (robust across re-renders).
+    detailsContainer.addEventListener('click', (e) => {
+        const tabBtn = e.target.closest('.tab-btn');
+        if (tabBtn) {
+            switchTab(tabBtn.dataset.tab);
+            return;
+        }
+
+        const addItemBtn = e.target.closest('.btn-add-item');
+        if (addItemBtn) {
+            openAddItemModal(parseInt(addItemBtn.dataset.subjectIndex), addItemBtn.dataset.type);
+            return;
+        }
+
+        const editItemBtn = e.target.closest('.btn-edit-item');
+        if (editItemBtn) {
+            openEditItemModal(
+                parseInt(editItemBtn.dataset.subjectIndex),
+                editItemBtn.dataset.type,
+                parseInt(editItemBtn.dataset.itemIndex)
+            );
+            return;
+        }
+
+        const deleteItemBtn = e.target.closest('.btn-delete-item');
+        if (deleteItemBtn) {
+            deleteItem(
+                parseInt(deleteItemBtn.dataset.subjectIndex),
+                deleteItemBtn.dataset.type,
+                parseInt(deleteItemBtn.dataset.itemIndex)
+            );
+            return;
+        }
+
+        const submitAssignmentBtn = e.target.closest('.btn-submit-assignment');
+        if (submitAssignmentBtn) {
+            openSubmitAssignmentModal(
+                parseInt(submitAssignmentBtn.dataset.subjectIndex),
+                parseInt(submitAssignmentBtn.dataset.assignmentIndex)
+            );
+            return;
+        }
+
+        const viewSubmissionsBtn = e.target.closest('.btn-view-submissions');
+        if (viewSubmissionsBtn) {
+            viewSubmissions(
+                parseInt(viewSubmissionsBtn.dataset.subjectIndex),
+                parseInt(viewSubmissionsBtn.dataset.assignmentIndex)
+            );
+            return;
+        }
+
+        const syncCloudBtn = e.target.closest('.btn-sync-cloud');
+        if (syncCloudBtn) {
+            saveSubjects(false);
+            saveSubjectsToFirestore();
+            return;
+        }
+
+        const editSubjectBtn = e.target.closest('.btn-edit-subject');
+        if (editSubjectBtn) {
+            openEditModal(parseInt(editSubjectBtn.dataset.index));
+        }
+    });
 
     document.querySelectorAll('.modal .close').forEach(btn => {
         btn.addEventListener('click', closeAllModals);
