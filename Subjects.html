@@ -131,7 +131,7 @@
               <div class="modal-body">
                 <h2>Add New Subject</h2>
 
-                <form id="addSubjectForm" onsubmit="handleAddSubject(event)">
+                <form id="addSubjectForm" onsubmit="return handleAddSubject(event)">
                   <div class="form-group">
                     <label>Subject Name</label>
                     <input type="text" id="newSubjectName" required placeholder="e.g. Mathematics" />
@@ -152,7 +152,7 @@
                     <textarea id="newSubjectDescription" rows="5" placeholder="Brief description of the subject..."></textarea>
                   </div>
 
-                  <button type="button" class="btn-add-subject" onclick="handleAddSubject(event)">
+                  <button type="submit" class="btn-add-subject">
                     <i class="fas fa-check"></i> Save Subject
                   </button>
                 </form>
@@ -578,7 +578,7 @@
         subjects.push(subject);
         
         // Save to localStorage
-        const saved = localStorage.setItem('subjects', JSON.stringify(subjects));
+        localStorage.setItem('subjects', JSON.stringify(subjects));
         console.log('Subjects saved to localStorage:', subjects);
         
         // Close modal and reload page to reflect changes
@@ -592,6 +592,7 @@
         }, 500);
         
         console.log('Subject added successfully');
+        return false; // Prevent form submission
       };
 
       // Logout button
