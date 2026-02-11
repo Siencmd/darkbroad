@@ -6192,3 +6192,52 @@ body.light-mode .detail-row {
         min-height: 44px;
     }
 }
+
+/* Senior-style responsive subject editor: drawer on desktop, sheet on mobile */
+.subject-editor-modal {
+    align-items: stretch;
+}
+
+.subject-editor-modal .modal-content {
+    width: min(520px, 100%);
+    max-width: 520px;
+    height: 100vh;
+    margin: 0 0 0 auto;
+    border-radius: 20px 0 0 20px;
+    overflow-y: auto;
+    animation: drawerIn 0.24s ease;
+}
+
+@keyframes drawerIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0.85;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 900px) {
+    .subject-editor-modal .modal-content {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        max-height: 92vh;
+        margin: auto 0 0 0;
+        border-radius: 18px 18px 0 0;
+        animation: sheetIn 0.22s ease;
+    }
+
+    @keyframes sheetIn {
+        from {
+            transform: translateY(100%);
+            opacity: 0.85;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+}
