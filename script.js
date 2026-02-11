@@ -344,6 +344,48 @@ function initializeHelp() {
 }
 
 // =========================
+// SAVE SUBJECTS TO FIRESTORE
+// =========================
+async function saveSubjectsToFirestore() {
+    if (!userData || !userData.course) {
+        console.log("No course data, skipping Firestore save.");
+        return;
+    }
+
+    try {
+        await setDoc(doc(db, "subjects", userData.course), {
+            subjects: subjects,
+            lastUpdated: serverTimestamp()
+        });
+        console.log("Subjects synced to cloud successfully!");
+    } catch (error) {
+        console.error("Error saving subjects to Firestore:", error);
+        // Don't show alert to avoid spam, just log
+    }
+}
+
+// =========================
+// LOAD SUBJECTS FROM FIRESTORE
+// =========================
+async function loadSubjectsFromFirestore(courseId) {
+    try {
+        const docRef = doc(db, "subjects", courseId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            subjects = docSnap.data().subjects || subjects;
+            saveSubjects(); // Sync to localStorage
+            renderSubjects();
+        } else {
+            // If no Firestore data, save local data to Firestore for first time
+            saveSubjectsToFirestore();
+        }
+    } catch (error) {
+        console.error("Error loading subjects from Firestore:", error);
+    }
+}
+
+// =========================
 // SUBJECTS PAGE FUNCTIONALITY
 // =========================
 function initializeSubjects() {
@@ -1447,48 +1489,6 @@ function initializeSubjects() {
             saveSubjectsToFirestore();
         } else {
             console.log('Not syncing to Firestore: autoSync=', autoSync, 'userData.course=', userData?.course);
-        }
-    }
-
-    // -------------------------
-    // LOAD SUBJECTS FROM FIRESTORE
-    // -------------------------
-    const loadSubjectsFromFirestore = async function(courseId) {
-        try {
-            const docRef = doc(db, "subjects", courseId);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                subjects = docSnap.data().subjects || subjects;
-                saveSubjects(); // Sync to localStorage
-                renderSubjects();
-            } else {
-                // If no Firestore data, save local data to Firestore for first time
-                saveSubjectsToFirestore();
-            }
-        } catch (error) {
-            console.error("Error loading subjects from Firestore:", error);
-        }
-    }
-
-    // -------------------------
-    // SAVE SUBJECTS TO FIRESTORE
-    // -------------------------
-    const saveSubjectsToFirestore = async function() {
-        if (!userData || !userData.course) {
-            console.log("No course data, skipping Firestore save.");
-            return;
-        }
-
-        try {
-            await setDoc(doc(db, "subjects", userData.course), {
-                subjects: subjects,
-                lastUpdated: serverTimestamp()
-            });
-            console.log("Subjects synced to cloud successfully!");
-        } catch (error) {
-            console.error("Error saving subjects to Firestore:", error);
-            // Don't show alert to avoid spam, just log
         }
     }
 
