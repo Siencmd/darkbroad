@@ -389,8 +389,6 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
 // SUBJECTS PAGE FUNCTIONALITY
 // =========================
 function initializeSubjects() {
-    console.log('initializeSubjects called');
-    
     const listContainer = document.getElementById('subjectsList');
     const detailsContainer = document.getElementById('subjectDetailsPanel');
     const addBtn = document.getElementById('addSubjectBtn');
@@ -399,17 +397,6 @@ function initializeSubjects() {
     const editModal = document.getElementById('editSubjectModal');
     const editForm = document.getElementById('editSubjectForm');
     const deleteBtn = document.getElementById('deleteSubjectBtn');
-
-    console.log('DOM elements found:', {
-        listContainer: !!listContainer,
-        detailsContainer: !!detailsContainer,
-        addBtn: !!addBtn,
-        addModal: !!addModal,
-        addForm: !!addForm,
-        editModal: !!editModal,
-        editForm: !!editForm,
-        deleteBtn: !!deleteBtn
-    });
 
     if (!listContainer || !detailsContainer) return;
 
@@ -803,13 +790,7 @@ function initializeSubjects() {
     // OPEN ADD MODAL
     // -------------------------
     addBtn?.addEventListener('click', () => {
-        console.log('Add Subject button clicked');
-        console.log('addModal exists:', !!addModal);
-        if (addModal) {
-            addModal.style.display = 'block';
-        } else {
-            console.error('addModal not found');
-        }
+        addModal.style.display = 'block';
     });
 
     // -------------------------
@@ -858,36 +839,30 @@ function initializeSubjects() {
     // -------------------------
     // ADD SUBJECT (FORM)
     // -------------------------
-    if (addForm) {
-        console.log('addForm found, attaching submit listener');
-        addForm.addEventListener('submit', async e => {
-            e.preventDefault();
-            console.log('Add subject form submitted');
+    addForm?.addEventListener('submit', async e => {
+        e.preventDefault();
 
-            const subject = {
-                id: Date.now().toString(), // Unique ID for subject
-                name: document.getElementById('newSubjectName').value.trim(),
-                teacher: document.getElementById('newTeacherName').value.trim(),
-                time: document.getElementById('newSubjectTime').value.trim(),
-                description: document.getElementById('newSubjectDescription').value.trim(),
-                lessons: [],
-                tasks: [],
-                assignments: [],
-                quizzes: []
-            };
+        const subject = {
+            id: Date.now().toString(), // Unique ID for subject
+            name: document.getElementById('newSubjectName').value.trim(),
+            teacher: document.getElementById('newTeacherName').value.trim(),
+            time: document.getElementById('newSubjectTime').value.trim(),
+            description: document.getElementById('newSubjectDescription').value.trim(),
+            lessons: [],
+            tasks: [],
+            assignments: [],
+            quizzes: []
+        };
 
-            console.log('New subject data:', subject);
-            subjects.push(subject);
-            saveSubjects();
-            renderSubjects();
+        subjects.push(subject);
+        saveSubjects();
+        renderSubjects();
 
-            addForm.reset();
-            addModal.style.display = 'none';
-            console.log('Subject added successfully');
-        });
-    } else {
-        console.error('addForm not found!');
-    }
+
+
+        addForm.reset();
+        addModal.style.display = 'none';
+    });
 
     // -------------------------
     // EDIT SUBJECT (FORM)
@@ -1202,7 +1177,6 @@ function initializeSubjects() {
     // OPEN ADD ITEM MODAL
     // -------------------------
     const openAddItemModal = function(subjectIndex, type) {
-        console.log('openAddItemModal called:', subjectIndex, type);
         if (type === 'quiz') {
             // Custom modal for quiz
             const modal = document.createElement('div');
@@ -1259,21 +1233,12 @@ function initializeSubjects() {
         } else {
             const modalId = `add${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
             const modal = document.getElementById(modalId);
-            if (!modal) {
-                console.error('Modal not found:', modalId);
-                return;
-            }
+            if (!modal) return;
 
-            const subjectIndexInput = document.getElementById(`${type}SubjectIndex`);
-            if (subjectIndexInput) {
-                subjectIndexInput.value = subjectIndex;
-            }
+            document.getElementById(`${type}SubjectIndex`).value = subjectIndex;
             modal.style.display = 'block';
         }
     }
-    
-    // Make globally accessible
-    window.openAddItemModal = openAddItemModal;
 
     // -------------------------
     // OPEN EDIT ITEM MODAL
@@ -1380,10 +1345,6 @@ function initializeSubjects() {
             modal.style.display = 'block';
         }
     }
-    
-    // Make globally accessible
-    window.openAddItemModal = openAddItemModal;
-    window.openEditItemModal = openEditItemModal;
 
     // -------------------------
     // OPEN SUBMIT ASSIGNMENT MODAL
@@ -1730,12 +1691,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =========================
-// EXPORT LOGOUT, THEME & SUBJECTS INIT
+// EXPORT LOGOUT & THEME
 // =========================
-export { logout, applyTheme, initializeSubjects };
+export { logout, applyTheme };
 
-// Make globally accessible
-window.initializeSubjects = initializeSubjects;
+// Make logout globally accessible for non-module scripts
+window.logout = logout;
 
 window.submitStudentFile = async function(subjectId, taskId, file) {
 
