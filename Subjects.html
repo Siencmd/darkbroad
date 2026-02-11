@@ -223,6 +223,7 @@
       
       document.getElementById('addSubjectForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
+        alert('Form submitted! Adding subject...');
         console.log('Add subject form submitted');
         
         var subjects = JSON.parse(localStorage.getItem('subjects')) || [];
