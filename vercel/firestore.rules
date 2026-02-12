@@ -16,28 +16,48 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/students/$(request.auth.uid));
     }
 
+    // Helper function to check if user has a profile in instructors collection
+    function hasInstructorsProfile() {
+      return exists(/databases/$(database)/documents/instructors/$(request.auth.uid));
+    }
+
     // Helper function to check if user exists in either collection
     function userExists() {
-      return hasUsersProfile() || hasStudentsProfile();
+      return hasUsersProfile() || hasInstructorsProfile() || hasStudentsProfile();
     }
 
     // Helper function to get user's course from their profile
     function userCourse() {
       return hasUsersProfile()
         ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.course
-        : get(/databases/$(database)/documents/students/$(request.auth.uid)).data.course;
+        : (
+            hasInstructorsProfile()
+              ? get(/databases/$(database)/documents/instructors/$(request.auth.uid)).data.course
+              : get(/databases/$(database)/documents/students/$(request.auth.uid)).data.course
+          );
     }
 
     // Helper function to get user's role from their profile
     function userRole() {
       return hasUsersProfile()
         ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        : get(/databases/$(database)/documents/students/$(request.auth.uid)).data.role;
+        : (
+            hasInstructorsProfile()
+              ? get(/databases/$(database)/documents/instructors/$(request.auth.uid)).data.role
+              : get(/databases/$(database)/documents/students/$(request.auth.uid)).data.role
+          );
+    }
+
+    // Helper function to check if user belongs to the course
+    function sameCourse(courseId) {
+      return (userCourse() is string) &&
+        (courseId is string) &&
+        userCourse().matches('(?i)^\\s*' + courseId + '\\s*$');
     }
 
     // Helper function to check if user belongs to the course
     function inCourse(courseId) {
-      return signedIn() && userExists() && userCourse() == courseId;
+      return signedIn() && userExists() && sameCourse(courseId);
     }
 
     // Helper function to check if user is an instructor for the course
@@ -54,6 +74,11 @@ service cloud.firestore {
 
     // Students collection (legacy) - users can read/write their own profile
     match /students/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    // Instructors collection - users can read/write their own profile
+    match /instructors/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
