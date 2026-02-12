@@ -5,31 +5,16 @@ import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
+import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
 
 // Maximum subjects limit to prevent Firestore quota issues
 const MAX_SUBJECTS_LIMIT = 10;
 
-// Load realtime helpers lazily so a 404 on realtime.js does not break the whole app.
-let setupRealtimeSubjects = () => null;
-let stopTaskListeners = () => {};
 let subjectsRealtimeUnsubscribe = null;
 let disableSubjectsRealtime = false;
 let isSavingSubjects = false; // Flag to prevent realtime loop when saving
 let syncTimer = null;
 let lastSyncedSubjectsHash = null;
-
-import('./realtime.js')
-    .then((mod) => {
-        if (typeof mod.setupRealtimeSubjects === 'function') {
-            setupRealtimeSubjects = mod.setupRealtimeSubjects;
-        }
-        if (typeof mod.stopTaskListeners === 'function') {
-            stopTaskListeners = mod.stopTaskListeners;
-        }
-    })
-    .catch((error) => {
-        console.warn('Realtime module unavailable. Continuing without realtime sync:', error.message);
-    });
 
 // db is now imported from firebase.js
 
