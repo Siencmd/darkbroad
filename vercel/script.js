@@ -3,7 +3,7 @@
 // =========================
 import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { doc, setDoc, getDoc, getDocs, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, getDocs, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
 
@@ -21,10 +21,27 @@ let assignmentCountsSubjectKey = null;
 // db is now imported from firebase.js
 
 function normalizeSubject(subject, index = 0) {
-    const normalizeTask = (task) => ({
+    const normalizeTask = (task, taskIndex = 0) => ({
         ...task,
+        id: task?.id || `legacy-task-${index}-${taskIndex}`,
         file: task?.file || task?.fileName || null,
         fileUrl: task?.fileUrl || task?.url || null
+    });
+
+    const normalizeAssignment = (assignment, assignmentIndex = 0) => ({
+        ...assignment,
+        id: assignment?.id || `legacy-assignment-${index}-${assignmentIndex}`,
+        submissions: Array.isArray(assignment?.submissions) ? assignment.submissions : []
+    });
+
+    const normalizeLesson = (lesson, lessonIndex = 0) => ({
+        ...lesson,
+        id: lesson?.id || `legacy-lesson-${index}-${lessonIndex}`
+    });
+
+    const normalizeQuiz = (quiz, quizIndex = 0) => ({
+        ...quiz,
+        id: quiz?.id || `legacy-quiz-${index}-${quizIndex}`
     });
 
     return {
@@ -33,10 +50,10 @@ function normalizeSubject(subject, index = 0) {
         teacher: subject?.teacher || "",
         time: subject?.time || "",
         description: subject?.description || "",
-        tasks: Array.isArray(subject?.tasks) ? subject.tasks.map(normalizeTask) : [],
-        assignments: Array.isArray(subject?.assignments) ? subject.assignments : [],
-        lessons: Array.isArray(subject?.lessons) ? subject.lessons : [],
-        quizzes: Array.isArray(subject?.quizzes) ? subject.quizzes : []
+        tasks: Array.isArray(subject?.tasks) ? subject.tasks.map((task, taskIndex) => normalizeTask(task, taskIndex)) : [],
+        assignments: Array.isArray(subject?.assignments) ? subject.assignments.map((assignment, assignmentIndex) => normalizeAssignment(assignment, assignmentIndex)) : [],
+        lessons: Array.isArray(subject?.lessons) ? subject.lessons.map((lesson, lessonIndex) => normalizeLesson(lesson, lessonIndex)) : [],
+        quizzes: Array.isArray(subject?.quizzes) ? subject.quizzes.map((quiz, quizIndex) => normalizeQuiz(quiz, quizIndex)) : []
     };
 }
 
@@ -698,8 +715,7 @@ async function fetchItemSubmissionsFromFirestore(type, itemId) {
 
     const collectionName = type === "task" ? "tasks" : "assignments";
     const submissionsRef = collection(db, "subjects", courseId, collectionName, itemId, "submissions");
-    const q = query(submissionsRef, orderBy("submittedAt", "desc"));
-    const submissionsSnap = await getDocs(q);
+    const submissionsSnap = await getDocs(submissionsRef);
 
     const submissions = [];
     submissionsSnap.forEach((submissionDoc) => {
