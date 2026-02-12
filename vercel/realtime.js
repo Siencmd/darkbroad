@@ -1,7 +1,11 @@
 // realtime.js - Real-time Firestore listeners for subjects and tasks
+// LIMIT: Maximum 10 subjects per course to prevent Firestore quota issues
 
 import { db } from './firebase.js';
-import { collection, doc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { collection, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+// Maximum subjects limit to prevent Firestore quota issues
+export const MAX_SUBJECTS_LIMIT = 10;
 
 // Global variables to store listeners (for cleanup if needed)
 let subjectsListener = null;
@@ -29,7 +33,14 @@ export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
         console.log('Snapshot received, exists:', docSnap.exists());
         if (docSnap.exists()) {
             const data = docSnap.data();
-            const subjects = data.subjects || [];
+            let subjects = data.subjects || [];
+            
+            // Enforce limit of 10 subjects to prevent quota issues
+            if (subjects.length > MAX_SUBJECTS_LIMIT) {
+                console.warn(`Subjects count (${subjects.length}) exceeds limit of ${MAX_SUBJECTS_LIMIT}. Truncating...`);
+                subjects = subjects.slice(0, MAX_SUBJECTS_LIMIT);
+            }
+            
             console.log('Real-time subjects update, count:', subjects.length);
             onSubjectsUpdate(subjects);
         } else {
@@ -45,34 +56,34 @@ export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
     return subjectsListener;
 }
 
-// Function to setup real-time listeners for tasks in a specific subject
-export function setupRealtimeTasks(subjectId, onTasksUpdate, onError) {
-    if (!subjectId) {
-        console.error('Subject ID required for real-time tasks');
+// Function to setup real-time listeners for tasks in a specific course document
+export function setupRealtimeTasks(courseId, onTasksUpdate, onError) {
+    if (!courseId) {
+        console.error('Course ID required for real-time tasks');
         return;
     }
 
-    // Unsubscribe previous listener for this subject if exists
-    if (tasksListeners[subjectId]) {
-        tasksListeners[subjectId]();
+    // Unsubscribe previous listener for this course if exists
+    if (tasksListeners[courseId]) {
+        tasksListeners[courseId]();
     }
 
-    const tasksRef = collection(db, 'subjects', subjectId, 'tasks');
+    const tasksRef = collection(db, 'subjects', courseId, 'tasks');
     const q = query(tasksRef, orderBy('createdAt', 'desc'));
 
-    tasksListeners[subjectId] = onSnapshot(q, (snapshot) => {
+    tasksListeners[courseId] = onSnapshot(q, (snapshot) => {
         const tasks = [];
         snapshot.forEach((doc) => {
             tasks.push({ id: doc.id, ...doc.data() });
         });
-        console.log(`Real-time tasks update for subject ${subjectId}:`, tasks);
-        onTasksUpdate(subjectId, tasks);
+        console.log(`Real-time tasks update for course ${courseId}:`, tasks);
+        onTasksUpdate(courseId, tasks);
     }, (error) => {
-        console.error(`Real-time tasks error for subject ${subjectId}:`, error);
+        console.error(`Real-time tasks error for course ${courseId}:`, error);
         if (onError) onError(error);
     });
 
-    return tasksListeners[subjectId];
+    return tasksListeners[courseId];
 }
 
 // Function to stop all real-time listeners
