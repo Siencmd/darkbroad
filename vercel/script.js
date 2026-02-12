@@ -708,15 +708,14 @@ function initializeSubjects() {
         });
     }
 
-    // Load subjects from Firestore only after Firebase Auth is ready.
+    // Load subjects from Firestore after Firebase Auth is ready.
     if (userData && userData.course) {
         const courseId = normalizeCourseId(userData.course);
-        waitForAuthReady().then((firebaseUser) => {
-            if (!firebaseUser) {
-                console.warn("Firebase auth not ready. Using local data only for now.");
-                renderSubjects();
-                return;
-            }
+        let cloudInitialized = false;
+
+        const initializeCloudSync = () => {
+            if (cloudInitialized) return;
+            cloudInitialized = true;
 
             loadSubjectsFromFirestore(courseId, renderSubjects).then(() => {
                 // Enable realtime updates for all users in the course
@@ -751,10 +750,26 @@ function initializeSubjects() {
                 console.warn("Cloud sync unavailable - using local data:", error.message);
                 renderSubjects();
             });
-        }).catch((error) => {
-            console.warn("Auth readiness check failed. Using local data:", error.message);
-            renderSubjects();
+        };
+
+        const authUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            if (!firebaseUser) {
+                return;
+            }
+            initializeCloudSync();
+            // We only need this once for subjects initialization.
+            authUnsubscribe();
         });
+
+        // Fast path when auth is already available.
+        if (auth.currentUser) {
+            initializeCloudSync();
+            authUnsubscribe();
+        } else {
+            // Fallback UI render while waiting for auth state.
+            renderSubjects();
+            console.log("Waiting for Firebase auth before attaching realtime subjects listener...");
+        }
     } else {
         console.log("No user course data, using localStorage data only");
         renderSubjects();
