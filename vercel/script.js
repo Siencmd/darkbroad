@@ -50,6 +50,10 @@ function normalizeCourseId(courseValue) {
     return typeof courseValue === 'string' ? courseValue.trim() : '';
 }
 
+function normalizeRole(roleValue) {
+    return typeof roleValue === 'string' ? roleValue.trim().toLowerCase() : '';
+}
+
 async function waitForAuthReady(timeoutMs = 5000) {
     if (auth.currentUser) return auth.currentUser;
 
@@ -455,14 +459,42 @@ function initializeHelp() {
 // =========================
 async function saveSubjectsToFirestore() {
     const userData = JSON.parse(localStorage.getItem("userData"));
-    const courseId = normalizeCourseId(userData?.course);
+    let courseId = normalizeCourseId(userData?.course);
     if (!userData || !courseId) {
         console.log("No course data, skipping Firestore save.");
         return false;
     }
 
-    if (!canSyncCourseData(userData)) {
-        console.log("Skipping Firestore save for non-instructor role:", userData.role);
+    const serverProfile = await getServerUserProfile();
+    if (!serverProfile || serverProfile.source === "none") {
+        console.warn("Skipping Firestore save: no server profile found for current user.");
+        return false;
+    }
+
+    const serverRole = normalizeRole(serverProfile.role);
+    const serverCourse = normalizeCourseId(serverProfile.course);
+    const localRole = normalizeRole(userData.role);
+    const localCourse = normalizeCourseId(userData.course);
+
+    if (!serverCourse) {
+        console.warn("Skipping Firestore save: server profile has no course assigned.");
+        return false;
+    }
+
+    if (localRole !== serverRole || localCourse !== serverCourse) {
+        const mergedUserData = { ...userData, role: serverRole || userData.role, course: serverCourse || userData.course };
+        localStorage.setItem("userData", JSON.stringify(mergedUserData));
+        console.warn("Updated local userData from server profile for sync consistency.", {
+            localRole,
+            serverRole,
+            localCourse,
+            serverCourse
+        });
+    }
+
+    courseId = serverCourse || courseId;
+    if (!isInstructorRoleValue(serverRole)) {
+        console.log("Skipping Firestore save for non-instructor server role:", serverRole);
         return false;
     }
 
@@ -512,8 +544,8 @@ async function saveSubjectsToFirestore() {
                         course: serverProfile.course
                     });
                     console.warn('Permission debug - local profile:', {
-                        role: userData.role,
-                        course: userData.course
+                        role: localRole,
+                        course: localCourse
                     });
                 }
             } catch (profileError) {
