@@ -152,42 +152,7 @@ async function getServerUserProfile() {
 }
 
 const storedSubjects = normalizeSubjects(JSON.parse(localStorage.getItem('subjects')));
-let subjects = storedSubjects.length ? storedSubjects : [
-    {
-        name: "Mathematics",
-        teacher: "Mr. Anderson",
-        time: "08:00 AM - 09:30 AM",
-        description: "Advanced Calculus and Algebra",
-        tasks: [
-            { title: "Complete Chapter 5 Exercises", dueDate: "2023-10-15", priority: "high", status: "pending", description: "Solve all exercises in Chapter 5", file: null, fileUrl: null }
-        ],
-        assignments: [
-            { title: "Research Paper", dueDate: "2023-10-20", points: 100, status: "pending", instructions: "Write a 5-page research paper on Calculus", file: null, fileUrl: null, submissions: [] }
-        ],
-        lessons: [],
-        quizzes: []
-    },
-    {
-        name: "Physics",
-        teacher: "Ms. Curie",
-        time: "10:00 AM - 11:30 AM",
-        description: "Fundamentals of Physics",
-        tasks: [],
-        assignments: [],
-        lessons: [],
-        quizzes: []
-    },
-    {
-        name: "Computer Science",
-        teacher: "Mr. Turing",
-        time: "01:00 PM - 02:30 PM",
-        description: "Algorithms and Data Structures",
-        tasks: [],
-        assignments: [],
-        lessons: [],
-        quizzes: []
-    }
-];
+let subjects = storedSubjects;
 
 // Function to setup task listeners for all subjects
 function setupTaskListeners() {
@@ -362,9 +327,9 @@ function initializeLogin() {
             let userCourse = '';
             const profile = await getUserProfileByUid(user.uid);
             if (profile.data) {
-                const data = profile.data;
-                userRole = data.role || 'student';
-                userCourse = data.course || '';
+                const { role = 'student', course = '' } = profile.data;
+                userRole = role;
+                userCourse = course;
             }
 
             // Store logged-in user in localStorage
@@ -821,11 +786,22 @@ function initializeSubjects() {
     }
 
     // subjects is now defined globally at the top of the file
+    let isSubjectsLoading = !!(userData && userData.course);
 
     // -------------------------
     // RENDER SUBJECTS - SIDEBAR
     // -------------------------
     const renderSubjects = function() {
+        if (isSubjectsLoading) {
+            listContainer.innerHTML = '<div class="empty-state"><p>Loading subjects...</p></div>';
+            return;
+        }
+
+        if (!subjects.length) {
+            listContainer.innerHTML = '<div class="empty-state"><p>No subjects assigned yet.</p></div>';
+            return;
+        }
+
         listContainer.innerHTML = subjects.map((sub, index) => `
             <div class="subject-list-item" data-index="${index}">
                 <div class="subject-item-content">
@@ -868,11 +844,14 @@ function initializeSubjects() {
                 // Null means "course doc missing" from realtime.js; keep current local list.
                 if (!Array.isArray(updatedSubjects)) {
                     console.warn("Realtime subjects payload is empty/missing. Preserving current local subjects.");
+                    isSubjectsLoading = false;
+                    renderSubjects();
                     return;
                 }
 
                 // When subjects update, stop existing task listeners and re-setup
                 stopTaskListeners();
+                isSubjectsLoading = false;
                 subjects = normalizeSubjects(updatedSubjects);
                 localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
                 lastSyncedSubjectsHash = JSON.stringify(subjects);
@@ -887,13 +866,18 @@ function initializeSubjects() {
                 console.log("Realtime update: Subjects refreshed from cloud.");
             }, (error) => {
                 console.warn("Realtime connection failed, using local data only:", error.message);
+                isSubjectsLoading = false;
+                renderSubjects();
             });
 
-            loadSubjectsFromFirestore(courseId, renderSubjects).then(() => {
+            loadSubjectsFromFirestore(courseId).then(() => {
                 // Setup task listeners after subjects are loaded
                 setupTaskListeners();
+                isSubjectsLoading = false;
+                renderSubjects();
             }).catch((error) => {
                 console.warn("Cloud sync unavailable - using local data:", error.message);
+                isSubjectsLoading = false;
                 renderSubjects();
             });
         };
