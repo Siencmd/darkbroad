@@ -851,7 +851,7 @@ function initializeSubjects() {
 
     // Load subjects from Firestore after Firebase Auth is ready.
     if (userData && userData.course) {
-        const courseId = normalizeCourseId(userData.course);
+        let courseId = normalizeCourseId(userData.course);
         let cloudInitialized = false;
 
         const initializeCloudSync = () => {
@@ -865,10 +865,15 @@ function initializeSubjects() {
                     return;
                 }
 
+                // Null means "course doc missing" from realtime.js; keep current local list.
+                if (!Array.isArray(updatedSubjects)) {
+                    console.warn("Realtime subjects payload is empty/missing. Preserving current local subjects.");
+                    return;
+                }
+
                 // When subjects update, stop existing task listeners and re-setup
                 stopTaskListeners();
-                subjects = updatedSubjects;
-                subjects = normalizeSubjects(subjects);
+                subjects = normalizeSubjects(updatedSubjects);
                 localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
                 lastSyncedSubjectsHash = JSON.stringify(subjects);
                 renderSubjects();
@@ -893,10 +898,31 @@ function initializeSubjects() {
             });
         };
 
-        const authUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (!firebaseUser) {
                 return;
             }
+
+            try {
+                const profile = await getUserProfileByUid(firebaseUser.uid);
+                if (profile?.data) {
+                    const serverCourse = normalizeCourseId(profile.data.course);
+                    const serverRole = normalizeRole(profile.data.role);
+                    if (serverCourse) {
+                        courseId = serverCourse;
+                        userData = {
+                            ...userData,
+                            id: firebaseUser.uid,
+                            role: serverRole || userData?.role,
+                            course: serverCourse
+                        };
+                        localStorage.setItem("userData", JSON.stringify(userData));
+                    }
+                }
+            } catch (profileError) {
+                console.warn("Could not refresh server profile before realtime init:", profileError.message);
+            }
+
             initializeCloudSync();
             // We only need this once for subjects initialization.
             authUnsubscribe();
@@ -904,8 +930,30 @@ function initializeSubjects() {
 
         // Fast path when auth is already available.
         if (auth.currentUser) {
-            initializeCloudSync();
-            authUnsubscribe();
+            (async () => {
+                try {
+                    const profile = await getUserProfileByUid(auth.currentUser.uid);
+                    if (profile?.data) {
+                        const serverCourse = normalizeCourseId(profile.data.course);
+                        const serverRole = normalizeRole(profile.data.role);
+                        if (serverCourse) {
+                            courseId = serverCourse;
+                            userData = {
+                                ...userData,
+                                id: auth.currentUser.uid,
+                                role: serverRole || userData?.role,
+                                course: serverCourse
+                            };
+                            localStorage.setItem("userData", JSON.stringify(userData));
+                        }
+                    }
+                } catch (profileError) {
+                    console.warn("Could not refresh server profile before realtime init:", profileError.message);
+                }
+
+                initializeCloudSync();
+                authUnsubscribe();
+            })();
         } else {
             // Fallback UI render while waiting for auth state.
             renderSubjects();
