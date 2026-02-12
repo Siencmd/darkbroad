@@ -3,7 +3,7 @@
 // =========================
 import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
 // Maximum subjects limit to prevent Firestore quota issues
@@ -2218,17 +2218,18 @@ document.addEventListener("DOMContentLoaded", () => {
 export { logout, applyTheme };
 
 window.submitStudentFile = async function(subjectId, taskId, file) {
+  const firebaseUser = auth.currentUser || await waitForAuthReady();
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const courseId = normalizeCourseId(userData?.course);
 
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
+  if (!firebaseUser || !courseId) {
     alert("Please login first");
     return;
   }
 
-  const userId = session.user.id;
-
-  const path = `${subjectId}/${taskId}/submissions/${userId}/${file.name}`;
+  const userId = firebaseUser.uid;
+  const safeSubjectId = subjectId || "unknown-subject";
+  const path = `subjects/${courseId}/${safeSubjectId}/${taskId}/submissions/${userId}/${file.name}`;
 
   try {
 
@@ -2241,17 +2242,20 @@ window.submitStudentFile = async function(subjectId, taskId, file) {
 
     const fileUrl = supabase.storage.from('files').getPublicUrl(path).data.publicUrl;
 
-    const taskRef = doc(db, "subjects", subjectId, "tasks", taskId);
+    const taskRef = doc(db, "subjects", courseId, "tasks", taskId);
+    const submissionRef = doc(db, "subjects", courseId, "tasks", taskId, "submissions", userId);
 
-    await updateDoc(taskRef, {
-      submissions: arrayUnion({
-        userId,
-        name: file.name,
-        url: fileUrl,
-        time: new Date().toISOString()
-      }),
+    await setDoc(taskRef, {
+      subjectId: safeSubjectId,
       updatedAt: serverTimestamp()
-    });
+    }, { merge: true });
+
+    await setDoc(submissionRef, {
+      studentId: userId,
+      fileName: file.name,
+      fileUrl: fileUrl,
+      submittedAt: serverTimestamp()
+    }, { merge: true });
 
     alert("Submission successful!");
 
