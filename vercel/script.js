@@ -11,6 +11,7 @@ let setupRealtimeSubjects = () => null;
 let stopTaskListeners = () => {};
 let subjectsRealtimeUnsubscribe = null;
 let disableSubjectsRealtime = false;
+let isSavingSubjects = false; // Flag to prevent realtime loop when saving
 
 import('./realtime.js')
     .then((mod) => {
@@ -415,6 +416,8 @@ async function saveSubjectsToFirestore() {
         return;
     }
 
+    isSavingSubjects = true; // Set flag before saving to prevent realtime loop
+    
     try {
         await setDoc(doc(db, "subjects", userData.course), {
             subjects: subjects,
@@ -422,9 +425,14 @@ async function saveSubjectsToFirestore() {
         });
         disableSubjectsRealtime = false;
         console.log("Subjects synced to cloud successfully!");
+        // Reset the saving flag after a short delay to allow Firestore to propagate
+        setTimeout(() => {
+            isSavingSubjects = false;
+        }, 500);
         return true;
     } catch (error) {
         console.error("Error saving subjects to Firestore:", error);
+        isSavingSubjects = false;
         if (error.code === 'permission-denied' || error.message?.includes('permission')) {
             // Prevent cloud snapshot from rolling back local instructor edits.
             disableSubjectsRealtime = true;
@@ -588,19 +596,17 @@ function initializeSubjects() {
                     renderSubjects();
                     return;
                 }
-                // Hybrid mode: prioritize local-first editing for instructor accounts.
-                if (isInstructorRole) {
-                    renderSubjects();
-                    return;
-                }
-                // Enable realtime updates for all users in the course
+                // Enable realtime updates for ALL users (both students and instructors)
+                // This ensures students see subjects added by instructors in realtime
                 subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
-                    if (disableSubjectsRealtime) return;
+                    // Skip if realtime is disabled or if we're currently saving (prevents loop)
+                    if (disableSubjectsRealtime || isSavingSubjects) return;
+                    
                     // When subjects update, stop existing task listeners and re-setup
                     stopTaskListeners();
                     subjects = updatedSubjects;
                     subjects = normalizeSubjects(subjects);
-                    saveSubjects(false); // Sync to localStorage without triggering another save
+                    localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
                     renderSubjects();
                     // Re-render current subject details if any
                     const activeItem = document.querySelector('.subject-list-item.active');
