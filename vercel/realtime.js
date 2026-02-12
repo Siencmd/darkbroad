@@ -14,27 +14,33 @@ export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
         return;
     }
 
+    console.log('Setting up realtime listener for course:', courseId);
+
     // Unsubscribe previous listener if exists
     if (subjectsListener) {
+        console.log('Unsubscribing previous listener');
         subjectsListener();
     }
 
     const subjectsRef = doc(db, 'subjects', courseId);
 
     subjectsListener = onSnapshot(subjectsRef, (docSnap) => {
+        console.log('Snapshot received, exists:', docSnap.exists());
         if (docSnap.exists()) {
-            const subjects = docSnap.data().subjects || [];
-            console.log('Real-time subjects update:', subjects);
+            const data = docSnap.data();
+            const subjects = data.subjects || [];
+            console.log('Real-time subjects update, count:', subjects.length, 'data:', subjects);
             onSubjectsUpdate(subjects);
         } else {
-            console.log('No subjects document found');
+            console.log('No subjects document found for course:', courseId);
             onSubjectsUpdate([]);
         }
     }, (error) => {
-        console.error('Real-time subjects error:', error);
+        console.error('Real-time subjects error:', error.code, error.message);
         if (onError) onError(error);
     });
 
+    console.log('Realtime listener set up successfully');
     return subjectsListener;
 }
 
