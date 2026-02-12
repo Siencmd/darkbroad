@@ -19,13 +19,19 @@ let lastSyncedSubjectsHash = null;
 // db is now imported from firebase.js
 
 function normalizeSubject(subject, index = 0) {
+    const normalizeTask = (task) => ({
+        ...task,
+        file: task?.file || task?.fileName || null,
+        fileUrl: task?.fileUrl || task?.url || null
+    });
+
     return {
         id: subject?.id || `legacy-subject-${index}`,
         name: subject?.name || "Untitled Subject",
         teacher: subject?.teacher || "",
         time: subject?.time || "",
         description: subject?.description || "",
-        tasks: Array.isArray(subject?.tasks) ? subject.tasks : [],
+        tasks: Array.isArray(subject?.tasks) ? subject.tasks.map(normalizeTask) : [],
         assignments: Array.isArray(subject?.assignments) ? subject.assignments : [],
         lessons: Array.isArray(subject?.lessons) ? subject.lessons : [],
         quizzes: Array.isArray(subject?.quizzes) ? subject.quizzes : []
@@ -845,7 +851,7 @@ function initializeSubjects() {
                                     <h4>${task.title}</h4>
                                     <p>Due: ${task.dueDate} | Priority: ${task.priority} | Status: ${task.status}</p>
                                     <p>${task.description}</p>
-                                    ${task.file ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl}" target="_blank">${task.file}</a></p>` : ''}
+                                    ${(task.file || task.fileName) ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl || task.url || '#'}" target="_blank">${task.file || task.fileName}</a></p>` : ''}
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
@@ -1810,6 +1816,12 @@ function initializeSubjects() {
         const assignment = sub.assignments[assignmentIndex];
         if (!assignment) return;
 
+        // Ensure only one submit-assignment modal exists to avoid duplicate IDs and stale file inputs.
+        const existingModal = document.getElementById('submitAssignmentModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'submitAssignmentModal';
@@ -1823,7 +1835,7 @@ function initializeSubjects() {
                         <input type="hidden" id="submitAssignmentIndex" value="${assignmentIndex}" />
                         <div class="form-group">
                             <label>Upload Your Submission</label>
-                            <input type="file" id="submitFile" required />
+                            <input type="file" id="submitAssignmentFile" required />
                         </div>
                         <button type="submit" class="btn-add-subject">Submit Assignment</button>
                     </form>
@@ -1837,8 +1849,8 @@ function initializeSubjects() {
 
         modal.querySelector('#submitAssignmentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const fileInput = document.getElementById('submitFile');
-            if (!fileInput.files[0]) {
+            const fileInput = modal.querySelector('#submitAssignmentFile');
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) {
                 alert('Please select a file to submit.');
                 return;
             }
