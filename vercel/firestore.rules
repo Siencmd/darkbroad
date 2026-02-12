@@ -43,12 +43,8 @@ service cloud.firestore {
     // Helper function to check if user is an instructor for the course
     function isInstructor(courseId) {
       return inCourse(courseId) &&
-        (userRole() == "instructor" ||
-         userRole() == "Instructor" ||
-         userRole() == "teacher" ||
-         userRole() == "Teacher" ||
-         userRole() == "admin" ||
-         userRole() == "Admin");
+        (userRole() is string) &&
+        userRole().matches('(?i)^\\s*(instructor|teacher|admin)\\s*$');
     }
 
     // Users collection - users can read/write their own profile
