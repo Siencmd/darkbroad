@@ -2,7 +2,7 @@
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth, db } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
@@ -57,6 +57,32 @@ function isInstructorRoleValue(role) {
 
 function canSyncCourseData(userData) {
     return !!(userData && userData.course && isInstructorRoleValue(userData.role));
+}
+
+function normalizeCourseId(courseValue) {
+    return typeof courseValue === 'string' ? courseValue.trim() : '';
+}
+
+async function waitForAuthReady(timeoutMs = 5000) {
+    if (auth.currentUser) return auth.currentUser;
+
+    return new Promise((resolve) => {
+        let resolved = false;
+        const timer = setTimeout(() => {
+            if (resolved) return;
+            resolved = true;
+            unsubscribe();
+            resolve(auth.currentUser || null);
+        }, timeoutMs);
+
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (resolved) return;
+            resolved = true;
+            clearTimeout(timer);
+            unsubscribe();
+            resolve(user || null);
+        });
+    });
 }
 
 async function getServerUserProfile() {
@@ -442,7 +468,8 @@ function initializeHelp() {
 // =========================
 async function saveSubjectsToFirestore() {
     const userData = JSON.parse(localStorage.getItem("userData"));
-    if (!userData || !userData.course) {
+    const courseId = normalizeCourseId(userData?.course);
+    if (!userData || !courseId) {
         console.log("No course data, skipping Firestore save.");
         return false;
     }
@@ -458,13 +485,13 @@ async function saveSubjectsToFirestore() {
         subjects = subjects.slice(0, MAX_SUBJECTS_LIMIT);
     }
 
-    console.log("Saving subjects to Firestore for course:", userData.course);
+    console.log("Saving subjects to Firestore for course:", courseId);
     console.log("Subjects to save:", subjects);
     
     isSavingSubjects = true; // Set flag before saving to prevent realtime loop
     
     try {
-        await setDoc(doc(db, "subjects", userData.course), {
+        await setDoc(doc(db, "subjects", courseId), {
             subjects: subjects,
             lastUpdated: serverTimestamp()
         });
@@ -517,7 +544,8 @@ async function saveSubjectsToFirestore() {
 // Save a student submission into Firestore subcollections
 async function saveStudentSubmissionToFirestore({ type, subject, item, fileName, fileUrl }) {
     const userData = JSON.parse(localStorage.getItem("userData"));
-    if (!userData || !userData.id || !userData.course) {
+    const courseId = normalizeCourseId(userData?.course);
+    if (!userData || !userData.id || !courseId) {
         throw new Error("Missing user session data for submission.");
     }
 
@@ -525,8 +553,8 @@ async function saveStudentSubmissionToFirestore({ type, subject, item, fileName,
     const itemId = item.id || Date.now().toString();
     item.id = itemId;
 
-    const itemRef = doc(db, "subjects", userData.course, collectionName, itemId);
-    const submissionRef = doc(db, "subjects", userData.course, collectionName, itemId, "submissions", userData.id);
+    const itemRef = doc(db, "subjects", courseId, collectionName, itemId);
+    const submissionRef = doc(db, "subjects", courseId, collectionName, itemId, "submissions", userData.id);
 
     // Ensure parent item doc exists for subcollection rules/reads.
     await setDoc(itemRef, {
@@ -551,7 +579,13 @@ async function saveStudentSubmissionToFirestore({ type, subject, item, fileName,
 // =========================
 async function loadSubjectsFromFirestore(courseId, onLoad) {
     try {
-        const docRef = doc(db, "subjects", courseId);
+        const normalizedCourseId = normalizeCourseId(courseId);
+        if (!normalizedCourseId) {
+            console.warn("loadSubjectsFromFirestore called without valid courseId");
+            return false;
+        }
+
+        const docRef = doc(db, "subjects", normalizedCourseId);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -652,21 +686,25 @@ function initializeSubjects() {
         });
     }
 
-    // Load subjects from Firestore if user is logged in
+    // Load subjects from Firestore only after Firebase Auth is ready.
     if (userData && userData.course) {
-        // Check if user is logged in via localStorage
-        const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-        
-        if (isLoggedIn) {
-            loadSubjectsFromFirestore(userData.course, renderSubjects).then(() => {
+        const courseId = normalizeCourseId(userData.course);
+        waitForAuthReady().then((firebaseUser) => {
+            if (!firebaseUser) {
+                console.warn("Firebase auth not ready. Using local data only for now.");
+                renderSubjects();
+                return;
+            }
+
+            loadSubjectsFromFirestore(courseId, renderSubjects).then(() => {
                 // Enable realtime updates for all users in the course
-                subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                subjectsRealtimeUnsubscribe = setupRealtimeSubjects(courseId, (updatedSubjects) => {
                     // Skip if realtime is disabled or if we're currently saving (prevents loop)
                     if (disableSubjectsRealtime || isSavingSubjects) {
                         console.log("Skipping realtime update - disabled or saving");
                         return;
                     }
-                    
+
                     // When subjects update, stop existing task listeners and re-setup
                     stopTaskListeners();
                     subjects = updatedSubjects;
@@ -690,10 +728,10 @@ function initializeSubjects() {
                 console.warn("Cloud sync unavailable - using local data:", error.message);
                 renderSubjects();
             });
-        } else {
-            console.log("User not authenticated, using localStorage data only");
+        }).catch((error) => {
+            console.warn("Auth readiness check failed. Using local data:", error.message);
             renderSubjects();
-        }
+        });
     } else {
         console.log("No user course data, using localStorage data only");
         renderSubjects();
