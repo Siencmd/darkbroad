@@ -3,7 +3,7 @@
 // =========================
 import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, getDocs, collection, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
 
@@ -643,6 +643,23 @@ async function saveStudentSubmissionToFirestore({ type, subject, item, fileName,
         fileUrl,
         submittedAt: serverTimestamp()
     }, { merge: true });
+}
+
+async function fetchItemSubmissionsFromFirestore(type, itemId) {
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const courseId = normalizeCourseId(userData?.course);
+    if (!courseId || !itemId) return [];
+
+    const collectionName = type === "task" ? "tasks" : "assignments";
+    const submissionsRef = collection(db, "subjects", courseId, collectionName, itemId, "submissions");
+    const q = query(submissionsRef, orderBy("submittedAt", "desc"));
+    const submissionsSnap = await getDocs(q);
+
+    const submissions = [];
+    submissionsSnap.forEach((submissionDoc) => {
+        submissions.push({ id: submissionDoc.id, ...submissionDoc.data() });
+    });
+    return submissions;
 }
 
 // =========================
@@ -2004,12 +2021,29 @@ function initializeSubjects() {
     // -------------------------
     // VIEW SUBMISSIONS
     // -------------------------
-    const viewSubmissions = function(subjectIndex, assignmentIndex) {
+    const viewSubmissions = async function(subjectIndex, assignmentIndex) {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
         const assignment = sub.assignments[assignmentIndex];
-        if (!assignment || !assignment.submissions) return;
+        if (!assignment) return;
+
+        let submissions = Array.isArray(assignment.submissions) ? assignment.submissions : [];
+        if (isInstructorRole && assignment.id) {
+            try {
+                submissions = await fetchItemSubmissionsFromFirestore("assignment", assignment.id);
+                assignment.submissions = submissions;
+                saveSubjects(false);
+                renderSubjectDetails(subjectIndex);
+            } catch (error) {
+                console.warn("Could not load assignment submissions from Firestore:", error.message);
+            }
+        }
+
+        if (!submissions.length) {
+            alert("No submissions yet.");
+            return;
+        }
 
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -2020,11 +2054,12 @@ function initializeSubjects() {
                 <div class="modal-body">
                     <h2>Submissions for: ${assignment.title}</h2>
                     <div class="submissions-list">
-                        ${assignment.submissions.map(submission => `
+                        ${submissions.map(submission => `
                             <div class="submission-item">
-                                <p><strong>Student ID:</strong> ${submission.studentId}</p>
+                                <p><strong>Student ID:</strong> ${submission.studentId || submission.id}</p>
+                                <p><strong>Name:</strong> ${submission.studentName || "N/A"}</p>
                                 <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
-                                <p><strong>Submitted At:</strong> ${new Date(submission.submittedAt).toLocaleString()}</p>
+                                <p><strong>Submitted At:</strong> ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}</p>
                             </div>
                         `).join('')}
                     </div>
