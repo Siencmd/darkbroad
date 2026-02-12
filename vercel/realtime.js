@@ -22,14 +22,15 @@ export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
         subjectsListener();
     }
 
-    const subjectsRef = doc(db, 'subjects', courseId);
+    // Use single document reference (same as old website)
+    const docRef = doc(db, 'subjects', courseId);
 
-    subjectsListener = onSnapshot(subjectsRef, (docSnap) => {
+    subjectsListener = onSnapshot(docRef, (docSnap) => {
         console.log('Snapshot received, exists:', docSnap.exists());
         if (docSnap.exists()) {
             const data = docSnap.data();
             const subjects = data.subjects || [];
-            console.log('Real-time subjects update, count:', subjects.length, 'data:', subjects);
+            console.log('Real-time subjects update, count:', subjects.length);
             onSubjectsUpdate(subjects);
         } else {
             console.log('No subjects document found for course:', courseId);
