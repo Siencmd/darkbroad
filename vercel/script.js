@@ -2,7 +2,7 @@
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth, db } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
@@ -594,58 +594,37 @@ function initializeSubjects() {
         const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
         
         if (isLoggedIn) {
-            console.log("User is logged in, waiting for Firebase Auth...");
-            
-            // Wait for Firebase Auth to be ready before setting up realtime listener
-            const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-                if (firebaseUser) {
-                    console.log("Firebase Auth ready, user:", firebaseUser.uid);
-                    console.log("Setting up realtime for course:", userData.course);
+            loadSubjectsFromFirestore(userData.course, renderSubjects).then(() => {
+                // Enable realtime updates for all users in the course
+                subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                    // Skip if realtime is disabled or if we're currently saving (prevents loop)
+                    if (disableSubjectsRealtime || isSavingSubjects) {
+                        console.log("Skipping realtime update - disabled or saving");
+                        return;
+                    }
                     
-                    // Set up realtime listener FIRST, regardless of initial load result
-                    // This ensures students receive updates when instructors add subjects
-                    subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
-                        // Skip if realtime is disabled or if we're currently saving (prevents loop)
-                        if (disableSubjectsRealtime || isSavingSubjects) {
-                            console.log("Skipping realtime update - disabled or saving");
-                            return;
-                        }
-                        
-                        console.log("Realtime update received, subjects count:", updatedSubjects.length);
-                        
-                        // When subjects update, stop existing task listeners and re-setup
-                        stopTaskListeners();
-                        subjects = updatedSubjects;
-                        subjects = normalizeSubjects(subjects);
-                        localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
-                        renderSubjects();
-                        // Re-render current subject details if any
-                        const activeItem = document.querySelector('.subject-list-item.active');
-                        if (activeItem) {
-                            renderSubjectDetails(activeItem.dataset.index);
-                        }
-                        // Setup task listeners for all subjects
-                        setupTaskListeners();
-                        console.log("Realtime update: Subjects refreshed from cloud.");
-                    }, (error) => {
-                        console.warn("Realtime connection failed, using local data only:", error.message);
-                    });
-                    
-                    // Then try to load initial data
-                    loadSubjectsFromFirestore(userData.course, renderSubjects).then((loadedFromCloud) => {
-                        console.log("Initial load from Firestore:", loadedFromCloud ? "success" : "failed, using local data");
-                        renderSubjects();
-                    }).catch((error) => {
-                        console.warn("Cloud sync unavailable - using local data:", error.message);
-                        renderSubjects(); // Fallback to localStorage
-                    });
-                    
-                    // Unsubscribe from auth listener after first run
-                    unsubscribeAuth();
-                } else {
-                    console.log("No Firebase user, using localStorage data only");
+                    // When subjects update, stop existing task listeners and re-setup
+                    stopTaskListeners();
+                    subjects = updatedSubjects;
+                    subjects = normalizeSubjects(subjects);
+                    localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
                     renderSubjects();
-                }
+                    // Re-render current subject details if any
+                    const activeItem = document.querySelector('.subject-list-item.active');
+                    if (activeItem) {
+                        renderSubjectDetails(activeItem.dataset.index);
+                    }
+                    // Setup task listeners for all subjects
+                    setupTaskListeners();
+                    console.log("Realtime update: Subjects refreshed from cloud.");
+                }, (error) => {
+                    console.warn("Realtime connection failed, using local data only:", error.message);
+                });
+                // Setup task listeners after subjects are loaded
+                setupTaskListeners();
+            }).catch((error) => {
+                console.warn("Cloud sync unavailable - using local data:", error.message);
+                renderSubjects();
             });
         } else {
             console.log("User not authenticated, using localStorage data only");
