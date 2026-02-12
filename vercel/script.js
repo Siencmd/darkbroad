@@ -15,6 +15,8 @@ let stopTaskListeners = () => {};
 let subjectsRealtimeUnsubscribe = null;
 let disableSubjectsRealtime = false;
 let isSavingSubjects = false; // Flag to prevent realtime loop when saving
+let syncTimer = null;
+let lastSyncedSubjectsHash = null;
 
 import('./realtime.js')
     .then((mod) => {
@@ -491,10 +493,18 @@ async function saveSubjectsToFirestore() {
     isSavingSubjects = true; // Set flag before saving to prevent realtime loop
     
     try {
+        const subjectsHash = JSON.stringify(subjects);
+        if (subjectsHash === lastSyncedSubjectsHash) {
+            console.log("Skipping Firestore save: no subject changes since last sync.");
+            isSavingSubjects = false;
+            return true;
+        }
+
         await setDoc(doc(db, "subjects", courseId), {
             subjects: subjects,
             lastUpdated: serverTimestamp()
         });
+        lastSyncedSubjectsHash = subjectsHash;
         disableSubjectsRealtime = false;
         console.log("Subjects synced to cloud successfully!");
         // Reset the saving flag after a short delay to allow Firestore to propagate
@@ -539,6 +549,17 @@ async function saveSubjectsToFirestore() {
         }
         return false;
     }
+}
+
+function scheduleSubjectsSync(delayMs = 1200) {
+    if (syncTimer) {
+        clearTimeout(syncTimer);
+    }
+
+    syncTimer = setTimeout(() => {
+        syncTimer = null;
+        saveSubjectsToFirestore();
+    }, delayMs);
 }
 
 // Save a student submission into Firestore subcollections
@@ -591,6 +612,7 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
         if (docSnap.exists()) {
             subjects = normalizeSubjects(docSnap.data().subjects || subjects);
             localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage
+            lastSyncedSubjectsHash = JSON.stringify(subjects);
             if (onLoad) onLoad();
             return true;
         } else {
@@ -710,6 +732,7 @@ function initializeSubjects() {
                     subjects = updatedSubjects;
                     subjects = normalizeSubjects(subjects);
                     localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
+                    lastSyncedSubjectsHash = JSON.stringify(subjects);
                     renderSubjects();
                     // Re-render current subject details if any
                     const activeItem = document.querySelector('.subject-list-item.active');
@@ -1974,8 +1997,8 @@ function initializeSubjects() {
         
         // Auto-sync to Firestore for instructor users only
         if (autoSync && canSync && !disableSubjectsRealtime) {
-            console.log('Auto-syncing to Firestore for course:', currentUserData.course);
-            saveSubjectsToFirestore();
+            console.log('Scheduling Firestore sync for course:', currentUserData.course);
+            scheduleSubjectsSync();
         } else {
             console.log('Not syncing to Firestore: autoSync=', autoSync, 'canSync=', canSync, 'userData.course=', currentUserData?.course, 'localMode=', disableSubjectsRealtime);
         }
