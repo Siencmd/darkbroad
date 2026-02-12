@@ -679,15 +679,22 @@ function scheduleSubjectsSync(delayMs = 1200) {
 async function saveStudentSubmissionToFirestore({ type, subject, item, fileName, fileUrl }) {
     const userData = JSON.parse(localStorage.getItem("userData"));
     const courseId = normalizeCourseId(userData?.course);
-    const authUid = auth.currentUser?.uid;
-    const studentId = authUid || userData?.id;
+    const firebaseUser = auth.currentUser || await waitForAuthReady();
+    const studentId = firebaseUser?.uid || null;
+
+    if (!firebaseUser) {
+        throw new Error("Firebase auth is not ready. Please log in again and retry.");
+    }
+
     if (!userData || !studentId || !courseId) {
         throw new Error("Missing user session data for submission.");
     }
 
     const collectionName = type === "task" ? "tasks" : "assignments";
-    const itemId = item.id || Date.now().toString();
-    item.id = itemId;
+    const itemId = item?.id;
+    if (!itemId) {
+        throw new Error("This item is missing its ID. Please refresh and try again.");
+    }
 
     const itemRef = doc(db, "subjects", courseId, collectionName, itemId);
     const submissionRef = doc(db, "subjects", courseId, collectionName, itemId, "submissions", studentId);
@@ -1989,14 +1996,6 @@ function initializeSubjects() {
                 return;
             }
 
-            if (!assignment.submissions) assignment.submissions = [];
-            assignment.submissions.push({
-                studentId: userData.id,
-                fileName: file.name,
-                fileUrl: fileUrl,
-                submittedAt: new Date().toISOString()
-            });
-
             try {
                 await saveStudentSubmissionToFirestore({
                     type: "assignment",
@@ -2006,8 +2005,18 @@ function initializeSubjects() {
                     fileUrl
                 });
             } catch (error) {
-                console.warn("Could not write assignment submission to Firestore:", error.message);
+                console.error("Could not write assignment submission to Firestore:", error);
+                alert(`Submission failed: ${error.message || "Could not save to Firestore."}`);
+                return;
             }
+
+            if (!assignment.submissions) assignment.submissions = [];
+            assignment.submissions.push({
+                studentId: auth.currentUser?.uid || userData.id,
+                fileName: file.name,
+                fileUrl: fileUrl,
+                submittedAt: new Date().toISOString()
+            });
 
             saveSubjects(false);
             renderSubjectDetails(subjectIndex);
@@ -2059,14 +2068,6 @@ function initializeSubjects() {
                 return;
             }
 
-            if (!task.submissions) task.submissions = [];
-            task.submissions.push({
-                studentId: userData.id,
-                fileName: file.name,
-                fileUrl: fileUrl,
-                submittedAt: new Date().toISOString()
-            });
-
             try {
                 await saveStudentSubmissionToFirestore({
                     type: "task",
@@ -2076,8 +2077,18 @@ function initializeSubjects() {
                     fileUrl
                 });
             } catch (error) {
-                console.warn("Could not write task submission to Firestore:", error.message);
+                console.error("Could not write task submission to Firestore:", error);
+                alert(`Submission failed: ${error.message || "Could not save to Firestore."}`);
+                return;
             }
+
+            if (!task.submissions) task.submissions = [];
+            task.submissions.push({
+                studentId: auth.currentUser?.uid || userData.id,
+                fileName: file.name,
+                fileUrl: fileUrl,
+                submittedAt: new Date().toISOString()
+            });
 
             // Update task status
             task.status = 'submitted';
