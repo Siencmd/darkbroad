@@ -59,6 +59,25 @@ function canSyncCourseData(userData) {
     return !!(userData && userData.course && isInstructorRoleValue(userData.role));
 }
 
+async function getServerUserProfile() {
+    const uid = auth.currentUser?.uid || JSON.parse(localStorage.getItem("userData") || "{}")?.id;
+    if (!uid) return null;
+
+    const usersRef = doc(db, "users", uid);
+    const usersSnap = await getDoc(usersRef);
+    if (usersSnap.exists()) {
+        return { source: "users", uid, ...usersSnap.data() };
+    }
+
+    const studentsRef = doc(db, "students", uid);
+    const studentsSnap = await getDoc(studentsRef);
+    if (studentsSnap.exists()) {
+        return { source: "students", uid, ...studentsSnap.data() };
+    }
+
+    return { source: "none", uid };
+}
+
 const storedSubjects = normalizeSubjects(JSON.parse(localStorage.getItem('subjects')));
 let subjects = storedSubjects.length ? storedSubjects : [
     {
@@ -461,6 +480,24 @@ async function saveSubjectsToFirestore() {
         console.error("Error saving subjects to Firestore:", error.code, error.message);
         isSavingSubjects = false;
         if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+            try {
+                const serverProfile = await getServerUserProfile();
+                if (serverProfile) {
+                    console.warn('Permission debug - server profile:', {
+                        source: serverProfile.source,
+                        uid: serverProfile.uid,
+                        role: serverProfile.role,
+                        course: serverProfile.course
+                    });
+                    console.warn('Permission debug - local profile:', {
+                        role: userData.role,
+                        course: userData.course
+                    });
+                }
+            } catch (profileError) {
+                console.warn("Could not fetch server profile for permission debug:", profileError.message);
+            }
+
             // Keep student realtime listener active; only instructors fall back to local edit mode.
             if (canSyncCourseData(userData)) {
                 disableSubjectsRealtime = true;
