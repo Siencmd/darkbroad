@@ -6,6 +6,9 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
+// Maximum subjects limit to prevent Firestore quota issues
+const MAX_SUBJECTS_LIMIT = 10;
+
 // Load realtime helpers lazily so a 404 on realtime.js does not break the whole app.
 let setupRealtimeSubjects = () => null;
 let stopTaskListeners = () => {};
@@ -45,6 +48,15 @@ function normalizeSubject(subject, index = 0) {
 function normalizeSubjects(list) {
     if (!Array.isArray(list)) return [];
     return list.map((subject, index) => normalizeSubject(subject, index));
+}
+
+function isInstructorRoleValue(role) {
+    const normalizedRole = (role || '').toLowerCase();
+    return normalizedRole === 'instructor' || normalizedRole === 'teacher' || normalizedRole === 'admin';
+}
+
+function canSyncCourseData(userData) {
+    return !!(userData && userData.course && isInstructorRoleValue(userData.role));
 }
 
 const storedSubjects = normalizeSubjects(JSON.parse(localStorage.getItem('subjects')));
@@ -413,7 +425,18 @@ async function saveSubjectsToFirestore() {
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (!userData || !userData.course) {
         console.log("No course data, skipping Firestore save.");
-        return;
+        return false;
+    }
+
+    if (!canSyncCourseData(userData)) {
+        console.log("Skipping Firestore save for non-instructor role:", userData.role);
+        return false;
+    }
+
+    // Enforce limit before saving to Firestore
+    if (subjects.length > MAX_SUBJECTS_LIMIT) {
+        console.warn(`Subjects count (${subjects.length}) exceeds limit of ${MAX_SUBJECTS_LIMIT}. Truncating before save...`);
+        subjects = subjects.slice(0, MAX_SUBJECTS_LIMIT);
     }
 
     console.log("Saving subjects to Firestore for course:", userData.course);
@@ -438,13 +461,17 @@ async function saveSubjectsToFirestore() {
         console.error("Error saving subjects to Firestore:", error.code, error.message);
         isSavingSubjects = false;
         if (error.code === 'permission-denied' || error.message?.includes('permission')) {
-            // Prevent cloud snapshot from rolling back local instructor edits.
-            disableSubjectsRealtime = true;
-            if (typeof subjectsRealtimeUnsubscribe === 'function') {
-                subjectsRealtimeUnsubscribe();
-                subjectsRealtimeUnsubscribe = null;
+            // Keep student realtime listener active; only instructors fall back to local edit mode.
+            if (canSyncCourseData(userData)) {
+                disableSubjectsRealtime = true;
+                if (typeof subjectsRealtimeUnsubscribe === 'function') {
+                    subjectsRealtimeUnsubscribe();
+                    subjectsRealtimeUnsubscribe = null;
+                }
+                console.warn("Cloud write denied for instructor. Continuing in local edit mode.");
+            } else {
+                console.warn("Cloud write denied for non-instructor; realtime listener remains active.");
             }
-            console.warn("Cloud write denied. Continuing in local mode.");
         }
         return false;
     }
@@ -884,6 +911,12 @@ function initializeSubjects() {
                 e.preventDefault();
                 e.stopImmediatePropagation();
 
+                // Check if we've reached the maximum limit
+                if (subjects.length >= MAX_SUBJECTS_LIMIT) {
+                    alert(`Cannot add more subjects. Maximum limit of ${MAX_SUBJECTS_LIMIT} subjects reached.`);
+                    return;
+                }
+
                 const subject = {
                     id: Date.now().toString(),
                     name: document.getElementById('newSubjectName').value.trim(),
@@ -1120,6 +1153,12 @@ function initializeSubjects() {
     // -------------------------
     addForm?.addEventListener('submit', async e => {
         e.preventDefault();
+
+        // Check if we've reached the maximum limit
+        if (subjects.length >= MAX_SUBJECTS_LIMIT) {
+            alert(`Cannot add more subjects. Maximum limit of ${MAX_SUBJECTS_LIMIT} subjects reached.`);
+            return;
+        }
 
         const subject = {
             id: Date.now().toString(), // Unique ID for subject
@@ -1704,7 +1743,7 @@ function initializeSubjects() {
                 console.warn("Could not write assignment submission to Firestore:", error.message);
             }
 
-            saveSubjects();
+            saveSubjects(false);
             renderSubjectDetails(subjectIndex);
             alert('Assignment submitted successfully!');
             modal.remove();
@@ -1769,7 +1808,7 @@ function initializeSubjects() {
             // Update task status
             task.status = 'submitted';
 
-            saveSubjects();
+            saveSubjects(false);
             renderSubjectDetails(subjectIndex);
             alert('Task submitted successfully!');
             document.getElementById('submitTaskModal').style.display = 'none';
@@ -1856,13 +1895,14 @@ function initializeSubjects() {
         
         // Get userData from localStorage
         const currentUserData = JSON.parse(localStorage.getItem("userData"));
+        const canSync = canSyncCourseData(currentUserData);
         
-        // Auto-sync to Firestore for all users
-        if (autoSync && currentUserData && currentUserData.course && !disableSubjectsRealtime) {
+        // Auto-sync to Firestore for instructor users only
+        if (autoSync && canSync && !disableSubjectsRealtime) {
             console.log('Auto-syncing to Firestore for course:', currentUserData.course);
             saveSubjectsToFirestore();
         } else {
-            console.log('Not syncing to Firestore: autoSync=', autoSync, 'userData.course=', currentUserData?.course, 'localMode=', disableSubjectsRealtime);
+            console.log('Not syncing to Firestore: autoSync=', autoSync, 'canSync=', canSync, 'userData.course=', currentUserData?.course, 'localMode=', disableSubjectsRealtime);
         }
     }
 
