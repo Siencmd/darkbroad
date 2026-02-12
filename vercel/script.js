@@ -679,7 +679,9 @@ function scheduleSubjectsSync(delayMs = 1200) {
 async function saveStudentSubmissionToFirestore({ type, subject, item, fileName, fileUrl }) {
     const userData = JSON.parse(localStorage.getItem("userData"));
     const courseId = normalizeCourseId(userData?.course);
-    if (!userData || !userData.id || !courseId) {
+    const authUid = auth.currentUser?.uid;
+    const studentId = authUid || userData?.id;
+    if (!userData || !studentId || !courseId) {
         throw new Error("Missing user session data for submission.");
     }
 
@@ -688,19 +690,22 @@ async function saveStudentSubmissionToFirestore({ type, subject, item, fileName,
     item.id = itemId;
 
     const itemRef = doc(db, "subjects", courseId, collectionName, itemId);
-    const submissionRef = doc(db, "subjects", courseId, collectionName, itemId, "submissions", userData.id);
+    const submissionRef = doc(db, "subjects", courseId, collectionName, itemId, "submissions", studentId);
 
-    // Ensure parent item doc exists for subcollection rules/reads.
-    await setDoc(itemRef, {
-        subjectId: subject.id || "",
-        subjectName: subject.name || "",
-        title: item.title || "",
-        dueDate: item.dueDate || "",
-        updatedAt: serverTimestamp()
-    }, { merge: true });
+    // Only instructors can write parent assignment/task docs by rules.
+    // Student submissions should write directly to the submissions subcollection.
+    if (isInstructorRoleValue(userData?.role)) {
+        await setDoc(itemRef, {
+            subjectId: subject.id || "",
+            subjectName: subject.name || "",
+            title: item.title || "",
+            dueDate: item.dueDate || "",
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+    }
 
     await setDoc(submissionRef, {
-        studentId: userData.id,
+        studentId,
         studentName: userData.name || "",
         fileName,
         fileUrl,
