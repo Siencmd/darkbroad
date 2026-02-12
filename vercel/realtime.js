@@ -45,7 +45,8 @@ export function setupRealtimeSubjects(courseId, onSubjectsUpdate, onError) {
             onSubjectsUpdate(subjects);
         } else {
             console.log('No subjects document found for course:', courseId);
-            onSubjectsUpdate([]);
+            // Return null so callers can decide whether to preserve local state.
+            onSubjectsUpdate(null);
         }
     }, (error) => {
         console.error('Real-time subjects error:', error.code, error.message);
