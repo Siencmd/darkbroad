@@ -1,9 +1,9 @@
 // =========================
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
-import { auth } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { auth, db } from './firebase.js';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { doc, setDoc, getDoc, onSnapshot, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 
 // Load realtime helpers lazily so a 404 on realtime.js does not break the whole app.
@@ -26,7 +26,7 @@ import('./realtime.js')
         console.warn('Realtime module unavailable. Continuing without realtime sync:', error.message);
     });
 
-const db = getFirestore();
+// db is now imported from firebase.js
 
 function normalizeSubject(subject, index = 0) {
     return {
@@ -416,6 +416,9 @@ async function saveSubjectsToFirestore() {
         return;
     }
 
+    console.log("Saving subjects to Firestore for course:", userData.course);
+    console.log("Subjects to save:", subjects);
+    
     isSavingSubjects = true; // Set flag before saving to prevent realtime loop
     
     try {
@@ -428,10 +431,11 @@ async function saveSubjectsToFirestore() {
         // Reset the saving flag after a short delay to allow Firestore to propagate
         setTimeout(() => {
             isSavingSubjects = false;
-        }, 500);
+            console.log("Saving flag reset, ready for realtime updates");
+        }, 1000);
         return true;
     } catch (error) {
-        console.error("Error saving subjects to Firestore:", error);
+        console.error("Error saving subjects to Firestore:", error.code, error.message);
         isSavingSubjects = false;
         if (error.code === 'permission-denied' || error.message?.includes('permission')) {
             // Prevent cloud snapshot from rolling back local instructor edits.
@@ -590,44 +594,65 @@ function initializeSubjects() {
         const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
         
         if (isLoggedIn) {
-            loadSubjectsFromFirestore(userData.course, renderSubjects).then((loadedFromCloud) => {
-                if (!loadedFromCloud) {
-                    // No cloud access: keep page fully usable from local data.
-                    renderSubjects();
-                    return;
-                }
-                // Enable realtime updates for ALL users (both students and instructors)
-                // This ensures students see subjects added by instructors in realtime
-                subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
-                    // Skip if realtime is disabled or if we're currently saving (prevents loop)
-                    if (disableSubjectsRealtime || isSavingSubjects) return;
+            console.log("User is logged in, waiting for Firebase Auth...");
+            
+            // Wait for Firebase Auth to be ready before setting up realtime listener
+            const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+                if (firebaseUser) {
+                    console.log("Firebase Auth ready, user:", firebaseUser.uid);
+                    console.log("Setting up realtime for course:", userData.course);
                     
-                    // When subjects update, stop existing task listeners and re-setup
-                    stopTaskListeners();
-                    subjects = updatedSubjects;
-                    subjects = normalizeSubjects(subjects);
-                    localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
+                    // Set up realtime listener FIRST, regardless of initial load result
+                    // This ensures students receive updates when instructors add subjects
+                    subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+                        // Skip if realtime is disabled or if we're currently saving (prevents loop)
+                        if (disableSubjectsRealtime || isSavingSubjects) {
+                            console.log("Skipping realtime update - disabled or saving");
+                            return;
+                        }
+                        
+                        console.log("Realtime update received, subjects count:", updatedSubjects.length);
+                        
+                        // When subjects update, stop existing task listeners and re-setup
+                        stopTaskListeners();
+                        subjects = updatedSubjects;
+                        subjects = normalizeSubjects(subjects);
+                        localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
+                        renderSubjects();
+                        // Re-render current subject details if any
+                        const activeItem = document.querySelector('.subject-list-item.active');
+                        if (activeItem) {
+                            renderSubjectDetails(activeItem.dataset.index);
+                        }
+                        // Setup task listeners for all subjects
+                        setupTaskListeners();
+                        console.log("Realtime update: Subjects refreshed from cloud.");
+                    }, (error) => {
+                        console.warn("Realtime connection failed, using local data only:", error.message);
+                    });
+                    
+                    // Then try to load initial data
+                    loadSubjectsFromFirestore(userData.course, renderSubjects).then((loadedFromCloud) => {
+                        console.log("Initial load from Firestore:", loadedFromCloud ? "success" : "failed, using local data");
+                        renderSubjects();
+                    }).catch((error) => {
+                        console.warn("Cloud sync unavailable - using local data:", error.message);
+                        renderSubjects(); // Fallback to localStorage
+                    });
+                    
+                    // Unsubscribe from auth listener after first run
+                    unsubscribeAuth();
+                } else {
+                    console.log("No Firebase user, using localStorage data only");
                     renderSubjects();
-                    // Re-render current subject details if any
-                    const activeItem = document.querySelector('.subject-list-item.active');
-                    if (activeItem) {
-                        renderSubjectDetails(activeItem.dataset.index);
-                    }
-                    // Setup task listeners for all subjects
-                    setupTaskListeners();
-                    console.log("Realtime update: Subjects refreshed from cloud.");
-                }, (error) => {
-                    console.warn("Realtime connection failed, using local data only:", error.message);
-                });
-            }).catch((error) => {
-                console.warn("Cloud sync unavailable - using local data");
-                renderSubjects(); // Fallback to localStorage
+                }
             });
         } else {
             console.log("User not authenticated, using localStorage data only");
             renderSubjects();
         }
     } else {
+        console.log("No user course data, using localStorage data only");
         renderSubjects();
     }
 
