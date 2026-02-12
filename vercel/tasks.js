@@ -2,12 +2,12 @@
 
 import { db, auth } from './firebase.js';
 import { supabase } from './supabase.js';
-import { doc, setDoc, updateDoc, deleteDoc, getDoc, addDoc, collection, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { doc, updateDoc, deleteDoc, getDoc, addDoc, collection, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Helper function to get current user role
 function getCurrentUserRole() {
     const userData = JSON.parse(localStorage.getItem('userData'));
-    return userData ? userData.role : null;
+    return userData?.role ? userData.role.toLowerCase().trim() : null;
 }
 
 // Helper function to get current user ID
@@ -41,10 +41,10 @@ async function uploadFileToSupabase(file, path) {
     }
 }
 
-// Create a new task (Instructor only)
-export async function createTask(subjectId, taskData) {
+// Create a new task (Instructor only). First arg is courseId.
+export async function createTask(courseId, taskData) {
     const role = getCurrentUserRole();
-    if (role !== 'instructor') {
+    if (!['instructor', 'teacher', 'admin'].includes(role)) {
         throw new Error('Only instructors can create tasks');
     }
 
@@ -56,17 +56,18 @@ export async function createTask(subjectId, taskData) {
     try {
         let fileUrl = null;
         if (taskData.file) {
-            const path = `subjects/${subjectId}/tasks/`;
+            const path = `subjects/${courseId}/tasks/`;
             fileUrl = await uploadFileToSupabase(taskData.file, path);
         }
 
-        const taskRef = collection(db, 'subjects', subjectId, 'tasks');
+        const taskRef = collection(db, 'subjects', courseId, 'tasks');
         const newTask = {
             title: taskData.title,
             description: taskData.description || '',
             dueDate: taskData.dueDate,
             priority: taskData.priority || 'medium',
             status: 'pending',
+            subjectId: taskData.subjectId || '',
             createdBy: userId,
             createdAt: serverTimestamp(),
             fileName: taskData.file ? taskData.file.name : null,
@@ -83,27 +84,28 @@ export async function createTask(subjectId, taskData) {
     }
 }
 
-// Update an existing task (Instructor only)
-export async function updateTask(subjectId, taskId, taskData) {
+// Update an existing task (Instructor only). First arg is courseId.
+export async function updateTask(courseId, taskId, taskData) {
     const role = getCurrentUserRole();
-    if (role !== 'instructor') {
+    if (!['instructor', 'teacher', 'admin'].includes(role)) {
         throw new Error('Only instructors can update tasks');
     }
 
     try {
         let fileUrl = taskData.fileUrl; // Keep existing if no new file
         if (taskData.file) {
-            const path = `subjects/${subjectId}/tasks/`;
+            const path = `subjects/${courseId}/tasks/`;
             fileUrl = await uploadFileToSupabase(taskData.file, path);
         }
 
-        const taskRef = doc(db, 'subjects', subjectId, 'tasks', taskId);
+        const taskRef = doc(db, 'subjects', courseId, 'tasks', taskId);
         await updateDoc(taskRef, {
             title: taskData.title,
             description: taskData.description || '',
             dueDate: taskData.dueDate,
             priority: taskData.priority || 'medium',
             status: taskData.status || 'pending',
+            subjectId: taskData.subjectId || '',
             fileName: taskData.file ? taskData.file.name : taskData.fileName,
             fileUrl: fileUrl,
             updatedAt: serverTimestamp()
@@ -115,15 +117,15 @@ export async function updateTask(subjectId, taskId, taskData) {
     }
 }
 
-// Delete a task (Instructor only)
-export async function deleteTask(subjectId, taskId) {
+// Delete a task (Instructor only). First arg is courseId.
+export async function deleteTask(courseId, taskId) {
     const role = getCurrentUserRole();
-    if (role !== 'instructor') {
+    if (!['instructor', 'teacher', 'admin'].includes(role)) {
         throw new Error('Only instructors can delete tasks');
     }
 
     try {
-        const taskRef = doc(db, 'subjects', subjectId, 'tasks', taskId);
+        const taskRef = doc(db, 'subjects', courseId, 'tasks', taskId);
         await deleteDoc(taskRef);
         console.log('Task deleted:', taskId);
     } catch (error) {
@@ -132,8 +134,8 @@ export async function deleteTask(subjectId, taskId) {
     }
 }
 
-// Submit a file for a task (Students only)
-export async function submitTaskSubmission(subjectId, taskId, file) {
+// Submit a file for a task (Students only). First arg is courseId.
+export async function submitTaskSubmission(courseId, taskId, file) {
     const role = getCurrentUserRole();
     if (role !== 'student') {
         throw new Error('Only students can submit task files');
@@ -145,10 +147,10 @@ export async function submitTaskSubmission(subjectId, taskId, file) {
     }
 
     try {
-        const path = `subjects/${subjectId}/tasks/${taskId}/submissions/${userId}/`;
+        const path = `subjects/${courseId}/tasks/${taskId}/submissions/${userId}/`;
         const fileUrl = await uploadFileToSupabase(file, path);
 
-        const taskRef = doc(db, 'subjects', subjectId, 'tasks', taskId);
+        const taskRef = doc(db, 'subjects', courseId, 'tasks', taskId);
         await updateDoc(taskRef, {
             submissions: arrayUnion({
                 studentId: userId,
@@ -164,10 +166,10 @@ export async function submitTaskSubmission(subjectId, taskId, file) {
     }
 }
 
-// Get a single task (for viewing)
-export async function getTask(subjectId, taskId) {
+// Get a single task (for viewing). First arg is courseId.
+export async function getTask(courseId, taskId) {
     try {
-        const taskRef = doc(db, 'subjects', subjectId, 'tasks', taskId);
+        const taskRef = doc(db, 'subjects', courseId, 'tasks', taskId);
         const taskSnap = await getDoc(taskRef);
         if (taskSnap.exists()) {
             return { id: taskSnap.id, ...taskSnap.data() };
@@ -180,8 +182,8 @@ export async function getTask(subjectId, taskId) {
     }
 }
 
-// Get all tasks for a subject (though realtime handles this, for initial load)
-export async function getTasks(subjectId) {
+// Get all tasks for a course (though realtime handles this, for initial load)
+export async function getTasks(courseId) {
     // This can be used if needed, but realtime.js handles ongoing updates
     // Implementation would use getDocs from collection
     // For now, rely on realtime
