@@ -60,6 +60,49 @@ function normalizeRole(roleValue) {
     return typeof roleValue === 'string' ? roleValue.trim().toLowerCase() : '';
 }
 
+async function getUserProfileByUid(uid) {
+    if (!uid) return { source: "none", data: null };
+
+    const usersSnap = await getDoc(doc(db, "users", uid));
+    if (usersSnap.exists()) {
+        return { source: "users", data: usersSnap.data() };
+    }
+
+    const instructorsSnap = await getDoc(doc(db, "instructors", uid));
+    if (instructorsSnap.exists()) {
+        return { source: "instructors", data: instructorsSnap.data() };
+    }
+
+    const studentsSnap = await getDoc(doc(db, "students", uid));
+    if (studentsSnap.exists()) {
+        return { source: "students", data: studentsSnap.data() };
+    }
+
+    return { source: "none", data: null };
+}
+
+function buildStoragePath({ courseId = "", subjectId = "", itemType = "", itemId = "", userId = "", fileName = "" }) {
+    const safeCourse = normalizeCourseId(courseId) || "unknown-course";
+    const safeSubject = subjectId || "unknown-subject";
+    const safeType = itemType || "misc";
+    const safeItem = itemId || "unknown-item";
+    const safeName = fileName || "file";
+    const parts = ["courses", safeCourse, "subjects", safeSubject, safeType, safeItem];
+    if (userId) parts.push("submissions", userId);
+    parts.push(safeName);
+    return parts.join("/");
+}
+
+function buildStoragePrefix({ courseId = "", subjectId = "", itemType = "", itemId = "", userId = "" }) {
+    const safeCourse = normalizeCourseId(courseId) || "unknown-course";
+    const safeSubject = subjectId || "unknown-subject";
+    const safeType = itemType || "misc";
+    const safeItem = itemId || "unknown-item";
+    const parts = ["courses", safeCourse, "subjects", safeSubject, safeType, safeItem];
+    if (userId) parts.push("submissions", userId);
+    return `${parts.join("/")}/`;
+}
+
 async function waitForAuthReady(timeoutMs = 5000) {
     if (auth.currentUser) return auth.currentUser;
 
@@ -85,20 +128,8 @@ async function waitForAuthReady(timeoutMs = 5000) {
 async function getServerUserProfile() {
     const uid = auth.currentUser?.uid || JSON.parse(localStorage.getItem("userData") || "{}")?.id;
     if (!uid) return null;
-
-    const usersRef = doc(db, "users", uid);
-    const usersSnap = await getDoc(usersRef);
-    if (usersSnap.exists()) {
-        return { source: "users", uid, ...usersSnap.data() };
-    }
-
-    const studentsRef = doc(db, "students", uid);
-    const studentsSnap = await getDoc(studentsRef);
-    if (studentsSnap.exists()) {
-        return { source: "students", uid, ...studentsSnap.data() };
-    }
-
-    return { source: "none", uid };
+    const profile = await getUserProfileByUid(uid);
+    return profile.data ? { source: profile.source, uid, ...profile.data } : { source: "none", uid };
 }
 
 const storedSubjects = normalizeSubjects(JSON.parse(localStorage.getItem('subjects')));
@@ -264,22 +295,13 @@ function initializeLogin() {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const {user} = userCredential;
 
-            // Fetch user role and course from Firestore (check "users" first, then "students" for backward compatibility)
-            let userDoc = await getDoc(doc(db, "users", user.uid));
             let userRole = 'student';
             let userCourse = '';
-            if (userDoc.exists()) {
-                const data = userDoc.data();
+            const profile = await getUserProfileByUid(user.uid);
+            if (profile.data) {
+                const data = profile.data;
                 userRole = data.role || 'student';
                 userCourse = data.course || '';
-            } else {
-                // Check "students" collection for old signups
-                userDoc = await getDoc(doc(db, "students", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    userRole = data.role || 'student';
-                    userCourse = data.course || '';
-                }
             }
 
             // Store logged-in user in localStorage
@@ -338,14 +360,19 @@ if (role === "instructor" && accessCode !== "INSTRUCTOR2026") {
 
             await updateProfile(user, { displayName: fullName });
 
-            await setDoc(doc(db, "users", user.uid), {
+            const profilePayload = {
                 fullName,
                 email,
                 phone,
                 course,
                 role,
                 createdAt: serverTimestamp()
-            });
+            };
+
+            await setDoc(doc(db, "users", user.uid), profilePayload);
+            if (role === "instructor") {
+                await setDoc(doc(db, "instructors", user.uid), profilePayload, { merge: true });
+            }
 
             setMessage("signupMessage", "Account created successfully! Redirecting...", true);
             setTimeout(() => window.location.href = "Login.html", 1500);
@@ -740,33 +767,33 @@ function initializeSubjects() {
             if (cloudInitialized) return;
             cloudInitialized = true;
 
-            loadSubjectsFromFirestore(courseId, renderSubjects).then(() => {
-                // Enable realtime updates for all users in the course
-                subjectsRealtimeUnsubscribe = setupRealtimeSubjects(courseId, (updatedSubjects) => {
-                    // Skip if realtime is disabled or if we're currently saving (prevents loop)
-                    if (disableSubjectsRealtime || isSavingSubjects) {
-                        console.log("Skipping realtime update - disabled or saving");
-                        return;
-                    }
+            subjectsRealtimeUnsubscribe = setupRealtimeSubjects(courseId, (updatedSubjects) => {
+                // Skip if realtime is disabled or if we're currently saving (prevents loop)
+                if (disableSubjectsRealtime || isSavingSubjects) {
+                    console.log("Skipping realtime update - disabled or saving");
+                    return;
+                }
 
-                    // When subjects update, stop existing task listeners and re-setup
-                    stopTaskListeners();
-                    subjects = updatedSubjects;
-                    subjects = normalizeSubjects(subjects);
-                    localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
-                    lastSyncedSubjectsHash = JSON.stringify(subjects);
-                    renderSubjects();
-                    // Re-render current subject details if any
-                    const activeItem = document.querySelector('.subject-list-item.active');
-                    if (activeItem) {
-                        renderSubjectDetails(activeItem.dataset.index);
-                    }
-                    // Setup task listeners for all subjects
-                    setupTaskListeners();
-                    console.log("Realtime update: Subjects refreshed from cloud.");
-                }, (error) => {
-                    console.warn("Realtime connection failed, using local data only:", error.message);
-                });
+                // When subjects update, stop existing task listeners and re-setup
+                stopTaskListeners();
+                subjects = updatedSubjects;
+                subjects = normalizeSubjects(subjects);
+                localStorage.setItem('subjects', JSON.stringify(subjects)); // Save to localStorage only
+                lastSyncedSubjectsHash = JSON.stringify(subjects);
+                renderSubjects();
+                // Re-render current subject details if any
+                const activeItem = document.querySelector('.subject-list-item.active');
+                if (activeItem) {
+                    renderSubjectDetails(activeItem.dataset.index);
+                }
+                // Setup task listeners for all subjects
+                setupTaskListeners();
+                console.log("Realtime update: Subjects refreshed from cloud.");
+            }, (error) => {
+                console.warn("Realtime connection failed, using local data only:", error.message);
+            });
+
+            loadSubjectsFromFirestore(courseId, renderSubjects).then(() => {
                 // Setup task listeners after subjects are loaded
                 setupTaskListeners();
             }).catch((error) => {
@@ -1857,7 +1884,15 @@ function initializeSubjects() {
 
             const file = fileInput.files[0];
             console.log('Uploading file:', file.name);
-            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/submissions/${userData.id}/`);
+            const courseId = normalizeCourseId(userData?.course);
+            const uploadPrefix = buildStoragePrefix({
+                courseId,
+                subjectId: sub.id,
+                itemType: "assignments",
+                itemId: assignment.id,
+                userId: userData.id
+            });
+            const fileUrl = await uploadFileToSupabase(file, uploadPrefix);
             console.log('Upload result:', fileUrl);
 
             if (!fileUrl) {
@@ -1919,7 +1954,15 @@ function initializeSubjects() {
 
             const file = fileInput.files[0];
             console.log('Uploading task submission:', file.name);
-            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${task.id}/submissions/${userData.id}/`);
+            const courseId = normalizeCourseId(userData?.course);
+            const uploadPrefix = buildStoragePrefix({
+                courseId,
+                subjectId: sub.id,
+                itemType: "tasks",
+                itemId: task.id,
+                userId: userData.id
+            });
+            const fileUrl = await uploadFileToSupabase(file, uploadPrefix);
             console.log('Upload result:', fileUrl);
 
             if (!fileUrl) {
@@ -2273,7 +2316,14 @@ window.submitStudentFile = async function(subjectId, taskId, file) {
 
   const userId = firebaseUser.uid;
   const safeSubjectId = subjectId || "unknown-subject";
-  const path = `subjects/${courseId}/${safeSubjectId}/${taskId}/submissions/${userId}/${file.name}`;
+  const path = buildStoragePath({
+    courseId,
+    subjectId: safeSubjectId,
+    itemType: "tasks",
+    itemId: taskId,
+    userId,
+    fileName: file.name
+  });
 
   try {
 
