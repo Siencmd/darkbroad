@@ -3,7 +3,7 @@
 // =========================
 import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { doc, setDoc, getDoc, getDocs, collection, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, getDocs, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
 
@@ -15,6 +15,8 @@ let disableSubjectsRealtime = false;
 let isSavingSubjects = false; // Flag to prevent realtime loop when saving
 let syncTimer = null;
 let lastSyncedSubjectsHash = null;
+let assignmentSubmissionListeners = {};
+let assignmentCountsSubjectKey = null;
 
 // db is now imported from firebase.js
 
@@ -176,6 +178,50 @@ function setupTaskListeners() {
     // Listening to /subjects/{subjectId}/tasks causes permission errors for this schema.
     // Keep this as a no-op until the app fully migrates to per-subject task subcollections.
     return;
+}
+
+function stopAssignmentSubmissionCountListeners() {
+    Object.values(assignmentSubmissionListeners).forEach((unsubscribe) => {
+        try {
+            unsubscribe();
+        } catch (error) {
+            console.warn("Failed to unsubscribe assignment submission listener:", error.message);
+        }
+    });
+    assignmentSubmissionListeners = {};
+    assignmentCountsSubjectKey = null;
+}
+
+function setupAssignmentSubmissionCountListeners(subjectIndex) {
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const courseId = normalizeCourseId(userData?.course);
+    const sub = subjects[subjectIndex];
+    if (!courseId || !sub || !Array.isArray(sub.assignments)) return;
+
+    const subjectKey = `${courseId}:${sub.id || subjectIndex}`;
+    if (assignmentCountsSubjectKey === subjectKey) return;
+
+    stopAssignmentSubmissionCountListeners();
+    assignmentCountsSubjectKey = subjectKey;
+
+    sub.assignments.forEach((assignment) => {
+        if (!assignment?.id) return;
+        const submissionsRef = collection(db, "subjects", courseId, "assignments", assignment.id, "submissions");
+        assignmentSubmissionListeners[assignment.id] = onSnapshot(submissionsRef, (snapshot) => {
+            const liveSubmissions = [];
+            snapshot.forEach((submissionDoc) => {
+                liveSubmissions.push({ id: submissionDoc.id, ...submissionDoc.data() });
+            });
+            assignment.submissions = liveSubmissions;
+
+            const countEl = document.querySelector(`.submission-count[data-assignment-id="${assignment.id}"]`);
+            if (countEl) {
+                countEl.textContent = String(liveSubmissions.length);
+            }
+        }, (error) => {
+            console.warn(`Realtime submission count failed for assignment ${assignment.id}:`, error.message);
+        });
+    });
 }
 
 
@@ -932,7 +978,7 @@ function initializeSubjects() {
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
                                         <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewSubmissions(${index}, ${i})">
-                                            <i class="fas fa-eye"></i> View Submissions (${assignment.submissions ? assignment.submissions.length : 0})
+                                            <i class="fas fa-eye"></i> View Submissions (<span class="submission-count" data-assignment-id="${assignment.id || ''}">${assignment.submissions ? assignment.submissions.length : 0}</span>)
                                         </button>
                                     </div>
                                     ` : `
@@ -1028,6 +1074,11 @@ function initializeSubjects() {
 
         // Keep a default visible tab state after each render.
         switchTab('tasks');
+        if (isInstructor) {
+            setupAssignmentSubmissionCountListeners(index);
+        } else {
+            stopAssignmentSubmissionCountListeners();
+        }
 
     };
 
