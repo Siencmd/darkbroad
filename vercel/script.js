@@ -995,7 +995,7 @@ function initializeSubjects() {
                         </button>` : ''}
                     </div>
                     <div class="items-list">
-                        ${sub.tasks.map((task, i) => `
+                        ${sub.tasks.length > 0 ? sub.tasks.map((task, i) => `
                             <div class="item-card">
                                 <div class="item-info">
                                     <h4>${task.title}</h4>
@@ -1014,7 +1014,7 @@ function initializeSubjects() {
                                 </div>
                                 ` : ''}
                             </div>
-                        `).join('')}
+                        `).join('') : `<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks yet.</p></div>`}
                     </div>
                 </div>
             </div>
@@ -1028,7 +1028,7 @@ function initializeSubjects() {
                         </button>` : ''}
                     </div>
                     <div class="items-list">
-                        ${sub.assignments.map((assignment, i) => `
+                        ${sub.assignments.length > 0 ? sub.assignments.map((assignment, i) => `
                             <div class="item-card">
                                 <div class="item-info">
                                     <h4>${assignment.title}</h4>
@@ -1061,7 +1061,7 @@ function initializeSubjects() {
                                 </div>
                                 ` : ''}
                             </div>
-                        `).join('')}
+                        `).join('') : `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No assignments yet.</p></div>`}
                     </div>
                 </div>
             </div>
@@ -1075,7 +1075,7 @@ function initializeSubjects() {
                         </button>` : ''}
                     </div>
                     <div class="items-list">
-                        ${sub.lessons.map((lesson, i) => `
+                        ${sub.lessons.length > 0 ? sub.lessons.map((lesson, i) => `
                             <div class="item-card">
                                 <div class="lesson-info">
                                     <h4>${lesson.title}</h4>
@@ -1094,7 +1094,7 @@ function initializeSubjects() {
                                 </div>
                                 ` : ''}
                             </div>
-                        `).join('')}
+                        `).join('') : `<div class="empty-state"><i class="fas fa-book-open"></i><p>No lessons yet.</p></div>`}
                     </div>
                 </div>
             </div>
@@ -1126,7 +1126,7 @@ function initializeSubjects() {
                                 </div>
                                 ` : ''}
                             </div>
-                        `).join('') : '<p>No quizzes available yet.</p>'}
+                        `).join('') : `<div class="empty-state"><i class="fas fa-question-circle"></i><p>No quizzes available yet.</p></div>`}
                     </div>
                 </div>
             </div>
