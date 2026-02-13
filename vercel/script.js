@@ -1003,6 +1003,20 @@ function initializeSubjects() {
                                     <p>Due: ${task.dueDate} | Priority: ${task.priority} | Status: ${task.status}</p>
                                     <p>${task.description}</p>
                                     ${(task.file || task.fileName) ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl || task.url || '#'}" target="_blank">${task.file || task.fileName}</a></p>` : ''}
+                                    ${isInstructor ? `
+                                    <div class="instructor-actions">
+                                        <button class="btn-view-submissions" data-task-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewTaskSubmissions(${index}, ${i})">
+                                            <i class="fas fa-eye"></i> View Submissions (<span class="submission-count" data-task-id="${task.id || ''}">${task.submissions ? task.submissions.length : 0}</span>)
+                                        </button>
+                                    </div>
+                                    ` : `
+                                    <div class="student-actions">
+                                        <button class="btn-submit-task" data-task-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitTaskModal(${index}, ${i})">
+                                            <i class="fas fa-upload"></i> Submit Task
+                                        </button>
+                                        ${task.submissions && task.submissions.find(s => s.studentId === userData.id) ? '<p><i class="fas fa-check"></i> Submitted</p>' : ''}
+                                    </div>
+                                    `}
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
@@ -1115,6 +1129,7 @@ function initializeSubjects() {
                                     <h4>${quiz.title}</h4>
                                     <p>Due: ${quiz.dueDate} | Points: ${quiz.points} | Status: ${quiz.status}</p>
                                     <p>${quiz.instructions}</p>
+                                    ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="quiz-link-btn"><i class="fas fa-external-link-alt"></i> Take Quiz</a>` : ''}
                                     ${quiz.submissions?.length > 0 ? `<p class="submission-count" data-quiz-id="${quiz.id}"><i class="fas fa-users"></i> ${quiz.submissions.length} submission${quiz.submissions.length !== 1 ? 's' : ''}</p>` : ''}
                                 </div>
                                 ${isInstructor ? `
@@ -1131,9 +1146,9 @@ function initializeSubjects() {
                                 </div>
                                 ` : `
                                 <div class="item-actions">
-                                    <button class="btn-submit-item" data-quiz-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Submit Quiz">
-                                        <i class="fas fa-upload"></i> Submit
-                                    </button>
+                                    ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
+                                        <i class="fas fa-play"></i> Take Quiz
+                                    </a>` : ''}
                                 </div>
                                 `}
                             </div>
@@ -1827,6 +1842,10 @@ function initializeSubjects() {
                                 <input type="number" id="newQuizPoints" required placeholder="e.g. 50" />
                             </div>
                             <div class="form-group">
+                                <label>Google Form Link</label>
+                                <input type="url" id="newQuizLink" placeholder="e.g. https://forms.gle/..." />
+                            </div>
+                            <div class="form-group">
                                 <label>Instructions</label>
                                 <textarea id="newQuizInstructions" rows="4" placeholder="Quiz instructions..."></textarea>
                             </div>
@@ -1850,6 +1869,7 @@ function initializeSubjects() {
                     points: parseInt(document.getElementById('newQuizPoints').value),
                     status: 'available',
                     instructions: document.getElementById('newQuizInstructions').value.trim(),
+                    quizLink: document.getElementById('newQuizLink').value.trim(),
                     submissions: []
                 };
                 sub.quizzes.push(quiz);
@@ -1904,6 +1924,10 @@ function initializeSubjects() {
                                 <input type="number" id="editQuizPoints" required value="${item.points}" />
                             </div>
                             <div class="form-group">
+                                <label>Google Form Link</label>
+                                <input type="url" id="editQuizLink" value="${item.quizLink || ''}" placeholder="e.g. https://forms.gle/..." />
+                            </div>
+                            <div class="form-group">
                                 <label>Instructions</label>
                                 <textarea id="editQuizInstructions" rows="4">${item.instructions}</textarea>
                             </div>
@@ -1930,6 +1954,7 @@ function initializeSubjects() {
                     points: parseInt(document.getElementById('editQuizPoints').value),
                     status: existingQuiz?.status || 'available',
                     instructions: document.getElementById('editQuizInstructions').value.trim(),
+                    quizLink: document.getElementById('editQuizLink').value.trim(),
                     submissions: existingQuiz?.submissions || []
                 };
                 saveSubjects();
@@ -2217,7 +2242,150 @@ function initializeSubjects() {
 
 
     // -------------------------
-    // SUBMIT TASK FORM HANDLER
+    // OPEN SUBMIT TASK MODAL (STUDENT)
+    // -------------------------
+    const openSubmitTaskModal = function(subjectIndex, taskIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const task = sub.tasks[taskIndex];
+        if (!task) return;
+
+        // Ensure only one submit-task modal exists to avoid duplicate IDs and stale file inputs.
+        const existingModal = document.getElementById('submitTaskModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'submitTaskModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submit Task: ${task.title}</h2>
+                    <form id="submitTaskForm">
+                        <input type="hidden" id="submitTaskSubjectIndex" value="${subjectIndex}" />
+                        <input type="hidden" id="submitTaskIndex" value="${taskIndex}" />
+                        <div class="form-group">
+                            <label>Upload Your Submission</label>
+                            <input type="file" id="submitTaskFile" required />
+                        </div>
+                        <button type="submit" class="btn-add-subject">Submit Task</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+        modal.querySelector('#submitTaskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = modal.querySelector('#submitTaskFile');
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                alert('Please select a file to submit.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            console.log('Uploading task submission:', file.name);
+            const courseId = normalizeCourseId(userData?.course);
+            const uploadPrefix = buildStoragePrefix({
+                courseId,
+                subjectId: sub.id,
+                itemType: "tasks",
+                itemId: task.id,
+                userId: userData.id
+            });
+            const fileUrl = await uploadFileToSupabase(file, uploadPrefix);
+            console.log('Upload result:', fileUrl);
+
+            if (!fileUrl) {
+                alert('File upload failed. Please try again.');
+                return;
+            }
+
+            try {
+                await saveStudentSubmissionToFirestore({
+                    type: "task",
+                    subject: sub,
+                    item: task,
+                    fileName: file.name,
+                    fileUrl
+                });
+            } catch (error) {
+                console.error("Could not write task submission to Firestore:", error);
+                alert(`Submission failed: ${error.message || "Could not save to Firestore."}`);
+                return;
+            }
+
+            if (!task.submissions) task.submissions = [];
+            task.submissions.push({
+                studentId: auth.currentUser?.uid || userData.id,
+                fileName: file.name,
+                fileUrl: fileUrl,
+                submittedAt: new Date().toISOString()
+            });
+
+            // Update task status
+            task.status = 'submitted';
+
+            saveSubjects(false);
+            renderSubjectDetails(subjectIndex);
+            alert('Task submitted successfully!');
+            modal.remove();
+        });
+    }
+
+    // -------------------------
+    // VIEW TASK SUBMISSIONS (INSTRUCTOR)
+    // -------------------------
+    const viewTaskSubmissions = async function(subjectIndex, taskIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const task = sub.tasks[taskIndex];
+        if (!task) return;
+
+        let submissions = Array.isArray(task.submissions) ? task.submissions : [];
+
+        if (!submissions.length) {
+            alert("No submissions yet.");
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'viewTaskSubmissionsModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submissions for: ${task.title}</h2>
+                    <div class="submissions-list">
+                        ${submissions.map(submission => `
+                            <div class="submission-item">
+                                <p><strong>Student ID:</strong> ${submission.studentId || submission.id}</p>
+                                <p><strong>Name:</strong> ${submission.studentName || "N/A"}</p>
+                                <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
+                                <p><strong>Submitted At:</strong> ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    };
+
+    // -------------------------
+    // SUBMIT TASK FORM HANDLER (LEGACY - uses modal in HTML)
     // -------------------------
     const submitTaskForm = document.getElementById('submitTaskForm');
     if (submitTaskForm) {
@@ -2371,8 +2539,10 @@ function initializeSubjects() {
     window.subjectsOpenEditItemModal = (subjectIndex, type, itemIndex) => openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
     window.subjectsDeleteItem = (subjectIndex, type, itemIndex) => deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
     window.subjectsOpenSubmitAssignmentModal = (subjectIndex, assignmentIndex) => openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
+    window.subjectsOpenSubmitTaskModal = (subjectIndex, taskIndex) => openSubmitTaskModal(parseInt(subjectIndex), parseInt(taskIndex));
     window.subjectsOpenSubmitQuizModal = (subjectIndex, quizIndex) => openSubmitQuizModal(parseInt(subjectIndex), parseInt(quizIndex));
     window.subjectsViewSubmissions = (subjectIndex, assignmentIndex) => viewSubmissions(parseInt(subjectIndex), parseInt(assignmentIndex));
+    window.subjectsViewTaskSubmissions = (subjectIndex, taskIndex) => viewTaskSubmissions(parseInt(subjectIndex), parseInt(taskIndex));
     window.subjectsViewQuizSubmissions = (subjectIndex, quizIndex) => viewQuizSubmissions(parseInt(subjectIndex), parseInt(quizIndex));
     window.subjectsSwitchTab = (tab) => switchTab(tab);
     window.subjectsSyncToCloud = () => {
