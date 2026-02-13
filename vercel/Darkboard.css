@@ -6157,6 +6157,72 @@ body.light-mode .btn-submit {
     transform: translateY(-2px);
 }
 
+/* Quiz Link Button */
+.quiz-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s;
+    margin-top: 8px;
+}
+
+.quiz-link-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+}
+
+/* Take Quiz Button */
+.btn-take-quiz {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-take-quiz:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+}
+
+/* Submit Task Button */
+.btn-submit-task {
+    padding: 8px 12px;
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-submit-task:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+    transform: translateY(-2px);
+}
+
 /* Detail Actions */
 .detail-actions {
     display: flex;
