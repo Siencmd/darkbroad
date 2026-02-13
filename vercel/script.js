@@ -1158,8 +1158,11 @@ function initializeSubjects() {
             </div>
         `;
 
-        // Keep a default visible tab state after each render.
-        switchTab('tasks');
+        // Only switch to tasks tab on initial render, not on re-renders
+        const currentTab = document.querySelector('.tab-btn.active');
+        if (!currentTab) {
+            switchTab('tasks');
+        }
         if (isInstructor) {
             setupAssignmentSubmissionCountListeners(index);
         } else {
@@ -1875,6 +1878,8 @@ function initializeSubjects() {
                 sub.quizzes.push(quiz);
                 saveSubjects();
                 renderSubjectDetails(subjectIndex);
+                // Switch to quizzes tab to show the new quiz
+                switchTab('quizzes');
                 modal.remove();
             });
         } else {
@@ -1957,8 +1962,9 @@ function initializeSubjects() {
                     quizLink: document.getElementById('editQuizLink').value.trim(),
                     submissions: existingQuiz?.submissions || []
                 };
-                saveSubjects();
+                saveSubjects(false); // false to prevent immediate Firestore sync that causes flicker
                 renderSubjectDetails(subjectIndex);
+                switchTab('quizzes');
                 modal.remove();
             });
 
