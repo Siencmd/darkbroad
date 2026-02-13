@@ -41,7 +41,8 @@ function normalizeSubject(subject, index = 0) {
 
     const normalizeQuiz = (quiz, quizIndex = 0) => ({
         ...quiz,
-        id: quiz?.id || `legacy-quiz-${index}-${quizIndex}`
+        id: quiz?.id || `legacy-quiz-${index}-${quizIndex}`,
+        submissions: Array.isArray(quiz?.submissions) ? quiz.submissions : []
     });
 
     return {
@@ -655,7 +656,7 @@ async function saveStudentSubmissionToFirestore({ type, subject, item, fileName,
         throw new Error("Missing user session data for submission.");
     }
 
-    const collectionName = type === "task" ? "tasks" : "assignments";
+    const collectionName = type === "task" ? "tasks" : type === "assignment" ? "assignments" : type === "quiz" ? "quizzes" : "items";
     const itemId = item?.id;
     if (!itemId) {
         throw new Error("This item is missing its ID. Please refresh and try again.");
@@ -664,7 +665,7 @@ async function saveStudentSubmissionToFirestore({ type, subject, item, fileName,
     const itemRef = doc(db, "subjects", courseId, collectionName, itemId);
     const submissionRef = doc(db, "subjects", courseId, collectionName, itemId, "submissions", studentId);
 
-    // Only instructors can write parent assignment/task docs by rules.
+    // Only instructors can write parent assignment/task/quiz docs by rules.
     // Student submissions should write directly to the submissions subcollection.
     if (isInstructorRoleValue(userData?.role)) {
         await setDoc(itemRef, {
@@ -690,7 +691,7 @@ async function fetchItemSubmissionsFromFirestore(type, itemId) {
     const courseId = normalizeCourseId(userData?.course);
     if (!courseId || !itemId) return [];
 
-    const collectionName = type === "task" ? "tasks" : "assignments";
+    const collectionName = type === "task" ? "tasks" : type === "assignment" ? "assignments" : type === "quiz" ? "quizzes" : "items";
     const submissionsRef = collection(db, "subjects", courseId, collectionName, itemId, "submissions");
     const submissionsSnap = await getDocs(submissionsRef);
 
@@ -1114,17 +1115,27 @@ function initializeSubjects() {
                                     <h4>${quiz.title}</h4>
                                     <p>Due: ${quiz.dueDate} | Points: ${quiz.points} | Status: ${quiz.status}</p>
                                     <p>${quiz.instructions}</p>
+                                    ${quiz.submissions?.length > 0 ? `<p class="submission-count" data-quiz-id="${quiz.id}"><i class="fas fa-users"></i> ${quiz.submissions.length} submission${quiz.submissions.length !== 1 ? 's' : ''}</p>` : ''}
                                 </div>
                                 ${isInstructor ? `
                                 <div class="item-actions">
                                     <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'quiz', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    <button class="btn-view-submissions" data-quiz-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewQuizSubmissions(${index}, ${i})" title="View Submissions">
+                                        <i class="fas fa-users"></i>
+                                    </button>
                                     <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'quiz', ${i})">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
-                                ` : ''}
+                                ` : `
+                                <div class="item-actions">
+                                    <button class="btn-submit-item" data-quiz-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Submit Quiz">
+                                        <i class="fas fa-upload"></i> Submit
+                                    </button>
+                                </div>
+                                `}
                             </div>
                         `).join('') : `<div class="empty-state"><i class="fas fa-question-circle"></i><p>No quizzes available yet.</p></div>`}
                     </div>
@@ -1833,11 +1844,13 @@ function initializeSubjects() {
                 e.preventDefault();
                 const sub = subjects[subjectIndex];
                 const quiz = {
+                    id: Date.now().toString(),
                     title: document.getElementById('newQuizTitle').value.trim(),
                     dueDate: document.getElementById('newQuizDueDate').value,
                     points: parseInt(document.getElementById('newQuizPoints').value),
                     status: 'available',
-                    instructions: document.getElementById('newQuizInstructions').value.trim()
+                    instructions: document.getElementById('newQuizInstructions').value.trim(),
+                    submissions: []
                 };
                 sub.quizzes.push(quiz);
                 saveSubjects();
@@ -1909,12 +1922,15 @@ function initializeSubjects() {
 
             modal.querySelector('#editQuizForm').addEventListener('submit', (e) => {
                 e.preventDefault();
+                const existingQuiz = sub.quizzes[itemIndex];
                 sub.quizzes[itemIndex] = {
+                    id: existingQuiz?.id || Date.now().toString(),
                     title: document.getElementById('editQuizTitle').value.trim(),
                     dueDate: document.getElementById('editQuizDueDate').value,
                     points: parseInt(document.getElementById('editQuizPoints').value),
-                    status: item.status,
-                    instructions: document.getElementById('editQuizInstructions').value.trim()
+                    status: existingQuiz?.status || 'available',
+                    instructions: document.getElementById('editQuizInstructions').value.trim(),
+                    submissions: existingQuiz?.submissions || []
                 };
                 saveSubjects();
                 renderSubjectDetails(subjectIndex);
@@ -2057,6 +2073,147 @@ function initializeSubjects() {
         });
     }
 
+    // -------------------------
+    // OPEN SUBMIT QUIZ MODAL
+    // -------------------------
+    const openSubmitQuizModal = function(subjectIndex, quizIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const quiz = sub.quizzes[quizIndex];
+        if (!quiz) return;
+
+        // Ensure only one submit-quiz modal exists to avoid duplicate IDs and stale file inputs.
+        const existingModal = document.getElementById('submitQuizModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'submitQuizModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submit Quiz: ${quiz.title}</h2>
+                    <form id="submitQuizForm">
+                        <input type="hidden" id="submitQuizSubjectIndex" value="${subjectIndex}" />
+                        <input type="hidden" id="submitQuizIndex" value="${quizIndex}" />
+                        <div class="form-group">
+                            <label>Upload Your Quiz Submission</label>
+                            <input type="file" id="submitQuizFile" required />
+                        </div>
+                        <button type="submit" class="btn-add-subject">Submit Quiz</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+
+        modal.querySelector('#submitQuizForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = modal.querySelector('#submitQuizFile');
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                alert('Please select a file to submit.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            console.log('Uploading quiz submission:', file.name);
+            const courseId = normalizeCourseId(userData?.course);
+            const uploadPrefix = buildStoragePrefix({
+                courseId,
+                subjectId: sub.id,
+                itemType: "quizzes",
+                itemId: quiz.id,
+                userId: userData.id
+            });
+            const fileUrl = await uploadFileToSupabase(file, uploadPrefix);
+            console.log('Upload result:', fileUrl);
+
+            if (!fileUrl) {
+                alert('File upload failed. Please try again.');
+                return;
+            }
+
+            try {
+                await saveStudentSubmissionToFirestore({
+                    type: "quiz",
+                    subject: sub,
+                    item: quiz,
+                    fileName: file.name,
+                    fileUrl
+                });
+            } catch (error) {
+                console.error("Could not write quiz submission to Firestore:", error);
+                alert(`Submission failed: ${error.message || "Could not save to Firestore."}`);
+                return;
+            }
+
+            if (!quiz.submissions) quiz.submissions = [];
+            quiz.submissions.push({
+                studentId: auth.currentUser?.uid || userData.id,
+                fileName: file.name,
+                fileUrl: fileUrl,
+                submittedAt: new Date().toISOString()
+            });
+
+            saveSubjects(false);
+            renderSubjectDetails(subjectIndex);
+            alert('Quiz submitted successfully!');
+            modal.remove();
+        });
+    }
+
+
+
+    // -------------------------
+    // VIEW QUIZ SUBMISSIONS
+    // -------------------------
+    const viewQuizSubmissions = async function(subjectIndex, quizIndex) {
+        const sub = subjects[subjectIndex];
+        if (!sub) return;
+
+        const quiz = sub.quizzes[quizIndex];
+        if (!quiz) return;
+
+        let submissions = Array.isArray(quiz.submissions) ? quiz.submissions : [];
+
+        if (!submissions.length) {
+            alert("No submissions yet.");
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'viewQuizSubmissionsModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="modal-body">
+                    <h2>Submissions for: ${quiz.title}</h2>
+                    <div class="submissions-list">
+                        ${submissions.map(submission => `
+                            <div class="submission-item">
+                                <p><strong>Student ID:</strong> ${submission.studentId || submission.id}</p>
+                                <p><strong>Name:</strong> ${submission.studentName || "N/A"}</p>
+                                <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
+                                <p><strong>Submitted At:</strong> ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('.close').addEventListener('click', () => modal.remove());
+    };
 
 
     // -------------------------
@@ -2214,7 +2371,9 @@ function initializeSubjects() {
     window.subjectsOpenEditItemModal = (subjectIndex, type, itemIndex) => openEditItemModal(parseInt(subjectIndex), type, parseInt(itemIndex));
     window.subjectsDeleteItem = (subjectIndex, type, itemIndex) => deleteItem(parseInt(subjectIndex), type, parseInt(itemIndex));
     window.subjectsOpenSubmitAssignmentModal = (subjectIndex, assignmentIndex) => openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
+    window.subjectsOpenSubmitQuizModal = (subjectIndex, quizIndex) => openSubmitQuizModal(parseInt(subjectIndex), parseInt(quizIndex));
     window.subjectsViewSubmissions = (subjectIndex, assignmentIndex) => viewSubmissions(parseInt(subjectIndex), parseInt(assignmentIndex));
+    window.subjectsViewQuizSubmissions = (subjectIndex, quizIndex) => viewQuizSubmissions(parseInt(subjectIndex), parseInt(quizIndex));
     window.subjectsSwitchTab = (tab) => switchTab(tab);
     window.subjectsSyncToCloud = () => {
         saveSubjects(false);
