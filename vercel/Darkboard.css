@@ -874,6 +874,11 @@ body.light-mode .theme-toggle-btn:hover {
     animation: float 3s ease-in-out infinite;
 }
 
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
 .see-all {
     color: #00d4ff;
     text-decoration: none;
@@ -987,9 +992,14 @@ body.light-mode .theme-toggle-btn:hover {
     align-items: center;
     padding: 15px;
     background: rgba(0, 212, 255, 0.05);
-    border-radius: 10px;
+    border-radius: 8px;
     border-left: 4px solid #00d4ff;
     transition: 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.schedule-item:last-child {
+    margin-bottom: 0;
 }
 
 .schedule-item:hover {
@@ -3232,6 +3242,7 @@ body.light-mode .theme-toggle-btn:hover {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    margin-bottom: 30px;
 }
 
 /* Responsive Grades */
@@ -3427,6 +3438,38 @@ body.light-mode .theme-toggle-btn:hover {
     border: 2px solid rgba(255, 255, 255, 0.15);
     border-radius: 15px;
     overflow: hidden;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.grades-table thead {
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.grades-table th {
+    padding: 20px 25px;
+    font-weight: 600;
+    color: #00d4ff;
+    border-bottom: 2px solid rgba(0, 212, 255, 0.2);
+    text-align: left;
+}
+
+.grades-table td {
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.grades-table tbody tr {
+    transition: 0.3s ease;
+}
+
+.grades-table tbody tr:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.grades-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .table-header {
@@ -3651,6 +3694,57 @@ body.light-mode .theme-toggle-btn:hover {
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
     margin-bottom: 30px;
+}
+
+.schedule-day {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.schedule-day h3 {
+    color: var(--accent);
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.schedule-day .schedule-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(0, 212, 255, 0.05);
+    border-radius: 8px;
+    border-left: 4px solid #00d4ff;
+    transition: 0.3s ease;
+}
+
+.schedule-day .schedule-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.schedule-day .schedule-item .time {
+    color: #00d4ff;
+    font-weight: 700;
+    font-size: 0.9em;
+}
+
+.schedule-day .schedule-item .subject {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.schedule-day .schedule-item .room {
+    color: var(--text-secondary);
+    font-size: 0.85em;
 }
 
 /* Responsive Schedule */
