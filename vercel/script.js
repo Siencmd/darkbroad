@@ -1272,7 +1272,6 @@ function initializeSubjects() {
                                     <h4>${quiz.title || 'Untitled Quiz'}</h4>
                                     <p>Due: ${quiz.dueDate || 'N/A'} | Points: ${quiz.points || 0} | Status: ${quiz.status || 'available'}</p>
                                     ${quiz.instructions ? `<p>${quiz.instructions}</p>` : ''}
-                                    ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="quiz-link-btn"><i class="fas fa-external-link-alt"></i> Take Quiz</a>` : ''}
                                     ${quiz.submissions?.length > 0 ? `<p class="submission-count" data-quiz-id="${quiz.id}"><i class="fas fa-users"></i> ${quiz.submissions.length} submission${quiz.submissions.length !== 1 ? 's' : ''}</p>` : ''}
                                 </div>
                                 ${isInstructor ? `
