@@ -2864,6 +2864,7 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     
     console.log('Looking for grade input with ID: grade-' + studentId);
     console.log('Grade input element:', gradeInput);
+    console.log('Grade input value property BEFORE:', gradeInput?.value);
     
     if (!gradeInput) {
         alert('Error: Grade input field not found for student. Please refresh the page and try again.');
@@ -2879,6 +2880,7 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const feedbackValue = feedbackInput.value;
     
     console.log('Grade value from input:', gradeValue);
+    console.log('Grade input value AFTER read:', gradeInput.value);
     
     const grade = parseFloat(gradeValue);
     const feedback = feedbackValue;
