@@ -280,6 +280,7 @@
                     teacher: subject.teacher,
                     itemTitle: assignment.title,
                     itemType: 'assignment',
+                    itemId: assignment.id,
                     itemPoints: assignment.points || 100,
                     dueDate: assignment.dueDate
                   });
@@ -299,6 +300,7 @@
                     teacher: subject.teacher,
                     itemTitle: task.title,
                     itemType: 'task',
+                    itemId: task.id,
                     itemPoints: 100,
                     dueDate: task.dueDate
                   });
@@ -318,6 +320,7 @@
                     teacher: subject.teacher,
                     itemTitle: quiz.title,
                     itemType: 'quiz',
+                    itemId: quiz.id,
                     itemPoints: quiz.points || 100,
                     dueDate: quiz.dueDate
                   });
@@ -395,7 +398,12 @@
           const submissionsSnap = await getDocs(submissionsRef);
           const rows = [];
           submissionsSnap.forEach((doc) => {
-            rows.push({ id: doc.id, ...doc.data() });
+            const rowData = doc.data() || {};
+            rows.push({
+              id: doc.id,
+              ...rowData,
+              studentId: rowData.studentId || doc.id
+            });
           });
           return rows;
         } catch (error) {
