@@ -151,7 +151,13 @@
         const announcementsList = document.querySelector('.announcements-list');
         
         // Get announcements from localStorage
-        const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+        let announcements = [];
+        try {
+          announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+          if (!Array.isArray(announcements)) announcements = [];
+        } catch (error) {
+          announcements = [];
+        }
         
         if (announcements.length === 0) {
           // Show empty state message but keep sample announcements
@@ -186,6 +192,28 @@
           announcementsList.appendChild(card);
         });
       }
+
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('.btn-read-more');
+        if (!button) return;
+
+        const card = button.closest('.announcement-card');
+        const text = card?.querySelector('p');
+        if (!text) return;
+
+        const expanded = button.dataset.expanded === 'true';
+        if (expanded) {
+          text.style.maxHeight = '';
+          text.style.overflow = '';
+          button.textContent = 'Read More';
+          button.dataset.expanded = 'false';
+        } else {
+          text.style.maxHeight = 'none';
+          text.style.overflow = 'visible';
+          button.textContent = 'Show Less';
+          button.dataset.expanded = 'true';
+        }
+      });
     </script>
   </body>
 </html>
