@@ -2932,8 +2932,69 @@ function initializeMenuFilter() {
 
 
 // =========================
+// AUTH GUARD - Protect pages from unauthenticated users
+// =========================
+function checkAuth() {
+    const isLoginPage = window.location.pathname.includes('Login.html') || 
+                        window.location.pathname.includes('SignUp.html') ||
+                        window.location.pathname.endsWith('/');
+    
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userData = localStorage.getItem('userData');
+    
+    // If not on login/signup page and not logged in, redirect to login
+    if (!isLoginPage && !isLoggedIn) {
+        console.log('User not authenticated, redirecting to login...');
+        window.location.href = 'Login.html';
+        return false;
+    }
+    
+    // If on login/signup page and already logged in, redirect to dashboard
+    if (isLoginPage && isLoggedIn && userData) {
+        console.log('User already logged in, redirecting to dashboard...');
+        window.location.href = 'index.html';
+        return false;
+    }
+    
+    return true;
+}
+
+// =========================
 // INITIALIZE EVERYTHING ON DOM
 // =========================
+document.addEventListener("DOMContentLoaded", () => {
+    // Run auth check first
+    if (!checkAuth()) return;
+    
+    initializeTheme();
+    initializeLogin();
+    initializeSignup();
+    initializeRoleToggle();
+    initializePasswordToggles();
+    initializeDashboard();
+    initializeHelp();
+    initializeSubjects();
+    initializeProfile();
+    initializeGradesTable();
+    initializeGradesFilter();
+    initializeMenuFilter();
+
+    // THEME BUTTONS FOR MULTIPLE PAGES
+    const darkModeBtn = document.getElementById("darkModeBtn");
+    const lightModeBtn = document.getElementById("lightModeBtn");
+    const darkThemeBtn = document.getElementById("darkThemeBtn");
+    const lightThemeBtn = document.getElementById("lightThemeBtn");
+
+    if (darkModeBtn) darkModeBtn.addEventListener("click", () => applyTheme("dark"));
+    if (lightModeBtn) lightModeBtn.addEventListener("click", () => applyTheme("light"));
+    if (darkThemeBtn) darkThemeBtn.addEventListener("click", () => applyTheme("dark"));
+    if (lightThemeBtn) lightThemeBtn.addEventListener("click", () => applyTheme("light"));
+
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+});
+
+// Old initialization - commented out
+/*
 document.addEventListener("DOMContentLoaded", () => {
     initializeTheme();
     initializeLogin();
@@ -2961,6 +3022,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("logoutBtn")?.addEventListener("click", logout);
 });
+*/
 
 // =========================
 // EXPORT LOGOUT & THEME
