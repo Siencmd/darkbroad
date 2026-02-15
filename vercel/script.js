@@ -17,6 +17,11 @@ let syncTimer = null;
 let lastSyncedSubjectsHash = null;
 let assignmentSubmissionListeners = {};
 let assignmentCountsSubjectKey = null;
+const DEBUG_MODE = false;
+
+function debugLog(...args) {
+    if (DEBUG_MODE) console.log(...args);
+}
 
 // db is now imported from firebase.js
 
@@ -218,7 +223,7 @@ function setupAssignmentSubmissionCountListeners(subjectIndex) {
 // Upload file to Supabase with enhanced error handling and logging
 async function uploadFileToSupabase(file, path) {
     try {
-        console.log('Starting upload to Supabase:', path + file.name);
+        debugLog('Starting upload to Supabase:', path + file.name);
         const { data, error } = await supabase.storage.from('files').upload(path + file.name, file, {
             upsert: true
         });
@@ -226,12 +231,12 @@ async function uploadFileToSupabase(file, path) {
             console.error('Supabase upload error:', error);
             throw new Error(`Upload failed: ${error.message}`);
         }
-        console.log('Upload successful, getting public URL');
+        debugLog('Upload successful, getting public URL');
         const { data: urlData } = supabase.storage.from('files').getPublicUrl(path + file.name);
         if (!urlData || !urlData.publicUrl) {
             throw new Error('Failed to get public URL');
         }
-        console.log('Public URL obtained:', urlData.publicUrl);
+        debugLog('Public URL obtained:', urlData.publicUrl);
         return urlData.publicUrl;
     } catch (error) {
         console.error('Upload error:', error);
@@ -521,6 +526,7 @@ function initializeHelp() {
     contactForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const btn = contactForm.querySelector('.btn-submit');
+        if (!btn) return;
         const originalText = btn.textContent;
         btn.textContent = 'Message Sent!';
         btn.style.background = '#4ade80';
@@ -754,7 +760,7 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
 // SUBJECTS PAGE FUNCTIONALITY
 // =========================
 function initializeSubjects() {
-    console.log('initializeSubjects called');
+    debugLog('initializeSubjects called');
 
     // This initializer is only for Subjects page UI.
     const isSubjectsPage = window.location.pathname.toLowerCase().includes('subjects.html');
@@ -771,7 +777,7 @@ function initializeSubjects() {
     const editForm = document.getElementById('editSubjectForm');
     const deleteBtn = document.getElementById('deleteSubjectBtn');
 
-    console.log('Elements found:', {
+    debugLog('Elements found:', {
         listContainer: !!listContainer,
         detailsContainer: !!detailsContainer,
         addBtn: !!addBtn,
@@ -791,8 +797,8 @@ function initializeSubjects() {
     let userData = JSON.parse(localStorage.getItem("userData"));
     const userRole = (userData?.role || 'student').toLowerCase();
     const isInstructorRole = userRole === 'instructor' || userRole === 'teacher' || userRole === 'admin';
-    console.log('User role:', userRole);
-    console.log('Add button element:', addBtn);
+    debugLog('User role:', userRole);
+    debugLog('Add button element:', addBtn);
 
     // Hide add subject button for students (instructor-only feature)
     const addSubjectBtn = document.getElementById('addSubjectBtn');
@@ -856,7 +862,7 @@ function initializeSubjects() {
             subjectsRealtimeUnsubscribe = setupRealtimeSubjects(courseId, (updatedSubjects) => {
                 // Skip if realtime is disabled or if we're currently saving (prevents loop)
                 if (disableSubjectsRealtime || isSavingSubjects) {
-                    console.log("Skipping realtime update - disabled or saving");
+                    debugLog("Skipping realtime update - disabled or saving");
                     return;
                 }
 
@@ -882,7 +888,7 @@ function initializeSubjects() {
                 }
                 // Setup task listeners for all subjects
                 setupTaskListeners();
-                console.log("Realtime update: Subjects refreshed from cloud.");
+                debugLog("Realtime update: Subjects refreshed from cloud.");
             }, (error) => {
                 console.warn("Realtime connection failed, using local data only:", error.message);
                 isSubjectsLoading = false;
@@ -960,10 +966,10 @@ function initializeSubjects() {
         } else {
             // Fallback UI render while waiting for auth state.
             renderSubjects();
-            console.log("Waiting for Firebase auth before attaching realtime subjects listener...");
+            debugLog("Waiting for Firebase auth before attaching realtime subjects listener...");
         }
     } else {
-        console.log("No user course data, using localStorage data only");
+        debugLog("No user course data, using localStorage data only");
         renderSubjects();
     }
 
@@ -975,8 +981,8 @@ function initializeSubjects() {
         if (!sub) return;
 
         const isInstructor = isInstructorRole;
-        console.log('User role in renderSubjectDetails:', userRole); // Debug log
-        console.log('Rendering for instructor:', isInstructor); // Debug log
+        debugLog('User role in renderSubjectDetails:', userRole);
+        debugLog('Rendering for instructor:', isInstructor);
 
         detailsContainer.innerHTML = `
             <div class="detail-header">
@@ -1024,7 +1030,7 @@ function initializeSubjects() {
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
                                         <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'task', '${task.id || ''}')">
-                                            <i class="fas fa-chart-bar"></i> Open in Grades (<span class="submission-count" data-task-id="${task.id || ''}">${task.submissions ? task.submissions.length : 0}</span>)
+                                            <i class="fas fa-chart-bar"></i> Open in Submissions (<span class="submission-count" data-task-id="${task.id || ''}">${task.submissions ? task.submissions.length : 0}</span>)
                                         </button>
                                     </div>
                                     ` : `
@@ -1071,7 +1077,7 @@ function initializeSubjects() {
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
                                         <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'assignment', '${assignment.id || ''}')">
-                                            <i class="fas fa-chart-bar"></i> Open in Grades (<span class="submission-count" data-assignment-id="${assignment.id || ''}">${assignment.submissions ? assignment.submissions.length : 0}</span>)
+                                            <i class="fas fa-chart-bar"></i> Open in Submissions (<span class="submission-count" data-assignment-id="${assignment.id || ''}">${assignment.submissions ? assignment.submissions.length : 0}</span>)
                                         </button>
                                     </div>
                                     ` : `
@@ -1155,7 +1161,7 @@ function initializeSubjects() {
                                     <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'quiz', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'quiz', '${quiz.id || ''}')" title="Open in Grades">
+                                    <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'quiz', '${quiz.id || ''}')" title="Open in Submissions">
                                         <i class="fas fa-users"></i>
                                     </button>
                                     <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'quiz', ${i})">
@@ -1498,70 +1504,7 @@ function initializeSubjects() {
 
 
 
-    // -------------------------
-    // ADD SUBJECT (FORM)
-    // -------------------------
-    addForm?.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        // Check if we've reached the maximum limit
-        if (subjects.length >= MAX_SUBJECTS_LIMIT) {
-            alert(`Cannot add more subjects. Maximum limit of ${MAX_SUBJECTS_LIMIT} subjects reached.`);
-            return;
-        }
-
-        const subject = {
-            id: Date.now().toString(), // Unique ID for subject
-            name: document.getElementById('newSubjectName').value.trim(),
-            teacher: document.getElementById('newTeacherName').value.trim(),
-            time: document.getElementById('newSubjectTime').value.trim(),
-            description: document.getElementById('newSubjectDescription').value.trim(),
-            lessons: [],
-            tasks: [],
-            assignments: [],
-            quizzes: []
-        };
-
-        subjects.push(subject);
-        saveSubjects();
-        renderSubjects();
-
-        // Setup task listener for the new subject
-        setupTaskListeners();
-
-        addForm.reset();
-        addModal.style.display = 'none';
-    });
-
-    // -------------------------
-    // EDIT SUBJECT (FORM)
-    // -------------------------
-    editForm?.addEventListener('submit', e => {
-        e.preventDefault();
-
-        // Prevent students from editing subjects
-        if (!isInstructorRole) {
-            alert('Only instructors can edit subjects.');
-            closeAllModals();
-            return;
-        }
-
-        const index = parseInt(document.getElementById('editSubjectIndex').value);
-
-        subjects[index] = {
-            ...subjects[index],
-            name: document.getElementById('editSubjectName').value.trim(),
-            teacher: document.getElementById('editTeacherName').value.trim(),
-            time: document.getElementById('editSubjectTime').value.trim(),
-            description: document.getElementById('editSubjectDescription').value.trim()
-        };
-
-        saveSubjects();
-        renderSubjects();
-        renderSubjectDetails(index);
-
-        closeAllModals();
-    });
+    // add/edit subject form submit is handled by the captured hybrid listener above.
 
     // -------------------------
     // DELETE SUBJECT
@@ -1592,49 +1535,7 @@ function initializeSubjects() {
         }
     });
 
-    // -------------------------
-    // ADD TASK (FORM)
-    // -------------------------
-    const addTaskForm = document.getElementById('addTaskForm');
-    addTaskForm?.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const subjectIndex = parseInt(document.getElementById('taskSubjectIndex').value);
-        const sub = subjects[subjectIndex];
-        if (!sub) return;
-
-    const task = {
-        id: Date.now().toString(),
-        title: document.getElementById('newTaskTitle').value.trim(),
-        dueDate: document.getElementById('newTaskDueDate').value,
-        priority: document.getElementById('newTaskPriority').value,
-        status: 'pending',
-        description: document.getElementById('newTaskDescription').value.trim(),
-        file: null,
-        fileUrl: null
-    };
-    const fileInput = document.getElementById('newTaskFile');
-    if (fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const fileName = file.name;
-        const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${task.id}/`);
-        task.file = fileName;
-        task.fileUrl = fileUrl;
-    }
-
-        sub.tasks.push(task);
-        saveSubjects();
-        renderSubjectDetails(subjectIndex);
-
-        // Switch to tasks tab
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelector('.tab-btn[data-tab="tasks"]').classList.add('active');
-        document.getElementById('tasks-tab').classList.add('active');
-
-        addTaskForm.reset();
-        document.getElementById('addTaskModal').style.display = 'none';
-    });
+    // add task form submit is handled by the captured hybrid listener above.
 
     // -------------------------
     // EDIT TASK (FORM)
@@ -1685,44 +1586,7 @@ function initializeSubjects() {
         deleteItem(subjectIndex, 'task', itemIndex);
     });
 
-    // -------------------------
-    // ADD ASSIGNMENT (FORM)
-    // -------------------------
-    const addAssignmentForm = document.getElementById('addAssignmentForm');
-    addAssignmentForm?.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const subjectIndex = parseInt(document.getElementById('assignmentSubjectIndex').value);
-        const sub = subjects[subjectIndex];
-        if (!sub) return;
-
-        const assignment = {
-            id: Date.now().toString(),
-            title: document.getElementById('newAssignmentTitle').value.trim(),
-            dueDate: document.getElementById('newAssignmentDueDate').value,
-            points: parseInt(document.getElementById('newAssignmentPoints').value),
-            status: document.getElementById('newAssignmentStatus').value,
-            instructions: document.getElementById('newAssignmentInstructions').value.trim(),
-            file: null,
-            fileUrl: null,
-            submissions: []
-        };
-        const fileInput = document.getElementById('newAssignmentFile');
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const fileName = file.name;
-            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${assignment.id}/`);
-            assignment.file = fileName;
-            assignment.fileUrl = fileUrl;
-        }
-
-        sub.assignments.push(assignment);
-        saveSubjects();
-        renderSubjectDetails(subjectIndex);
-
-        addAssignmentForm.reset();
-        document.getElementById('addAssignmentModal').style.display = 'none';
-    });
+    // add assignment form submit is handled by the captured hybrid listener above.
 
     // -------------------------
     // EDIT ASSIGNMENT (FORM)
@@ -1775,42 +1639,7 @@ function initializeSubjects() {
         deleteItem(subjectIndex, 'assignment', itemIndex);
     });
 
-    // -------------------------
-    // ADD LESSON (FORM)
-    // -------------------------
-    const addLessonForm = document.getElementById('addLessonForm');
-    addLessonForm?.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const subjectIndex = parseInt(document.getElementById('lessonSubjectIndex').value);
-        const sub = subjects[subjectIndex];
-        if (!sub) return;
-
-        const lesson = {
-            id: Date.now().toString(),
-            title: document.getElementById('newLessonTitle').value.trim(),
-            duration: document.getElementById('newLessonDuration').value.trim(),
-            status: document.getElementById('newLessonStatus').value,
-            content: document.getElementById('newLessonContent').value.trim(),
-            file: null,
-            fileUrl: null
-        };
-        const fileInput = document.getElementById('newLessonFile');
-        if (fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const fileName = file.name;
-            const fileUrl = await uploadFileToSupabase(file, `subjects/${sub.id}/${lesson.id}/`);
-            lesson.file = fileName;
-            lesson.fileUrl = fileUrl;
-        }
-
-        sub.lessons.push(lesson);
-        saveSubjects();
-        renderSubjectDetails(subjectIndex);
-
-        addLessonForm.reset();
-        document.getElementById('addLessonModal').style.display = 'none';
-    });
+    // add lesson form submit is handled by the captured hybrid listener above.
 
     // -------------------------
     // EDIT LESSON (FORM)
@@ -2441,79 +2270,7 @@ function initializeSubjects() {
         modal.querySelector('.close').addEventListener('click', () => modal.remove());
     };
 
-    // -------------------------
-    // SUBMIT TASK FORM HANDLER (LEGACY - uses modal in HTML)
-    // -------------------------
-    const submitTaskForm = document.getElementById('submitTaskForm');
-    if (submitTaskForm) {
-        submitTaskForm.addEventListener('submit', async e => {
-            e.preventDefault();
-            
-            const subjectIndex = parseInt(document.getElementById('submitTaskSubjectIndex').value);
-            const taskIndex = parseInt(document.getElementById('submitTaskIndex').value);
-            const sub = subjects[subjectIndex];
-            if (!sub) return;
-
-            const task = sub.tasks[taskIndex];
-            if (!task) return;
-
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            const fileInput = document.getElementById('submitTaskFile');
-            if (!fileInput.files[0]) {
-                alert('Please select a file to submit.');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            console.log('Uploading task submission:', file.name);
-            const courseId = normalizeCourseId(userData?.course);
-            const uploadPrefix = buildStoragePrefix({
-                courseId,
-                subjectId: sub.id,
-                itemType: "tasks",
-                itemId: task.id,
-                userId: userData.id
-            });
-            const fileUrl = await uploadFileToSupabase(file, uploadPrefix);
-            console.log('Upload result:', fileUrl);
-
-            if (!fileUrl) {
-                alert('File upload failed. Please try again.');
-                return;
-            }
-
-            try {
-                await saveStudentSubmissionToFirestore({
-                    type: "task",
-                    subject: sub,
-                    item: task,
-                    fileName: file.name,
-                    fileUrl
-                });
-            } catch (error) {
-                console.error("Could not write task submission to Firestore:", error);
-                alert(`Submission failed: ${error.message || "Could not save to Firestore."}`);
-                return;
-            }
-
-            if (!task.submissions) task.submissions = [];
-            task.submissions.push({
-                studentId: auth.currentUser?.uid || userData.id,
-                fileName: file.name,
-                fileUrl: fileUrl,
-                submittedAt: new Date().toISOString()
-            });
-
-            // Update task status
-            task.status = 'submitted';
-
-            saveSubjects(false);
-            renderSubjectDetails(subjectIndex);
-            alert('Task submitted successfully!');
-            document.getElementById('submitTaskModal').style.display = 'none';
-            submitTaskForm.reset();
-        });
-    }
+    // legacy static submitTaskForm handler removed; dynamic modal handler is used.
 
     // -------------------------
     // VIEW SUBMISSIONS
@@ -2666,7 +2423,7 @@ function initializeSubjects() {
         params.set('subject', String(parseInt(subjectIndex)));
         params.set('type', String(itemType || '').toLowerCase());
         if (itemId) params.set('itemId', String(itemId));
-        window.location.href = `Grades.html?${params.toString()}`;
+        window.location.href = `Submissions.html?${params.toString()}`;
     };
     // Backward-compatible handlers for older inline onclick usages.
     window.subjectsViewSubmissions = (subjectIndex, assignmentIndex) => {
@@ -2692,7 +2449,7 @@ function initializeSubjects() {
     // -------------------------
     const saveSubjects = function(autoSync = true) {
         localStorage.setItem('subjects', JSON.stringify(subjects));
-        console.log('Saving subjects to localStorage:', subjects);
+        debugLog('Saving subjects to localStorage:', subjects);
         
         // Get userData from localStorage
         const currentUserData = JSON.parse(localStorage.getItem("userData"));
@@ -2700,10 +2457,10 @@ function initializeSubjects() {
         
         // Auto-sync to Firestore for instructor users only
         if (autoSync && canSync && !disableSubjectsRealtime) {
-            console.log('Scheduling Firestore sync for course:', currentUserData.course);
+            debugLog('Scheduling Firestore sync for course:', currentUserData.course);
             scheduleSubjectsSync();
         } else {
-            console.log('Not syncing to Firestore: autoSync=', autoSync, 'canSync=', canSync, 'userData.course=', currentUserData?.course, 'localMode=', disableSubjectsRealtime);
+            debugLog('Not syncing to Firestore: autoSync=', autoSync, 'canSync=', canSync, 'userData.course=', currentUserData?.course, 'localMode=', disableSubjectsRealtime);
         }
     }
 
@@ -2856,8 +2613,8 @@ function initializeGradesFilter() {
 // SAVE GRADE FUNCTIONALITY
 // =========================
 window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
-    console.log('saveGrade called:', { subjectIndex, assignmentIndex, studentId });
-    console.log('subjects array:', subjects);
+    debugLog('saveGrade called:', { subjectIndex, assignmentIndex, studentId });
+    debugLog('subjects array:', subjects);
     
     const sub = subjects[subjectIndex];
     if (!sub) {
@@ -2865,8 +2622,8 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
         return;
     }
     
-    console.log('Subject:', sub.name);
-    console.log('Assignments:', sub.assignments);
+    debugLog('Subject:', sub.name);
+    debugLog('Assignments:', sub.assignments);
     
     const assignment = sub.assignments[assignmentIndex];
     if (!assignment) {
@@ -2874,7 +2631,7 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
         return;
     }
     
-    console.log('Assignment:', assignment);
+    debugLog('Assignment:', assignment);
     
     const userData = JSON.parse(localStorage.getItem("userData"));
     const courseId = normalizeCourseId(userData?.course);
@@ -2883,9 +2640,9 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const gradeInput = document.getElementById(`grade-${studentId}`);
     const feedbackInput = document.getElementById(`feedback-${studentId}`);
     
-    console.log('Looking for grade input with ID: grade-' + studentId);
-    console.log('Grade input element:', gradeInput);
-    console.log('Grade input value property BEFORE:', gradeInput?.value);
+    debugLog('Looking for grade input with ID: grade-' + studentId);
+    debugLog('Grade input element:', gradeInput);
+    debugLog('Grade input value property BEFORE:', gradeInput?.value);
     
     if (!gradeInput) {
         alert('Error: Grade input field not found for student. Please refresh the page and try again.');
@@ -2900,8 +2657,8 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const gradeValue = gradeInput.value;
     const feedbackValue = feedbackInput.value;
     
-    console.log('Grade value from input:', gradeValue);
-    console.log('Grade input value AFTER read:', gradeInput.value);
+    debugLog('Grade value from input:', gradeValue);
+    debugLog('Grade input value AFTER read:', gradeInput.value);
     
     const grade = parseFloat(gradeValue);
     const feedback = feedbackValue;
@@ -2910,7 +2667,7 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     let maxPoints = assignment?.points || 100;
     
     // Validate grade - check if it's a valid number
-    console.log('DEBUG: gradeValue is:', JSON.stringify(gradeValue), 'length:', gradeValue.length);
+    debugLog('gradeValue is:', JSON.stringify(gradeValue), 'length:', gradeValue.length);
     if (gradeValue === '') {
         alert('Please enter a grade - the input field is empty! Check console for debug info.');
         return;
@@ -3155,20 +2912,13 @@ window.submitStudentFile = async function(subjectId, taskId, file) {
 
     const fileUrl = supabase.storage.from('files').getPublicUrl(path).data.publicUrl;
 
-    const taskRef = doc(db, "subjects", courseId, "tasks", taskId);
-    const submissionRef = doc(db, "subjects", courseId, "tasks", taskId, "submissions", userId);
-
-    await setDoc(taskRef, {
-      subjectId: safeSubjectId,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-
-    await setDoc(submissionRef, {
-      studentId: userId,
+    await saveStudentSubmissionToFirestore({
+      type: "task",
+      subject: { id: safeSubjectId, name: "" },
+      item: { id: taskId, title: "" },
       fileName: file.name,
-      fileUrl: fileUrl,
-      submittedAt: serverTimestamp()
-    }, { merge: true });
+      fileUrl
+    });
 
     alert("Submission successful!");
 
