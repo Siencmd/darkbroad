@@ -161,12 +161,68 @@
     <script type="module" src="script.js"></script>
     <script type="module">
       import { logout } from "./script.js";
+      import { auth, db } from "./firebase.js";
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
       
+      let profileRealtimeUnsubscribe = null;
+
       // Load user data on page load
       window.addEventListener('DOMContentLoaded', () => {
         loadUserProfileData();
+        setupProfileRealtime();
+      });
+
+      function setupProfileRealtime() {
+        onAuthStateChanged(auth, (user) => {
+          if (!user) return;
+
+          if (typeof profileRealtimeUnsubscribe === 'function') {
+            profileRealtimeUnsubscribe();
+            profileRealtimeUnsubscribe = null;
+          }
+
+          profileRealtimeUnsubscribe = onSnapshot(doc(db, 'users', user.uid), (userSnap) => {
+            if (!userSnap.exists()) return;
+            const profile = userSnap.data() || {};
+
+            const localUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const localProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+
+            const mergedUserData = {
+              ...localUserData,
+              id: user.uid,
+              name: profile.fullName || localUserData.name || user.displayName || 'User',
+              role: profile.role || localUserData.role,
+              course: profile.course || localUserData.course,
+              email: profile.email || localUserData.email
+            };
+
+            const mergedProfile = {
+              ...localProfile,
+              fullName: profile.fullName || localProfile.fullName || mergedUserData.name,
+              email: profile.email || localProfile.email || mergedUserData.email,
+              phone: profile.phone || localProfile.phone,
+              dob: localProfile.dob,
+              gender: localProfile.gender
+            };
+
+            localStorage.setItem('userData', JSON.stringify(mergedUserData));
+            localStorage.setItem('userProfile', JSON.stringify(mergedProfile));
+            loadUserProfileData();
+          }, (error) => {
+            console.warn('Profile realtime sync failed:', error?.message || error);
+          });
+        });
+      }
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof profileRealtimeUnsubscribe === 'function') {
+          profileRealtimeUnsubscribe();
+          profileRealtimeUnsubscribe = null;
+        }
       });
       
       function loadUserProfileData() {
