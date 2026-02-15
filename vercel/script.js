@@ -42,6 +42,12 @@ function normalizeSubject(subject, index = 0) {
     const normalizeQuiz = (quiz, quizIndex = 0) => ({
         ...quiz,
         id: quiz?.id || `legacy-quiz-${index}-${quizIndex}`,
+        title: quiz?.title || "Untitled Quiz",
+        dueDate: quiz?.dueDate || "",
+        points: quiz?.points || 0,
+        status: quiz?.status || "available",
+        instructions: quiz?.instructions || "",
+        quizLink: quiz?.quizLink || "",
         submissions: Array.isArray(quiz?.submissions) ? quiz.submissions : []
     });
 
@@ -1126,9 +1132,9 @@ function initializeSubjects() {
                         ${sub.quizzes.length > 0 ? sub.quizzes.map((quiz, i) => `
                             <div class="item-card">
                                 <div class="item-info">
-                                    <h4>${quiz.title}</h4>
-                                    <p>Due: ${quiz.dueDate} | Points: ${quiz.points} | Status: ${quiz.status}</p>
-                                    <p>${quiz.instructions}</p>
+                                    <h4>${quiz.title || 'Untitled Quiz'}</h4>
+                                    <p>Due: ${quiz.dueDate || 'N/A'} | Points: ${quiz.points || 0} | Status: ${quiz.status || 'available'}</p>
+                                    ${quiz.instructions ? `<p>${quiz.instructions}</p>` : ''}
                                     ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="quiz-link-btn"><i class="fas fa-external-link-alt"></i> Take Quiz</a>` : ''}
                                     ${quiz.submissions?.length > 0 ? `<p class="submission-count" data-quiz-id="${quiz.id}"><i class="fas fa-users"></i> ${quiz.submissions.length} submission${quiz.submissions.length !== 1 ? 's' : ''}</p>` : ''}
                                 </div>
@@ -1149,6 +1155,9 @@ function initializeSubjects() {
                                     ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
                                         <i class="fas fa-play"></i> Take Quiz
                                     </a>` : ''}
+                                    <button class="btn-submit-quiz" data-quiz-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Submit Quiz">
+                                        <i class="fas fa-upload"></i> Submit
+                                    </button>
                                 </div>
                                 `}
                             </div>
@@ -1207,7 +1216,12 @@ function initializeSubjects() {
     // -------------------------
     const closeAllModals = function() {
         document.querySelectorAll('.modal').forEach(modal => {
-            modal.style.display = 'none';
+            // Remove dynamically created quiz/submission modals to avoid duplicate IDs
+            if (['addQuizModal', 'editQuizModal', 'submitQuizModal', 'viewQuizSubmissionsModal'].includes(modal.id)) {
+                modal.remove();
+            } else {
+                modal.style.display = 'none';
+            }
         });
     }
 
@@ -1821,6 +1835,10 @@ function initializeSubjects() {
     // -------------------------
     const openAddItemModal = function(subjectIndex, type) {
         if (type === 'quiz') {
+            // Remove any existing quiz modal to avoid duplicate IDs
+            const existingModal = document.getElementById('addQuizModal');
+            if (existingModal) existingModal.remove();
+
             // Custom modal for quiz
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -1904,6 +1922,10 @@ function initializeSubjects() {
         if (!item) return;
 
         if (type === 'quiz') {
+            // Remove any existing edit quiz modal to avoid duplicate IDs
+            const existingModal = document.getElementById('editQuizModal');
+            if (existingModal) existingModal.remove();
+
             // Custom edit modal for quiz
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -1918,15 +1940,15 @@ function initializeSubjects() {
                             <input type="hidden" id="editQuizSubjectIndex" value="${subjectIndex}" />
                             <div class="form-group">
                                 <label>Quiz Title</label>
-                                <input type="text" id="editQuizTitle" required value="${item.title}" />
+                                <input type="text" id="editQuizTitle" required value="${item.title || ''}" />
                             </div>
                             <div class="form-group">
                                 <label>Due Date</label>
-                                <input type="date" id="editQuizDueDate" required value="${item.dueDate}" />
+                                <input type="date" id="editQuizDueDate" required value="${item.dueDate || ''}" />
                             </div>
                             <div class="form-group">
                                 <label>Points</label>
-                                <input type="number" id="editQuizPoints" required value="${item.points}" />
+                                <input type="number" id="editQuizPoints" required value="${item.points || 0}" />
                             </div>
                             <div class="form-group">
                                 <label>Google Form Link</label>
@@ -1934,7 +1956,7 @@ function initializeSubjects() {
                             </div>
                             <div class="form-group">
                                 <label>Instructions</label>
-                                <textarea id="editQuizInstructions" rows="4">${item.instructions}</textarea>
+                                <textarea id="editQuizInstructions" rows="4">${item.instructions || ''}</textarea>
                             </div>
                             <div class="form-actions">
                                 <button type="submit" class="btn-save">Save Changes</button>
