@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link
+    <links
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
     />
@@ -180,8 +180,8 @@
         document.getElementById('upcomingDeadlines').style.display = 'block';
         document.getElementById('weeklySchedule').style.display = 'block';
 
-        // Setup filter.getElementById('showAssignments'). listeners
-        documentaddEventListener('change', updateCalendarEvents);
+        // Setup filter listeners
+        document.getElementById('showAssignments').addEventListener('change', updateCalendarEvents);
         document.getElementById('showTasks').addEventListener('change', updateCalendarEvents);
         document.getElementById('showQuizzes').addEventListener('change', updateCalendarEvents);
         document.getElementById('showClasses').addEventListener('change', updateCalendarEvents);
