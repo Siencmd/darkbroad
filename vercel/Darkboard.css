@@ -6906,6 +6906,12 @@ body.light-mode .detail-row {
     border-color: var(--primary-color);
 }
 
+/* Filter select dropdown options */
+.filter-select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
 /* Submissions stats */
 .submissions-stats {
     display: flex;
