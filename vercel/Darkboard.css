@@ -2283,15 +2283,19 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--text-secondary);
     font-weight: 400;
+}
+
+.form-group textarea::placeholder {
+    color: var(--text-secondary);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--input-focus-bg, rgba(255, 255, 255, 0.08));
     border-color: var(--accent);
     box-shadow: var(--glass-shadow-hover), 0 0 0 3px rgba(0, 240, 255, 0.2);
     transform: translateY(-4px);
@@ -5456,8 +5460,16 @@ body.light-mode .settings-card-header {
 }
 
 body.light-mode .profile-card {
-    background: rgba(0, 0, 0, 0.05);
-    border: 2px solid rgba(0, 150, 200, 0.15);
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(0, 150, 200, 0.3);
+}
+
+body.light-mode .profile-name-section h1 {
+    color: #0b1f2e;
+}
+
+body.light-mode .profile-name-section p {
+    color: #555555;
 }
 
 body.light-mode .modal-content {
@@ -6534,12 +6546,28 @@ body.light-mode .btn-submit {
 }
 
 body.light-mode .detail-group {
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(0, 150, 200, 0.2);
+}
+
+body.light-mode .detail-group h3 {
+    color: #0b1f2e;
 }
 
 body.light-mode .detail-row {
-    border-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .detail-label {
+    color: #555555;
+}
+
+body.light-mode .detail-value {
+    color: #1a1a1a;
+}
+
+body.light-mode .profile-section {
+    background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
 }
 
 /* Small mobile adjustments */
@@ -6908,6 +6936,24 @@ body.light-mode .detail-row {
 
 /* Filter select dropdown options */
 .filter-select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Settings select dropdown options */
+.settings-select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Setting select dropdown options */
+.setting-select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Global select option styling */
+select option {
     background: var(--bg-primary);
     color: var(--text-primary);
 }
