@@ -333,12 +333,12 @@
             
             <div class="submission-card-footer">
               ${isInstructor && sub.status !== 'graded' ? `
-                <button class="btn-grade" onclick="openGradingModal('${sub.subjectIndex}', '${sub.itemType}', '${sub.itemId}', '${sub.studentId}', '${sub.itemTitle}', ${sub.itemPoints})">
+                <button class="btn-grade" onclick="openGradingModal('${sub.subjectIndex}', '${sub.itemType}', '${sub.itemId}', '${sub.studentId}', ${sub.itemPoints})">
                   <i class="fas fa-edit"></i> Grade Submission
                 </button>
               ` : ''}
               ${isInstructor && sub.status === 'graded' ? `
-                <button class="btn-edit-grade" onclick="openGradingModal('${sub.subjectIndex}', '${sub.itemType}', '${sub.itemId}', '${sub.studentId}', '${sub.itemTitle}', ${sub.itemPoints})">
+                <button class="btn-edit-grade" onclick="openGradingModal('${sub.subjectIndex}', '${sub.itemType}', '${sub.itemId}', '${sub.studentId}', ${sub.itemPoints})">
                   <i class="fas fa-edit"></i> Edit Grade
                 </button>
               ` : ''}
@@ -387,12 +387,10 @@
       }
 
       // Open grading modal
-      window.openGradingModal = async function(subjectIndex, itemType, itemId, studentId, itemTitle, itemPoints) {
+      window.openGradingModal = async function(subjectIndex, itemType, itemId, studentId, itemPoints) {
         const modal = document.getElementById('gradingModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalContent = document.getElementById('modalContent');
-
-        modalTitle.textContent = `Grade: ${itemTitle}`;
 
         // Find the submission
         const submission = allSubmissions.find(sub =>
@@ -406,6 +404,8 @@
           alert('Submission not found');
           return;
         }
+
+        modalTitle.textContent = `Grade: ${submission.itemTitle}`;
 
         // Use itemPoints from function parameter or fallback to submission's itemPoints or default to 100
         const maxPoints = itemPoints || submission.itemPoints || 100;
