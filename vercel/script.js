@@ -1288,9 +1288,9 @@ function initializeSubjects() {
                                 </div>
                                 ` : `
                                 <div class="item-actions">
-                                    ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
+                                    ${quiz?.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
                                         <i class="fas fa-play"></i> Take Quiz
-                                    </a>` : ''}
+                                    </a>` : `<span style="color: var(--text-secondary); font-size: 0.85em;">No quiz available</span>`}
                                 </div>
                                 `}
                             </div>
