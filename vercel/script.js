@@ -3,7 +3,7 @@
 // =========================
 import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { doc, setDoc, getDoc, getDocs, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, getDocs, collection, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
 
@@ -29,8 +29,10 @@ function normalizeSubject(subject, index = 0) {
     const normalizeTask = (task, taskIndex = 0) => ({
         ...task,
         id: task?.id || `legacy-task-${index}-${taskIndex}`,
+        status: ['pending', 'in-progress', 'completed', 'submitted'].includes(task?.status) ? task.status : 'pending',
         file: task?.file || task?.fileName || null,
-        fileUrl: task?.fileUrl || task?.url || null
+        fileUrl: task?.fileUrl || task?.url || null,
+        submissions: Array.isArray(task?.submissions) ? task.submissions : []
     });
 
     const normalizeAssignment = (assignment, assignmentIndex = 0) => ({
@@ -186,36 +188,149 @@ function stopAssignmentSubmissionCountListeners() {
     assignmentCountsSubjectKey = null;
 }
 
-function setupAssignmentSubmissionCountListeners(subjectIndex) {
+function setupAssignmentSubmissionCountListeners(subjectIndex, activeCourseId = "") {
     const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-    const courseId = normalizeCourseId(userData?.course);
+    const courseId = normalizeCourseId(activeCourseId) || normalizeCourseId(userData?.course);
     const sub = subjects[subjectIndex];
-    if (!courseId || !sub || !Array.isArray(sub.assignments)) return;
+    if (!courseId || !sub) return;
 
-    const subjectKey = `${courseId}:${sub.id || subjectIndex}`;
+    const subjectKey = `${courseId}:${sub.id || subjectIndex}:${isInstructorRoleValue(userData?.role) ? "instructor" : "student"}:${userData?.id || ""}`;
     if (assignmentCountsSubjectKey === subjectKey) return;
 
     stopAssignmentSubmissionCountListeners();
     assignmentCountsSubjectKey = subjectKey;
 
-    sub.assignments.forEach((assignment) => {
-        if (!assignment?.id) return;
-        const submissionsRef = collection(db, "subjects", courseId, "assignments", assignment.id, "submissions");
-        assignmentSubmissionListeners[assignment.id] = onSnapshot(submissionsRef, (snapshot) => {
-            const liveSubmissions = [];
-            snapshot.forEach((submissionDoc) => {
-                liveSubmissions.push({ id: submissionDoc.id, ...submissionDoc.data() });
-            });
-            assignment.submissions = liveSubmissions;
+    const watchSubmissions = (items, collectionName, keyName) => {
+        if (!Array.isArray(items)) return;
 
-            const countEl = document.querySelector(`.submission-count[data-assignment-id="${assignment.id}"]`);
-            if (countEl) {
-                countEl.textContent = String(liveSubmissions.length);
-            }
-        }, (error) => {
-            console.warn(`Realtime submission count failed for assignment ${assignment.id}:`, error.message);
+        items.forEach((item) => {
+            if (!item?.id) return;
+            const submissionsRef = collection(db, "subjects", courseId, collectionName, item.id, "submissions");
+
+            // Hydrate once so counts don't stay stale while waiting for the first realtime callback.
+            getDocs(submissionsRef).then((snapshot) => {
+                const initialSubmissions = [];
+                snapshot.forEach((submissionDoc) => {
+                    initialSubmissions.push({ id: submissionDoc.id, ...submissionDoc.data() });
+                });
+                item.submissions = initialSubmissions;
+
+                const countEl = document.querySelector(`.submission-count[data-${keyName}-id="${item.id}"]`);
+                if (countEl) {
+                    if (keyName === "quiz") {
+                        countEl.innerHTML = `<i class="fas fa-users"></i> ${initialSubmissions.length} submission${initialSubmissions.length !== 1 ? "s" : ""}`;
+                    } else {
+                        countEl.textContent = String(initialSubmissions.length);
+                    }
+                }
+            }).catch((error) => {
+                console.warn(`Initial submissions load failed for ${collectionName} ${item.id}:`, error.message);
+            });
+
+            const listenerKey = `${collectionName}:${item.id}`;
+            assignmentSubmissionListeners[listenerKey] = onSnapshot(submissionsRef, (snapshot) => {
+                const hadOwnSubmission = Array.isArray(item.submissions)
+                    ? item.submissions.some((submission) => (submission.studentId || submission.id) === userData?.id)
+                    : false;
+
+                const liveSubmissions = [];
+                snapshot.forEach((submissionDoc) => {
+                    liveSubmissions.push({ id: submissionDoc.id, ...submissionDoc.data() });
+                });
+                item.submissions = liveSubmissions;
+
+                if (keyName === "task") {
+                    const hasOwnSubmission = liveSubmissions.some((submission) => (submission.studentId || submission.id) === userData?.id);
+                    const submittedIndicator = document.querySelector(`.task-submitted-indicator[data-task-submitted-id="${item.id}"]`);
+                    if (submittedIndicator) {
+                        submittedIndicator.style.display = hasOwnSubmission ? "block" : "none";
+                    }
+
+                    if (hasOwnSubmission && item.status !== "submitted") {
+                        item.status = "submitted";
+                    }
+
+                    if (!isInstructorRoleValue(userData?.role) && hadOwnSubmission !== hasOwnSubmission) {
+                        const statusLine = document.querySelector(`.task-status-line[data-task-status-id="${item.id}"]`);
+                        if (statusLine) {
+                            statusLine.textContent = `Due: ${item.dueDate} | Priority: ${item.priority} | Status: ${item.status}`;
+                        }
+                    }
+                }
+
+                const countEl = document.querySelector(`.submission-count[data-${keyName}-id="${item.id}"]`);
+                if (countEl) {
+                    if (keyName === "quiz") {
+                        countEl.innerHTML = `<i class="fas fa-users"></i> ${liveSubmissions.length} submission${liveSubmissions.length !== 1 ? "s" : ""}`;
+                    } else {
+                        countEl.textContent = String(liveSubmissions.length);
+                    }
+                }
+            }, (error) => {
+                console.warn(`Realtime submission count failed for ${collectionName} ${item.id}:`, error.message);
+            });
         });
-    });
+    };
+
+    watchSubmissions(sub.assignments, "assignments", "assignment");
+    watchSubmissions(sub.tasks, "tasks", "task");
+    watchSubmissions(sub.quizzes, "quizzes", "quiz");
+}
+
+async function hydrateSubmissionCountsForSubject(subjectIndex, activeCourseId = "") {
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const courseId = normalizeCourseId(activeCourseId) || normalizeCourseId(userData?.course);
+    const sub = subjects[subjectIndex];
+    if (!courseId || !sub) return;
+
+    const hydrateItems = async (items, collectionName, keyName) => {
+        if (!Array.isArray(items)) return;
+
+        for (const item of items) {
+            if (!item?.id) continue;
+            try {
+                const submissionsRef = collection(db, "subjects", courseId, collectionName, item.id, "submissions");
+                const submissionsSnap = await getDocs(submissionsRef);
+                const submissions = [];
+                submissionsSnap.forEach((submissionDoc) => {
+                    submissions.push({ id: submissionDoc.id, ...submissionDoc.data() });
+                });
+                item.submissions = submissions;
+
+                const countEl = document.querySelector(`.submission-count[data-${keyName}-id="${item.id}"]`);
+                if (countEl) {
+                    if (keyName === "quiz") {
+                        countEl.innerHTML = `<i class="fas fa-users"></i> ${submissions.length} submission${submissions.length !== 1 ? "s" : ""}`;
+                    } else {
+                        countEl.textContent = String(submissions.length);
+                    }
+                }
+
+                if (keyName === "task") {
+                    const hasOwnSubmission = submissions.some((submission) => (submission.studentId || submission.id) === userData?.id);
+                    const submittedIndicator = document.querySelector(`.task-submitted-indicator[data-task-submitted-id="${item.id}"]`);
+                    if (submittedIndicator) {
+                        submittedIndicator.style.display = hasOwnSubmission ? "block" : "none";
+                    }
+                    if (hasOwnSubmission && item.status !== "submitted") {
+                        item.status = "submitted";
+                        const statusLine = document.querySelector(`.task-status-line[data-task-status-id="${item.id}"]`);
+                        if (statusLine) {
+                            statusLine.textContent = `Due: ${item.dueDate} | Priority: ${item.priority} | Status: ${item.status}`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn(`Failed to hydrate ${collectionName} submissions for ${item.id}:`, error.message);
+            }
+        }
+    };
+
+    await Promise.all([
+        hydrateItems(sub.assignments, "assignments", "assignment"),
+        hydrateItems(sub.tasks, "tasks", "task"),
+        hydrateItems(sub.quizzes, "quizzes", "quiz")
+    ]);
 }
 
 
@@ -914,6 +1029,7 @@ function initializeSubjects() {
 
     // Get user role
     let userData = JSON.parse(localStorage.getItem("userData"));
+    let courseId = normalizeCourseId(userData?.course);
     const userRole = (userData?.role || 'student').toLowerCase();
     const isInstructorRole = userRole === 'instructor' || userRole === 'teacher' || userRole === 'admin';
     debugLog('User role:', userRole);
@@ -971,7 +1087,6 @@ function initializeSubjects() {
 
     // Load subjects from Firestore after Firebase Auth is ready.
     if (userData && userData.course) {
-        let courseId = normalizeCourseId(userData.course);
         let cloudInitialized = false;
 
         const initializeCloudSync = () => {
@@ -1064,8 +1179,8 @@ function initializeSubjects() {
                     if (profile?.data) {
                         const serverCourse = normalizeCourseId(profile.data.course);
                         const serverRole = normalizeRole(profile.data.role);
-                        if (serverCourse) {
-                            courseId = serverCourse;
+                    if (serverCourse) {
+                        courseId = serverCourse;
                             userData = {
                                 ...userData,
                                 id: auth.currentUser.uid,
@@ -1143,13 +1258,13 @@ function initializeSubjects() {
                             <div class="item-card">
                                 <div class="item-info">
                                     <h4>${task.title}</h4>
-                                    <p>Due: ${task.dueDate} | Priority: ${task.priority} | Status: ${task.status}</p>
+                                    <p class="task-status-line" data-task-status-id="${task.id || ''}">Due: ${task.dueDate} | Priority: ${task.priority} | Status: ${task.status}</p>
                                     <p>${task.description}</p>
                                     ${(task.file || task.fileName) ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl || task.url || '#'}" target="_blank">${task.file || task.fileName}</a></p>` : ''}
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
                                         <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'task', '${task.id || ''}')">
-                                            <i class="fas fa-chart-bar"></i> Open in Submissions (<span class="submission-count" data-task-id="${task.id || ''}">${task.submissions ? task.submissions.length : 0}</span>)
+                                            <i class="fas fa-chart-bar"></i> Open in Submissions
                                         </button>
                                     </div>
                                     ` : `
@@ -1157,7 +1272,7 @@ function initializeSubjects() {
                                         <button class="btn-submit-task" data-task-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitTaskModal(${index}, ${i})">
                                             <i class="fas fa-upload"></i> Submit Task
                                         </button>
-                                        ${task.submissions && task.submissions.find(s => s.studentId === userData.id) ? '<p><i class="fas fa-check"></i> Submitted</p>' : ''}
+                                        <p class="task-submitted-indicator" data-task-submitted-id="${task.id || ''}" style="${task.submissions && task.submissions.find(s => (s.studentId || s.id) === userData.id) ? '' : 'display:none;'}"><i class="fas fa-check"></i> Submitted</p>
                                     </div>
                                     `}
                                 </div>
@@ -1196,7 +1311,7 @@ function initializeSubjects() {
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
                                         <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'assignment', '${assignment.id || ''}')">
-                                            <i class="fas fa-chart-bar"></i> Open in Submissions (<span class="submission-count" data-assignment-id="${assignment.id || ''}">${assignment.submissions ? assignment.submissions.length : 0}</span>)
+                                            <i class="fas fa-chart-bar"></i> Open in Submissions
                                         </button>
                                     </div>
                                     ` : `
@@ -1308,11 +1423,8 @@ function initializeSubjects() {
         if (!currentTab) {
             switchTab('tasks');
         }
-        if (isInstructor) {
-            setupAssignmentSubmissionCountListeners(index);
-        } else {
-            stopAssignmentSubmissionCountListeners();
-        }
+        setupAssignmentSubmissionCountListeners(index, courseId);
+        hydrateSubmissionCountsForSubject(index, courseId);
 
     };
 
@@ -2510,14 +2622,34 @@ function initializeSubjects() {
     // -------------------------
     // DELETE ITEM
     // -------------------------
-    const deleteItem = function(subjectIndex, type, itemIndex) {
+    const deleteItem = async function(subjectIndex, type, itemIndex) {
         const sub = subjects[subjectIndex];
         if (!sub) return;
 
         const arrayName = type === 'quiz' ? 'quizzes' : `${type}s`;
         if (!sub[arrayName] || !sub[arrayName][itemIndex]) return;
 
+        const item = sub[arrayName][itemIndex];
+        const itemId = item?.id;
+        
+        // Get course ID for Firestore operations
+        const courseId = normalizeCourseId(userData?.course);
+        
         if (confirm(`Are you sure you want to delete this ${type}?`)) {
+            // Delete from Firestore if item has an ID
+            if (itemId && courseId) {
+                try {
+                    const collectionName = type === 'quiz' ? 'quizzes' : type === 'task' ? 'tasks' : 'assignments';
+                    const itemRef = doc(db, 'subjects', courseId, collectionName, itemId);
+                    await deleteDoc(itemRef);
+                    console.log(`${type} deleted from Firestore:`, itemId);
+                } catch (error) {
+                    console.error(`Error deleting ${type} from Firestore:`, error);
+                    // Continue with local deletion even if Firestore deletion fails
+                }
+            }
+            
+            // Delete from local array
             sub[arrayName].splice(itemIndex, 1);
             saveSubjects();
             renderSubjectDetails(subjectIndex);
