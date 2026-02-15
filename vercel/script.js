@@ -1288,14 +1288,9 @@ function initializeSubjects() {
                                 </div>
                                 ` : `
                                 <div class="item-actions">
-                                    ${quiz.quizLink 
-                                        ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
-                                            <i class="fas fa-play"></i> Take Quiz
-                                           </a>`
-                                        : `<button class="btn-submit-quiz" data-quiz-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Take Quiz">
-                                            <i class="fas fa-play"></i> Take Quiz
-                                           </button>`
-                                    }
+                                    ${quiz.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
+                                        <i class="fas fa-play"></i> Take Quiz
+                                    </a>` : ''}
                                 </div>
                                 `}
                             </div>
