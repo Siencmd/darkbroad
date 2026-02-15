@@ -146,6 +146,10 @@
       let allSubmissions = [];
       let userData = null;
       let isInstructor = false;
+      const pageParams = new URLSearchParams(window.location.search);
+      const focusSubject = pageParams.get('subject');
+      const focusType = pageParams.get('type');
+      const focusItemId = pageParams.get('itemId');
 
       // Load user data and subjects
       async function initializeSubmissionsPage() {
@@ -173,6 +177,14 @@
           subjectFilter.appendChild(option);
         });
 
+        if (focusSubject !== null && focusSubject !== '') {
+          subjectFilter.value = String(focusSubject);
+        }
+        if (focusType) {
+          const typeFilterEl = document.getElementById('typeFilter');
+          if (typeFilterEl) typeFilterEl.value = String(focusType).toLowerCase();
+        }
+
         // Load all submissions
         await loadAllSubmissions();
         
@@ -180,6 +192,11 @@
         document.getElementById('subjectFilter').addEventListener('change', filterSubmissions);
         document.getElementById('statusFilter').addEventListener('change', filterSubmissions);
         document.getElementById('typeFilter').addEventListener('change', filterSubmissions);
+
+        // Apply deep-link filters from Subjects page if present
+        if ((focusSubject !== null && focusSubject !== '') || focusType || focusItemId) {
+          filterSubmissions();
+        }
       }
 
       // Load all submissions from all subjects
@@ -370,6 +387,10 @@
 
         if (typeFilter !== 'all') {
           filtered = filtered.filter(sub => sub.itemType === typeFilter);
+        }
+
+        if (focusItemId) {
+          filtered = filtered.filter(sub => String(sub.itemId) === String(focusItemId));
         }
 
         renderSubmissions(filtered);
