@@ -2594,8 +2594,9 @@ function initializeSubjects() {
                                         
                                         <div class="grade-actions">
                                             <button
+                                                type="button"
                                                 class="btn-save-grade"
-                                                onclick="window.saveGrade(${subjectIndex}, ${assignmentIndex}, '${submission.studentId || submission.id}')">
+                                                onclick="event.preventDefault(); window.saveGrade(${subjectIndex}, ${assignmentIndex}, '${submission.studentId || submission.id}')">
                                                 <i class="fas fa-save"></i> Save Grade
                                             </button>
                                             ${submission.status === 'graded' ? `
@@ -2889,8 +2890,9 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     let maxPoints = assignment?.points || 100;
     
     // Validate grade - check if it's a valid number
+    console.log('DEBUG: gradeValue is:', JSON.stringify(gradeValue), 'length:', gradeValue.length);
     if (gradeValue === '') {
-        alert('Please enter a grade');
+        alert('Please enter a grade - the input field is empty! Check console for debug info.');
         return;
     }
     
