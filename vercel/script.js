@@ -1291,6 +1291,9 @@ function initializeSubjects() {
                                     ${quiz?.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
                                         <i class="fas fa-play"></i> Take Quiz
                                     </a>` : `<span style="color: var(--text-secondary); font-size: 0.85em;">No quiz available</span>`}
+                                    <button class="btn-submit-assignment" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Submit Quiz">
+                                        <i class="fas fa-upload"></i> Submit Quiz
+                                    </button>
                                 </div>
                                 `}
                             </div>
