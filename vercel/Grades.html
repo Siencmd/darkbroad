@@ -177,6 +177,16 @@
         </div>
       </div>
 
+      <div id="gradingModal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <span class="close" id="closeGradingModal">&times;</span>
+          <div class="modal-body">
+            <h2 id="modalTitle">Grade Submission</h2>
+            <div id="modalContent"></div>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <script type="module" src="firebase.js"></script>
@@ -185,7 +195,7 @@
       import { logout } from "./script.js";
       import { auth, db } from './firebase.js';
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, getDoc, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { doc, getDoc, getDocs, collection, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
@@ -193,8 +203,17 @@
       // Global data
       let subjects = [];
       let userData = null;
+      let allRows = [];
       let allGrades = [];
       let charts = {};
+      const pageParams = new URLSearchParams(window.location.search);
+      const focusSubject = pageParams.get('subject');
+      const focusType = pageParams.get('type');
+      const focusItemId = pageParams.get('itemId');
+
+      function isInstructorRole() {
+        return ['instructor', 'teacher', 'admin'].includes((userData?.role || '').toLowerCase());
+      }
 
       // Initialize page
       async function initializeGradesPage() {
@@ -211,6 +230,17 @@
           option.textContent = subject.name;
           subjectFilter.appendChild(option);
         });
+
+        if (focusSubject !== null && focusSubject !== '') {
+          subjectFilter.value = String(focusSubject);
+        }
+
+        if (isInstructorRole()) {
+          const welcomeTitle = document.querySelector('.welcome-text h1');
+          const welcomeText = document.querySelector('.welcome-text p');
+          if (welcomeTitle) welcomeTitle.innerHTML = '<i class="fas fa-clipboard-check"></i> Grade Submissions';
+          if (welcomeText) welcomeText.textContent = 'Review submissions and input points for students.';
+        }
 
         // Load grades from Firestore
         await loadGrades();
@@ -232,7 +262,7 @@
             return;
           }
 
-          allGrades = [];
+          allRows = [];
 
           // Load grades from each subject
           for (let subjectIndex = 0; subjectIndex < subjects.length; subjectIndex++) {
@@ -241,16 +271,16 @@
             // Load assignment grades
             if (subject.assignments && subject.assignments.length > 0) {
               for (const assignment of subject.assignments) {
-                const grades = await fetchGrades('assignments', assignment.id, courseId);
-                grades.forEach(grade => {
-                  allGrades.push({
-                    ...grade,
+                const rows = await fetchSubmissions('assignments', assignment.id, courseId);
+                rows.forEach(row => {
+                  allRows.push({
+                    ...row,
                     subjectIndex,
                     subjectName: subject.name,
                     teacher: subject.teacher,
                     itemTitle: assignment.title,
                     itemType: 'assignment',
-                    itemPoints: assignment.points,
+                    itemPoints: assignment.points || 100,
                     dueDate: assignment.dueDate
                   });
                 });
@@ -260,10 +290,10 @@
             // Load task grades
             if (subject.tasks && subject.tasks.length > 0) {
               for (const task of subject.tasks) {
-                const grades = await fetchGrades('tasks', task.id, courseId);
-                grades.forEach(grade => {
-                  allGrades.push({
-                    ...grade,
+                const rows = await fetchSubmissions('tasks', task.id, courseId);
+                rows.forEach(row => {
+                  allRows.push({
+                    ...row,
                     subjectIndex,
                     subjectName: subject.name,
                     teacher: subject.teacher,
@@ -279,16 +309,16 @@
             // Load quiz grades
             if (subject.quizzes && subject.quizzes.length > 0) {
               for (const quiz of subject.quizzes) {
-                const grades = await fetchGrades('quizzes', quiz.id, courseId);
-                grades.forEach(grade => {
-                  allGrades.push({
-                    ...grade,
+                const rows = await fetchSubmissions('quizzes', quiz.id, courseId);
+                rows.forEach(row => {
+                  allRows.push({
+                    ...row,
                     subjectIndex,
                     subjectName: subject.name,
                     teacher: subject.teacher,
                     itemTitle: quiz.title,
                     itemType: 'quiz',
-                    itemPoints: quiz.points,
+                    itemPoints: quiz.points || 100,
                     dueDate: quiz.dueDate
                   });
                 });
@@ -296,9 +326,42 @@
             }
           }
 
-          // Filter to only show current student's grades
-          if (userData.role !== 'instructor' && userData.role !== 'teacher' && userData.role !== 'admin') {
-            allGrades = allGrades.filter(g => g.studentId === userData.id);
+          // Students only see their own records
+          if (!isInstructorRole()) {
+            allRows = allRows.filter(row => row.studentId === userData.id);
+          }
+
+          if (focusSubject !== null && focusSubject !== '') {
+            allRows = allRows.filter(row => String(row.subjectIndex) === String(focusSubject));
+          }
+          if (focusType) {
+            allRows = allRows.filter(row => row.itemType === String(focusType).toLowerCase());
+          }
+          if (focusItemId) {
+            allRows = allRows.filter(row => String(row.itemId) === String(focusItemId));
+          }
+
+          allGrades = allRows.filter(row => row.grade !== undefined && row.status === 'graded');
+
+          if (allRows.length === 0) {
+            showEmptyState();
+            return;
+          }
+
+          const loadingEl = document.getElementById('loadingState');
+          const statsEl = document.getElementById('gradesStats');
+          const analyticsEl = document.getElementById('analyticsSection');
+          const filterEl = document.getElementById('filterSection');
+          const tableEl = document.getElementById('gradesTable');
+
+          if (isInstructorRole()) {
+            renderGradesTable(allRows);
+            loadingEl.style.display = 'none';
+            statsEl.style.display = 'none';
+            analyticsEl.style.display = 'none';
+            filterEl.style.display = 'block';
+            tableEl.style.display = 'block';
+            return;
           }
 
           if (allGrades.length === 0) {
@@ -306,21 +369,15 @@
             return;
           }
 
-          // Calculate and display statistics
           calculateStatistics();
-          
-          // Render table
           renderGradesTable(allGrades);
-          
-          // Render analytics
           renderAnalytics();
 
-          // Show all sections
-          document.getElementById('loadingState').style.display = 'none';
-          document.getElementById('gradesStats').style.display = 'flex';
-          document.getElementById('analyticsSection').style.display = 'block';
-          document.getElementById('filterSection').style.display = 'block';
-          document.getElementById('gradesTable').style.display = 'block';
+          loadingEl.style.display = 'none';
+          statsEl.style.display = 'flex';
+          analyticsEl.style.display = 'block';
+          filterEl.style.display = 'block';
+          tableEl.style.display = 'block';
 
         } catch (error) {
           console.error('Error loading grades:', error);
@@ -328,25 +385,21 @@
         }
       }
 
-      // Fetch grades from Firestore
-      async function fetchGrades(collectionName, itemId, courseId) {
+      // Fetch submissions from Firestore
+      async function fetchSubmissions(collectionName, itemId, courseId) {
         if (!courseId || !itemId) return [];
         
         const submissionsRef = collection(db, "subjects", courseId, collectionName, itemId, "submissions");
         
         try {
           const submissionsSnap = await getDocs(submissionsRef);
-          const grades = [];
+          const rows = [];
           submissionsSnap.forEach((doc) => {
-            const data = doc.data();
-            // Only include graded submissions
-            if (data.grade !== undefined && data.status === 'graded') {
-              grades.push({ id: doc.id, ...data });
-            }
+            rows.push({ id: doc.id, ...doc.data() });
           });
-          return grades;
+          return rows;
         } catch (error) {
-          console.warn(`Could not fetch ${collectionName} grades:`, error.message);
+          console.warn(`Could not fetch ${collectionName} submissions:`, error.message);
           return [];
         }
       }
@@ -405,19 +458,32 @@
         return '#ef4444'; // Red
       }
 
+      function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleString();
+      }
+
       // Render grades table
       function renderGradesTable(grades) {
         const tbody = document.getElementById('gradesTableBody');
+        const instructorView = isInstructorRole();
         
         if (grades.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="empty-row">No grades found</td></tr>';
+          tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${instructorView ? 'No submissions found' : 'No grades found'}</td></tr>`;
           return;
         }
 
         tbody.innerHTML = grades.map(grade => {
-          const percentage = grade.itemPoints > 0 ? ((grade.grade / grade.itemPoints) * 100) : 0;
-          const letterGrade = getLetterGrade(percentage);
-          const gradeColor = getGradeColor(percentage);
+          const isGraded = grade.grade !== undefined && grade.status === 'graded';
+          const percentage = isGraded && grade.itemPoints > 0 ? ((grade.grade / grade.itemPoints) * 100) : 0;
+          const letterGrade = isGraded ? getLetterGrade(percentage) : '--';
+          const gradeColor = isGraded ? getGradeColor(percentage) : '#64748b';
+          const actionButton = instructorView
+            ? `<button class="${isGraded ? 'btn-edit-grade' : 'btn-grade'}" onclick="openGradingModal('${grade.subjectIndex}', '${grade.itemType}', '${grade.itemId}', '${grade.studentId}', ${grade.itemPoints || 100})">
+                <i class="fas fa-edit"></i> ${isGraded ? 'Edit Grade' : 'Grade'}
+              </button>`
+            : '';
           
           return `
             <tr>
@@ -425,11 +491,17 @@
               <td>${grade.teacher || 'N/A'}</td>
               <td>${grade.itemTitle}</td>
               <td><span class="type-badge ${grade.itemType}">${grade.itemType}</span></td>
-              <td><strong>${grade.grade}</strong></td>
+              <td><strong>${isGraded ? grade.grade : '--'}</strong></td>
               <td>${grade.itemPoints}</td>
-              <td>${percentage.toFixed(1)}%</td>
+              <td>${isGraded ? `${percentage.toFixed(1)}%` : '--'}</td>
               <td><span class="grade-badge" style="background: ${gradeColor}">${letterGrade}</span></td>
-              <td><span class="status-badge graded"><i class="fas fa-check"></i> Graded</span></td>
+              <td>
+                ${isGraded
+                  ? '<span class="status-badge graded"><i class="fas fa-check"></i> Graded</span>'
+                  : '<span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>'
+                }
+                ${instructorView ? actionButton : ''}
+              </td>
             </tr>
           `;
         }).join('');
@@ -440,10 +512,17 @@
         const subjectFilter = document.getElementById('subjectFilter').value;
         const termFilter = document.getElementById('termFilter').value;
 
-        let filtered = [...allGrades];
+        let filtered = isInstructorRole() ? [...allRows] : [...allGrades];
 
         if (subjectFilter !== 'all') {
           filtered = filtered.filter(g => g.subjectIndex == subjectFilter);
+        }
+
+        if (focusType) {
+          filtered = filtered.filter(g => g.itemType === String(focusType).toLowerCase());
+        }
+        if (focusItemId) {
+          filtered = filtered.filter(g => String(g.itemId) === String(focusItemId));
         }
 
         // Term filtering (simplified - could be enhanced)
@@ -633,8 +712,98 @@
       // Show empty state
       function showEmptyState() {
         document.getElementById('loadingState').style.display = 'none';
+        if (isInstructorRole()) {
+          const emptyTitle = document.querySelector('#emptyState h3');
+          const emptyText = document.querySelector('#emptyState p');
+          if (emptyTitle) emptyTitle.textContent = 'No Submissions Yet';
+          if (emptyText) emptyText.textContent = 'No student submissions matched this filter yet.';
+        }
         document.getElementById('emptyState').style.display = 'flex';
       }
+
+      // Open grading modal
+      window.openGradingModal = function(subjectIndex, itemType, itemId, studentId, itemPoints) {
+        if (!isInstructorRole()) return;
+
+        const modal = document.getElementById('gradingModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const maxPoints = Number(itemPoints) || 100;
+
+        const submission = allRows.find(row =>
+          String(row.subjectIndex) === String(subjectIndex) &&
+          row.itemType === itemType &&
+          String(row.itemId) === String(itemId) &&
+          String(row.studentId) === String(studentId)
+        );
+
+        if (!submission) {
+          alert('Submission not found');
+          return;
+        }
+
+        modalTitle.textContent = `Grade: ${submission.itemTitle}`;
+        modalContent.innerHTML = `
+          <div class="grading-form">
+            <div class="submission-details">
+              <p><strong>Student:</strong> ${submission.studentName || submission.studentId || 'Unknown'}</p>
+              <p><strong>Submitted:</strong> ${formatDate(submission.submittedAt)}</p>
+              <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName || 'Submission file'}</a></p>
+            </div>
+            <div class="grade-input-section">
+              <div class="form-group">
+                <label for="gradeInput">Grade:</label>
+                <input type="number" id="gradeInput" class="grade-input" value="${submission.grade !== undefined ? submission.grade : ''}" min="0" max="${maxPoints}" placeholder="0" />
+                / ${maxPoints} points
+              </div>
+              <div class="form-group">
+                <label for="feedbackInput">Feedback:</label>
+                <textarea id="feedbackInput" class="feedback-input" rows="4" placeholder="Enter feedback">${submission.feedback || ''}</textarea>
+              </div>
+              <button class="btn-save-grade" onclick="saveGradeFromModal('${subjectIndex}', '${itemType}', '${itemId}', '${studentId}', ${maxPoints})">
+                <i class="fas fa-save"></i> Save Grade
+              </button>
+            </div>
+          </div>
+        `;
+
+        modal.style.display = 'block';
+      };
+
+      // Save grade from modal
+      window.saveGradeFromModal = async function(subjectIndex, itemType, itemId, studentId, itemPoints) {
+        const gradeInput = document.getElementById('gradeInput');
+        const feedbackInput = document.getElementById('feedbackInput');
+        const maxPoints = Number(itemPoints) || 100;
+        const grade = parseFloat(gradeInput.value);
+        const feedback = (feedbackInput.value || '').trim();
+
+        if (isNaN(grade) || grade < 0 || grade > maxPoints) {
+          alert(`Grade must be between 0 and ${maxPoints}`);
+          return;
+        }
+
+        try {
+          const collectionName = itemType === 'task' ? 'tasks' : itemType === 'assignment' ? 'assignments' : 'quizzes';
+          const submissionRef = doc(db, "subjects", userData.course, collectionName, itemId, "submissions", studentId);
+
+          await setDoc(submissionRef, {
+            grade,
+            maxPoints,
+            feedback,
+            gradedAt: serverTimestamp(),
+            gradedBy: auth.currentUser.uid,
+            status: "graded"
+          }, { merge: true });
+
+          alert('Grade saved successfully!');
+          document.getElementById('gradingModal').style.display = 'none';
+          await loadGrades();
+        } catch (error) {
+          console.error("Error saving grade:", error);
+          alert("Failed to save grade: " + error.message);
+        }
+      };
 
       // Export grades
       window.exportGrades = function() {
@@ -659,6 +828,16 @@
         a.click();
         window.URL.revokeObjectURL(url);
       };
+
+      // Modal close handlers
+      document.getElementById('closeGradingModal').addEventListener('click', () => {
+        document.getElementById('gradingModal').style.display = 'none';
+      });
+      window.addEventListener('click', (event) => {
+        if (event.target && event.target.id === 'gradingModal') {
+          document.getElementById('gradingModal').style.display = 'none';
+        }
+      });
 
       // Initialize on load
       onAuthStateChanged(auth, (user) => {
