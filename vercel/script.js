@@ -1407,7 +1407,7 @@ function initializeSubjects() {
                                         <i class="fas fa-play"></i> Take Quiz
                                     </a>` : `<span style="color: var(--text-secondary); font-size: 0.85em;">No quiz available</span>`}
                                     <button class="btn-submit-assignment" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Submit Quiz">
-                                        <i class="fas fa-upload"></i> Submit Quiz
+                                        <i class="fas fa-check"></i> Mark as Done
                                     </button>
                                 </div>
                                 `}
@@ -2199,13 +2199,29 @@ function initializeSubjects() {
                 return;
             }
 
-            if (!assignment.submissions) assignment.submissions = [];
-            assignment.submissions.push({
-                studentId: auth.currentUser?.uid || userData.id,
-                fileName: file.name,
-                fileUrl: fileUrl,
-                submittedAt: new Date().toISOString()
-            });
+            // Check if student already has a submission and update it, or add new one
+            const currentUserId = auth.currentUser?.uid || userData.id;
+            const existingIndex = assignment.submissions.findIndex(
+                s => (s.studentId || s.id) === currentUserId
+            );
+            
+            if (existingIndex >= 0) {
+                // Update existing submission
+                assignment.submissions[existingIndex] = {
+                    studentId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: fileUrl,
+                    submittedAt: new Date().toISOString()
+                };
+            } else {
+                // Add new submission
+                assignment.submissions.push({
+                    studentId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: fileUrl,
+                    submittedAt: new Date().toISOString()
+                });
+            }
 
             saveSubjects(false);
             renderSubjectDetails(subjectIndex);
@@ -2237,7 +2253,7 @@ function initializeSubjects() {
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <div class="modal-body">
-                    <h2>Submit Quiz: ${quiz.title}</h2>
+                    <h2>Mark as Done: ${quiz.title}</h2>
                     <form id="submitQuizForm">
                         <input type="hidden" id="submitQuizSubjectIndex" value="${subjectIndex}" />
                         <input type="hidden" id="submitQuizIndex" value="${quizIndex}" />
@@ -2245,7 +2261,7 @@ function initializeSubjects() {
                             <label>Upload Your Quiz Submission</label>
                             <input type="file" id="submitQuizFile" required />
                         </div>
-                        <button type="submit" class="btn-add-subject">Submit Quiz</button>
+                        <button type="submit" class="btn-add-subject">Mark as Done</button>
                     </form>
                 </div>
             </div>
@@ -2295,13 +2311,29 @@ function initializeSubjects() {
                 return;
             }
 
-            if (!quiz.submissions) quiz.submissions = [];
-            quiz.submissions.push({
-                studentId: auth.currentUser?.uid || userData.id,
-                fileName: file.name,
-                fileUrl: fileUrl,
-                submittedAt: new Date().toISOString()
-            });
+            // Check if student already has a submission and update it, or add new one
+            const currentUserId = auth.currentUser?.uid || userData.id;
+            const existingIndex = quiz.submissions.findIndex(
+                s => (s.studentId || s.id) === currentUserId
+            );
+            
+            if (existingIndex >= 0) {
+                // Update existing submission
+                quiz.submissions[existingIndex] = {
+                    studentId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: fileUrl,
+                    submittedAt: new Date().toISOString()
+                };
+            } else {
+                // Add new submission
+                quiz.submissions.push({
+                    studentId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: fileUrl,
+                    submittedAt: new Date().toISOString()
+                });
+            }
 
             saveSubjects(false);
             renderSubjectDetails(subjectIndex);
@@ -2438,13 +2470,29 @@ function initializeSubjects() {
                 return;
             }
 
-            if (!task.submissions) task.submissions = [];
-            task.submissions.push({
-                studentId: auth.currentUser?.uid || userData.id,
-                fileName: file.name,
-                fileUrl: fileUrl,
-                submittedAt: new Date().toISOString()
-            });
+            // Check if student already has a submission and update it, or add new one
+            const currentUserId = auth.currentUser?.uid || userData.id;
+            const existingIndex = task.submissions.findIndex(
+                s => (s.studentId || s.id) === currentUserId
+            );
+            
+            if (existingIndex >= 0) {
+                // Update existing submission
+                task.submissions[existingIndex] = {
+                    studentId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: fileUrl,
+                    submittedAt: new Date().toISOString()
+                };
+            } else {
+                // Add new submission
+                task.submissions.push({
+                    studentId: currentUserId,
+                    fileName: file.name,
+                    fileUrl: fileUrl,
+                    submittedAt: new Date().toISOString()
+                });
+            }
 
             // Update task status
             task.status = 'submitted';
