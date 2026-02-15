@@ -2539,44 +2539,47 @@ function initializeSubjects() {
             return;
         }
 
+        // Get max points with fallback
+        const maxPoints = assignment?.points || assignment?.maxPoints || 100;
+        
         const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'viewSubmissionsModal';
-        modal.innerHTML = `
-            <div class="modal-content large-modal">
-                <span class="close">&times;</span>
-                <div class="modal-body">
-                    <h2>Submissions for: ${assignment.title}</h2>
-                    <p class="assignment-info">Due: ${assignment.dueDate} | Total Points: ${assignment.points}</p>
-                    <div class="submissions-list">
-                        ${submissions.map((submission, idx) => `
-                            <div class="submission-item">
-                                <div class="submission-header">
-                                    <h3>${submission.studentName || "Unknown Student"}</h3>
-                                    <span class="submission-date">
-                                        Submitted: ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}
-                                    </span>
-                                </div>
-                                
-                                <div class="submission-file">
-                                    <i class="fas fa-file"></i>
-                                    <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a>
-                                </div>
-                                
-                                ${isInstructorRole ? `
-                                    <div class="grading-section">
-                                        <div class="grade-input-group">
-                                            <label>Grade:</label>
-                                            <input
-                                                type="number"
-                                                class="grade-input"
-                                                id="grade-${submission.studentId}"
-                                                value="${submission.grade !== undefined ? submission.grade : ''}"
-                                                min="0"
-                                                max="${assignment.points}"
-                                                placeholder="0"
-                                            /> / ${assignment.points} points
-                                        </div>
+            modal.className = 'modal';
+            modal.id = 'viewSubmissionsModal';
+            modal.innerHTML = `
+                <div class="modal-content large-modal">
+                    <span class="close">&times;</span>
+                    <div class="modal-body">
+                        <h2>Submissions for: ${assignment.title}</h2>
+                        <p class="assignment-info">Due: ${assignment.dueDate} | Total Points: ${maxPoints}</p>
+                        <div class="submissions-list">
+                            ${submissions.map((submission, idx) => `
+                                <div class="submission-item">
+                                    <div class="submission-header">
+                                        <h3>${submission.studentName || "Unknown Student"}</h3>
+                                        <span class="submission-date">
+                                            Submitted: ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="submission-file">
+                                        <i class="fas fa-file"></i>
+                                        <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a>
+                                    </div>
+                                    
+                                    ${isInstructorRole ? `
+                                        <div class="grading-section">
+                                            <div class="grade-input-group">
+                                                <label>Grade:</label>
+                                                <input
+                                                    type="number"
+                                                    class="grade-input"
+                                                    id="grade-${submission.studentId}"
+                                                    value="${submission.grade !== undefined ? submission.grade : ''}"
+                                                    min="0"
+                                                    max="${maxPoints}"
+                                                    placeholder="0"
+                                                /> / ${maxPoints} points
+                                            </div>
                                         
                                         <div class="feedback-input-group">
                                             <label>Feedback:</label>
@@ -2848,9 +2851,12 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const grade = parseFloat(gradeInput.value);
     const feedback = feedbackInput.value.trim();
     
-    // Validate grade
-    if (isNaN(grade) || grade < 0 || grade > assignment.points) {
-        alert(`Grade must be between 0 and ${assignment.points}`);
+    // Get max points - default to 100 if not set
+    const maxPoints = assignment?.points || assignment?.maxPoints || 100;
+    
+    // Validate grade - allow any grade up to maxPoints
+    if (isNaN(grade) || grade < 0 || grade > maxPoints) {
+        alert(`Grade must be between 0 and ${maxPoints}`);
         return;
     }
     
@@ -2859,7 +2865,7 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
         const submissionRef = doc(db, "subjects", courseId, "assignments", assignment.id, "submissions", studentId);
         await setDoc(submissionRef, {
             grade: grade,
-            maxPoints: assignment.points,
+            maxPoints: maxPoints,
             feedback: feedback,
             gradedAt: serverTimestamp(),
             gradedBy: auth.currentUser.uid,
@@ -2872,7 +2878,7 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
             await setDoc(notificationRef, {
                 type: "grade_received",
                 title: `Grade Posted: ${assignment.title}`,
-                message: `You received ${grade}/${assignment.points} points`,
+                message: `You received ${grade}/${maxPoints} points`,
                 link: `/Subjects.html?subject=${subjectIndex}&tab=assignments`,
                 read: false,
                 timestamp: serverTimestamp()
