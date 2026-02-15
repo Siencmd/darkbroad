@@ -2257,10 +2257,7 @@ function initializeSubjects() {
                     <form id="submitQuizForm">
                         <input type="hidden" id="submitQuizSubjectIndex" value="${subjectIndex}" />
                         <input type="hidden" id="submitQuizIndex" value="${quizIndex}" />
-                        <div class="form-group">
-                            <label>Upload Your Quiz Submission</label>
-                            <input type="file" id="submitQuizFile" required />
-                        </div>
+                        <p style="margin-bottom: 20px;">Click the button below to mark this quiz as completed.</p>
                         <button type="submit" class="btn-add-subject">Mark as Done</button>
                     </form>
                 </div>
@@ -2273,37 +2270,18 @@ function initializeSubjects() {
 
         modal.querySelector('#submitQuizForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const fileInput = modal.querySelector('#submitQuizFile');
-            if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-                alert('Please select a file to submit.');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            console.log('Uploading quiz submission:', file.name);
+            
+            // Mark quiz as done without file upload
+            const currentUserId = auth.currentUser?.uid || userData.id;
             const courseId = normalizeCourseId(userData?.course);
-            const uploadPrefix = buildStoragePrefix({
-                courseId,
-                subjectId: sub.id,
-                itemType: "quizzes",
-                itemId: quiz.id,
-                userId: userData.id
-            });
-            const fileUrl = await uploadFileToSupabase(file, uploadPrefix);
-            console.log('Upload result:', fileUrl);
-
-            if (!fileUrl) {
-                alert('File upload failed. Please try again.');
-                return;
-            }
 
             try {
                 await saveStudentSubmissionToFirestore({
                     type: "quiz",
                     subject: sub,
                     item: quiz,
-                    fileName: file.name,
-                    fileUrl
+                    fileName: "Quiz Completed",
+                    fileUrl: null
                 });
             } catch (error) {
                 console.error("Could not write quiz submission to Firestore:", error);
@@ -2312,7 +2290,6 @@ function initializeSubjects() {
             }
 
             // Check if student already has a submission and update it, or add new one
-            const currentUserId = auth.currentUser?.uid || userData.id;
             const existingIndex = quiz.submissions.findIndex(
                 s => (s.studentId || s.id) === currentUserId
             );
@@ -2321,16 +2298,16 @@ function initializeSubjects() {
                 // Update existing submission
                 quiz.submissions[existingIndex] = {
                     studentId: currentUserId,
-                    fileName: file.name,
-                    fileUrl: fileUrl,
+                    fileName: "Quiz Completed",
+                    fileUrl: null,
                     submittedAt: new Date().toISOString()
                 };
             } else {
                 // Add new submission
                 quiz.submissions.push({
                     studentId: currentUserId,
-                    fileName: file.name,
-                    fileUrl: fileUrl,
+                    fileName: "Quiz Completed",
+                    fileUrl: null,
                     submittedAt: new Date().toISOString()
                 });
             }
