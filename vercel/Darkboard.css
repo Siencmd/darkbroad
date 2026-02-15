@@ -4300,14 +4300,17 @@ body.light-mode .theme-toggle-btn:hover {
 
 .btn-read-more {
     padding: 8px 16px;
-    background: rgba(0, 212, 255, 0.15);
-    border: 1px solid rgba(0, 212, 255, 0.4);
-    color: var(--accent, #00d4ff);
+    background: rgba(0, 212, 255, 0.2);
+    border: 1px solid rgba(0, 212, 255, 0.5);
+    color: #00d4ff !important;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
     font-size: 0.9em;
     transition: all 0.3s ease;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
 }
 
 .btn-read-more:hover {
@@ -5108,13 +5111,13 @@ body.light-mode .announcement-content {
 }
 
 body.light-mode .btn-read-more {
-    background: rgba(0, 150, 200, 0.15);
-    border-color: rgba(0, 150, 200, 0.4);
-    color: #0096c8;
+    background: rgba(0, 150, 200, 0.2);
+    border-color: rgba(0, 150, 200, 0.5);
+    color: #0096c8 !important;
 }
 
 body.light-mode .btn-read-more:hover {
-    background: rgba(0, 150, 200, 0.25);
+    background: rgba(0, 150, 200, 0.3);
     border-color: #0096c8;
 }
 
@@ -6891,6 +6894,9 @@ body.light-mode .detail-row {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
 }
 
 .btn-grade {
