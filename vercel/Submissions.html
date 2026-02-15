@@ -279,7 +279,7 @@
           }
 
           renderSubmissions(allSubmissions);
-          updateStats();
+          updateStats(allSubmissions);
         } catch (error) {
           console.error('Error loading submissions:', error);
           container.innerHTML = '<div class="error-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading submissions</p></div>';
@@ -343,7 +343,7 @@
                 <p><strong>Student:</strong> ${sub.studentName || 'Unknown'}</p>
               ` : ''}
               <p><strong>Submitted:</strong> ${formatDate(sub.submittedAt)}</p>
-              <p><strong>File:</strong> <a href="${sub.fileUrl}" target="_blank">${sub.fileName}</a></p>
+              <p><strong>File:</strong> ${sub.fileUrl ? `<a href="${sub.fileUrl}" target="_blank">${sub.fileName || 'Submission file'}</a>` : (sub.fileName || 'No file')}</p>
               
               ${sub.grade !== undefined ? `
                 <div class="grade-display">
@@ -375,10 +375,10 @@
         const statusFilter = document.getElementById('statusFilter').value;
         const typeFilter = document.getElementById('typeFilter').value;
 
-        let filtered = allSubmissions;
+        let filtered = [...allSubmissions];
 
         if (subjectFilter !== 'all') {
-          filtered = filtered.filter(sub => sub.subjectIndex == subjectFilter);
+          filtered = filtered.filter(sub => String(sub.subjectIndex) === String(subjectFilter));
         }
 
         if (statusFilter !== 'all') {
@@ -389,17 +389,24 @@
           filtered = filtered.filter(sub => sub.itemType === typeFilter);
         }
 
+        if (focusSubject !== null && focusSubject !== '') {
+          filtered = filtered.filter(sub => String(sub.subjectIndex) === String(focusSubject));
+        }
+        if (focusType) {
+          filtered = filtered.filter(sub => sub.itemType === String(focusType).toLowerCase());
+        }
         if (focusItemId) {
           filtered = filtered.filter(sub => String(sub.itemId) === String(focusItemId));
         }
 
         renderSubmissions(filtered);
+        updateStats(filtered);
       }
 
       // Update statistics
-      function updateStats() {
-        const pending = allSubmissions.filter(sub => sub.status !== 'graded').length;
-        const graded = allSubmissions.filter(sub => sub.status === 'graded').length;
+      function updateStats(submissions = allSubmissions) {
+        const pending = submissions.filter(sub => sub.status !== 'graded').length;
+        const graded = submissions.filter(sub => sub.status === 'graded').length;
         
         document.getElementById('pendingCount').textContent = pending;
         document.getElementById('gradedCount').textContent = graded;
@@ -420,10 +427,10 @@
 
         // Find the submission
         const submission = allSubmissions.find(sub =>
-          sub.subjectIndex == subjectIndex &&
+          String(sub.subjectIndex) === String(subjectIndex) &&
           sub.itemType === itemType &&
-          sub.itemId === itemId &&
-          sub.studentId === studentId
+          String(sub.itemId) === String(itemId) &&
+          String(sub.studentId) === String(studentId)
         );
 
         if (!submission) {
@@ -439,9 +446,9 @@
         modalContent.innerHTML = `
           <div class="grading-form">
             <div class="submission-details">
-              <p><strong>Student:</strong> ${submission.studentName}</p>
+              <p><strong>Student:</strong> ${submission.studentName || submission.studentId || 'Unknown'}</p>
               <p><strong>Submitted:</strong> ${formatDate(submission.submittedAt)}</p>
-              <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
+              <p><strong>File:</strong> ${submission.fileUrl ? `<a href="${submission.fileUrl}" target="_blank">${submission.fileName || 'Submission file'}</a>` : (submission.fileName || 'No file')}</p>
             </div>
 
             <div class="grade-input-section">
@@ -468,7 +475,7 @@
                 >${submission.feedback || ''}</textarea>
               </div>
 
-              <button class="btn-save-grade" onclick="saveGradeFromModal('${subjectIndex}', '${itemType}', '${itemId}', '${studentId}', ${itemPoints})">
+              <button class="btn-save-grade" onclick="saveGradeFromModal('${subjectIndex}', '${itemType}', '${itemId}', '${studentId}', ${maxPoints})">
                 <i class="fas fa-save"></i> Save Grade
               </button>
             </div>
@@ -487,7 +494,7 @@
         const feedback = feedbackInput.value.trim();
 
         // Use fallback value if itemPoints is undefined
-        const maxPoints = itemPoints || 100;
+        const maxPoints = Number(itemPoints) || 100;
 
         if (isNaN(grade) || grade < 0 || grade > maxPoints) {
           alert(`Grade must be between 0 and ${maxPoints}`);
