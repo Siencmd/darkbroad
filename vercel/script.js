@@ -2574,7 +2574,7 @@ function initializeSubjects() {
                                                 <input
                                                     type="number"
                                                     class="grade-input"
-                                                    id="grade-${submission.studentId}"
+                                                    id="grade-${submission.studentId || submission.id}"
                                                     value="${submission.grade !== undefined ? submission.grade : ''}"
                                                     min="0"
                                                     max="${maxPoints}"
@@ -2586,7 +2586,7 @@ function initializeSubjects() {
                                             <label>Feedback:</label>
                                             <textarea
                                                 class="feedback-input"
-                                                id="feedback-${submission.studentId}"
+                                                id="feedback-${submission.studentId || submission.id}"
                                                 rows="3"
                                                 placeholder="Enter feedback for student..."
                                             >${submission.feedback || ''}</textarea>
@@ -2595,7 +2595,7 @@ function initializeSubjects() {
                                         <div class="grade-actions">
                                             <button
                                                 class="btn-save-grade"
-                                                onclick="window.saveGrade(${subjectIndex}, ${assignmentIndex}, '${submission.studentId}')">
+                                                onclick="window.saveGrade(${subjectIndex}, ${assignmentIndex}, '${submission.studentId || submission.id}')">
                                                 <i class="fas fa-save"></i> Save Grade
                                             </button>
                                             ${submission.status === 'graded' ? `
