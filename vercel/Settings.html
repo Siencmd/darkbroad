@@ -201,10 +201,62 @@
     <script type="module" src="script.js"></script>
     <script type="module">
       import { logout, applyTheme } from "./script.js";
+      import { auth, db } from "./firebase.js";
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
-      
+
+      let profileRealtimeUnsubscribe = null;
+
+      function updateHeaderName() {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName) {
+          headerUserName.textContent = userData.name || 'User';
+        }
+      }
+
+      function setupSettingsRealtimeProfile() {
+        onAuthStateChanged(auth, (user) => {
+          if (!user) return;
+
+          if (typeof profileRealtimeUnsubscribe === 'function') {
+            profileRealtimeUnsubscribe();
+            profileRealtimeUnsubscribe = null;
+          }
+
+          profileRealtimeUnsubscribe = onSnapshot(doc(db, 'users', user.uid), (userSnap) => {
+            if (!userSnap.exists()) return;
+            const profile = userSnap.data() || {};
+            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const merged = {
+              ...localUser,
+              id: user.uid,
+              name: profile.fullName || localUser.name || user.displayName || 'User',
+              role: profile.role || localUser.role,
+              course: profile.course || localUser.course
+            };
+            localStorage.setItem('userData', JSON.stringify(merged));
+            updateHeaderName();
+          }, (error) => {
+            console.warn('Settings profile realtime failed:', error?.message || error);
+          });
+        });
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        updateHeaderName();
+        setupSettingsRealtimeProfile();
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof profileRealtimeUnsubscribe === 'function') {
+          profileRealtimeUnsubscribe();
+          profileRealtimeUnsubscribe = null;
+        }
+      });
 
     </script>
   </body>
