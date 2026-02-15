@@ -1011,8 +1011,8 @@ function initializeSubjects() {
                                     ${(task.file || task.fileName) ? `<p><i class="fas fa-paperclip"></i> <a href="${task.fileUrl || task.url || '#'}" target="_blank">${task.file || task.fileName}</a></p>` : ''}
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
-                                        <button class="btn-view-submissions" data-task-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewTaskSubmissions(${index}, ${i})">
-                                            <i class="fas fa-eye"></i> View Submissions (<span class="submission-count" data-task-id="${task.id || ''}">${task.submissions ? task.submissions.length : 0}</span>)
+                                        <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'task', '${task.id || ''}')">
+                                            <i class="fas fa-chart-bar"></i> Open in Grades (<span class="submission-count" data-task-id="${task.id || ''}">${task.submissions ? task.submissions.length : 0}</span>)
                                         </button>
                                     </div>
                                     ` : `
@@ -1058,8 +1058,8 @@ function initializeSubjects() {
                                     ${assignment.file ? `<p><i class="fas fa-paperclip"></i> <a href="${assignment.fileUrl}" target="_blank">${assignment.file}</a></p>` : ''}
                                     ${isInstructor ? `
                                     <div class="instructor-actions">
-                                        <button class="btn-view-submissions" data-assignment-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewSubmissions(${index}, ${i})">
-                                            <i class="fas fa-eye"></i> View Submissions (<span class="submission-count" data-assignment-id="${assignment.id || ''}">${assignment.submissions ? assignment.submissions.length : 0}</span>)
+                                        <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'assignment', '${assignment.id || ''}')">
+                                            <i class="fas fa-chart-bar"></i> Open in Grades (<span class="submission-count" data-assignment-id="${assignment.id || ''}">${assignment.submissions ? assignment.submissions.length : 0}</span>)
                                         </button>
                                     </div>
                                     ` : `
@@ -1143,7 +1143,7 @@ function initializeSubjects() {
                                     <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsOpenEditItemModal(${index}, 'quiz', ${i})">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-view-submissions" data-quiz-index="${i}" data-subject-index="${index}" onclick="window.subjectsViewQuizSubmissions(${index}, ${i})" title="View Submissions">
+                                    <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'quiz', '${quiz.id || ''}')" title="Open in Grades">
                                         <i class="fas fa-users"></i>
                                     </button>
                                     <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}" onclick="window.subjectsDeleteItem(${index}, 'quiz', ${i})">
@@ -1455,15 +1455,6 @@ function initializeSubjects() {
             openSubmitAssignmentModal(
                 parseInt(submitAssignmentBtn.dataset.subjectIndex),
                 parseInt(submitAssignmentBtn.dataset.assignmentIndex)
-            );
-            return;
-        }
-
-        const viewSubmissionsBtn = e.target.closest('.btn-view-submissions');
-        if (viewSubmissionsBtn) {
-            viewSubmissions(
-                parseInt(viewSubmissionsBtn.dataset.subjectIndex),
-                parseInt(viewSubmissionsBtn.dataset.assignmentIndex)
             );
             return;
         }
@@ -2658,9 +2649,13 @@ function initializeSubjects() {
     window.subjectsOpenSubmitAssignmentModal = (subjectIndex, assignmentIndex) => openSubmitAssignmentModal(parseInt(subjectIndex), parseInt(assignmentIndex));
     window.subjectsOpenSubmitTaskModal = (subjectIndex, taskIndex) => openSubmitTaskModal(parseInt(subjectIndex), parseInt(taskIndex));
     window.subjectsOpenSubmitQuizModal = (subjectIndex, quizIndex) => openSubmitQuizModal(parseInt(subjectIndex), parseInt(quizIndex));
-    window.subjectsViewSubmissions = (subjectIndex, assignmentIndex) => viewSubmissions(parseInt(subjectIndex), parseInt(assignmentIndex));
-    window.subjectsViewTaskSubmissions = (subjectIndex, taskIndex) => viewTaskSubmissions(parseInt(subjectIndex), parseInt(taskIndex));
-    window.subjectsViewQuizSubmissions = (subjectIndex, quizIndex) => viewQuizSubmissions(parseInt(subjectIndex), parseInt(quizIndex));
+    window.subjectsOpenGradesForItem = (subjectIndex, itemType, itemId) => {
+        const params = new URLSearchParams();
+        params.set('subject', String(parseInt(subjectIndex)));
+        params.set('type', String(itemType || '').toLowerCase());
+        if (itemId) params.set('itemId', String(itemId));
+        window.location.href = `Grades.html?${params.toString()}`;
+    };
     window.subjectsSwitchTab = (tab) => switchTab(tab);
     window.subjectsSyncToCloud = () => {
         saveSubjects(false);
