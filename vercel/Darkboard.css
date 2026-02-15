@@ -3831,10 +3831,66 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 .calendar-filters input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--accent);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    background: transparent;
     cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.calendar-filters input[type="checkbox"]:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+.calendar-filters input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+}
+
+.calendar-filters input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Color-matched checkboxes per filter */
+.calendar-filters label:nth-child(1) input[type="checkbox"]:checked {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+}
+
+.calendar-filters label:nth-child(2) input[type="checkbox"]:checked {
+    background: #FF9800;
+    border-color: #FF9800;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+}
+
+.calendar-filters label:nth-child(3) input[type="checkbox"]:checked {
+    background: #E91E63;
+    border-color: #E91E63;
+    box-shadow: 0 0 10px rgba(233, 30, 99, 0.4);
+}
+
+.calendar-filters label:nth-child(4) input[type="checkbox"]:checked {
+    background: #2196F3;
+    border-color: #2196F3;
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
 }
 
 .btn-export-calendar {
