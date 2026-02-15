@@ -39,7 +39,7 @@
       <div class="nav-right">
         <div class="user-menu-right">
           <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
-          <span id="headerUserName">Ace</span>
+          <span id="headerUserName">Loading...</span>
         </div>
       </div>
     </nav>
@@ -663,6 +663,14 @@
       // Initialize on load
       onAuthStateChanged(auth, (user) => {
         if (user) {
+          // Load user data for header
+          const userData = JSON.parse(localStorage.getItem('userData'));
+          if (userData) {
+            const headerUserName = document.getElementById('headerUserName');
+            if (headerUserName) {
+              headerUserName.textContent = userData.name || 'User';
+            }
+          }
           initializeGradesPage();
         } else {
           window.location.href = 'Login.html';
