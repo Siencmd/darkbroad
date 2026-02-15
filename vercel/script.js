@@ -481,6 +481,125 @@ function initializeDashboard() {
     }
 }
 
+function initializeHeaderProfileMenu() {
+    const nav = document.querySelector('.main-nav');
+    if (!nav) return;
+
+    const navList = nav.querySelector('.nav-list');
+    if (navList) {
+        const removableLinks = Array.from(navList.querySelectorAll('a.nav-item'));
+        removableLinks.forEach((link) => {
+            const href = (link.getAttribute('href') || '').toLowerCase();
+            const text = (link.textContent || '').trim().toLowerCase();
+            const isProfileNav = href.endsWith('profile.html') || text === 'profile';
+            const isSettingsNav = href.endsWith('settings.html') || text === 'settings';
+            const isHelpNav = href.endsWith('help.html') || text === 'help';
+            const isLogoutNav = link.id === 'logoutBtn' || text === 'logout';
+
+            if (isProfileNav || isSettingsNav || isHelpNav || isLogoutNav) {
+                link.closest('li')?.remove();
+            }
+        });
+    }
+
+    const userMenu = nav.querySelector('.user-menu-right');
+    if (!userMenu || userMenu.dataset.dropdownInitialized === 'true') return;
+    userMenu.dataset.dropdownInitialized = 'true';
+
+    const userName = userMenu.querySelector('#headerUserName');
+    if (userName) userName.style.display = 'none';
+
+    userMenu.style.position = 'relative';
+    userMenu.setAttribute('role', 'button');
+    userMenu.setAttribute('tabindex', '0');
+    userMenu.setAttribute('aria-haspopup', 'true');
+    userMenu.setAttribute('aria-expanded', 'false');
+
+    const existingMenu = document.getElementById('headerProfileDropdown');
+    if (existingMenu) existingMenu.remove();
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'headerProfileDropdown';
+    dropdown.style.position = 'absolute';
+    dropdown.style.top = 'calc(100% + 10px)';
+    dropdown.style.right = '0';
+    dropdown.style.minWidth = '180px';
+    dropdown.style.background = 'var(--card-bg)';
+    dropdown.style.border = '1px solid var(--glass-border)';
+    dropdown.style.borderRadius = '10px';
+    dropdown.style.padding = '8px';
+    dropdown.style.boxShadow = 'var(--glass-shadow)';
+    dropdown.style.zIndex = '1200';
+    dropdown.style.display = 'none';
+    dropdown.innerHTML = `
+        <a href="Profile.html" class="profile-dropdown-item" data-action="profile">Profile</a>
+        <a href="Settings.html" class="profile-dropdown-item" data-action="settings">Settings</a>
+        <a href="Help.html" class="profile-dropdown-item" data-action="help">Help</a>
+        <a href="#" class="profile-dropdown-item" data-action="logout">Logout</a>
+    `;
+    userMenu.appendChild(dropdown);
+
+    const dropdownLinks = dropdown.querySelectorAll('.profile-dropdown-item');
+    dropdownLinks.forEach((link) => {
+        link.style.display = 'block';
+        link.style.padding = '10px 12px';
+        link.style.borderRadius = '8px';
+        link.style.color = 'var(--text-primary)';
+        link.style.textDecoration = 'none';
+        link.style.fontSize = '0.9rem';
+        link.style.fontWeight = '500';
+        link.addEventListener('mouseenter', () => {
+            link.style.background = 'rgba(255, 255, 255, 0.1)';
+            link.style.color = 'var(--accent)';
+        });
+        link.addEventListener('mouseleave', () => {
+            link.style.background = 'transparent';
+            link.style.color = 'var(--text-primary)';
+        });
+    });
+
+    const setOpen = (open) => {
+        dropdown.style.display = open ? 'block' : 'none';
+        userMenu.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    const toggleMenu = () => {
+        const isOpen = dropdown.style.display === 'block';
+        setOpen(!isOpen);
+    };
+
+    userMenu.addEventListener('click', (event) => {
+        if (event.target.closest('.profile-dropdown-item')) return;
+        toggleMenu();
+    });
+
+    userMenu.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            toggleMenu();
+        }
+        if (event.key === 'Escape') setOpen(false);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!userMenu.contains(event.target)) setOpen(false);
+    });
+
+    dropdown.addEventListener('click', async (event) => {
+        const actionLink = event.target.closest('.profile-dropdown-item');
+        if (!actionLink) return;
+
+        const { action } = actionLink.dataset;
+        if (action !== 'logout') {
+            setOpen(false);
+            return;
+        }
+
+        event.preventDefault();
+        await logout();
+    });
+}
+
 // =========================
 // LOGOUT
 // =========================
@@ -2548,18 +2667,30 @@ function initializeProfile() {
 
 function updateProfileUI(data) {
     if(data.fullName) {
-        document.getElementById('fullName').textContent = data.fullName;
-        const displayName = document.getElementById('displayName');
-        if(displayName) displayName.textContent = data.fullName;
+        const fullName = document.getElementById('fullName');
+        const fullNameDisplay = document.getElementById('fullNameDisplay');
+        if (fullName) fullName.textContent = data.fullName;
+        if (fullNameDisplay) fullNameDisplay.textContent = data.fullName;
     }
     if(data.email) {
-        document.getElementById('infoEmail').textContent = data.email;
-        const displayEmail = document.getElementById('displayEmail');
-        if(displayEmail) displayEmail.textContent = data.email;
+        const infoEmail = document.getElementById('infoEmail');
+        if (infoEmail) infoEmail.textContent = data.email;
     }
-    if(data.phone) document.getElementById('infoPhone').textContent = data.phone;
-    if(data.dob) document.getElementById('infoDOB').textContent = data.dob;
-    if(data.gender) document.getElementById('infoGender').textContent = data.gender;
+    if(data.phone) {
+        const infoPhone = document.getElementById('infoPhone');
+        if (infoPhone) infoPhone.textContent = data.phone;
+    }
+    if(data.dob) {
+        const infoDOB = document.getElementById('infoDOB');
+        if (infoDOB) infoDOB.textContent = data.dob;
+    }
+    if(data.gender) {
+        const infoGender = document.getElementById('infoGender');
+        if (infoGender) infoGender.textContent = data.gender;
+    }
+
+    const headerUserName = document.getElementById('headerUserName');
+    if (headerUserName && data.fullName) headerUserName.textContent = data.fullName;
 }
 
 // =========================
@@ -2818,6 +2949,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ensureSharedDomScaffold();
     
     initializeTheme();
+    initializeHeaderProfileMenu();
     initializeLogin();
     initializeSignup();
     initializeRoleToggle();
