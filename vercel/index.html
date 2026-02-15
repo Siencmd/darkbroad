@@ -58,7 +58,7 @@
       <div class="nav-right">
         <div class="user-menu-right">
           <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
-          <span id="headerUserName">Ace</span>
+          <span id="headerUserName">Loading...</span>
         </div>
       </div>
     </nav>
@@ -87,7 +87,7 @@
         <section class="card" aria-labelledby="welcome-heading">
           <div class="welcome-section">
             <div class="welcome-text">
-              <h1 id="welcome-heading">Welcome back, <span id="dashboardUserName">John</span>! 👋</h1>
+              <h1 id="welcome-heading">Welcome back, <span id="dashboardUserName">User</span>! 👋</h1>
               <p>
                 <span class="greetingMessage" aria-live="polite"></span>
               </p>
@@ -100,30 +100,24 @@
           <h2 id="stats-heading" class="sr-only">Academic Statistics</h2>
           <div class="grades-stats" style="margin-bottom: 0">
             <div class="stat-card">
-              <div class="stat-value" aria-label="4 subjects enrolled">4</div>
+              <div class="stat-value" id="subjectsCount" aria-label="0 subjects enrolled">0</div>
               <div class="stat-name">Subjects Enrolled</div>
-              <div class="stat-bar" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">
-                <div class="stat-fill" style="width: 80%"></div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" id="subjectsBar" style="width: 0%"></div>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-value" aria-label="Current average grade A minus">A-</div>
+              <div class="stat-value" id="averageGrade" aria-label="No grade yet">--</div>
               <div class="stat-name">Current Average</div>
-              <div class="stat-bar" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100">
-                <div
-                  class="stat-fill"
-                  style="width: 90%; background: #4ade80"
-                ></div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" id="gradeBar" style="width: 0%; background: #4ade80"></div>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-value" aria-label="2 upcoming deadlines">2</div>
+              <div class="stat-value" id="deadlinesCount" aria-label="0 upcoming deadlines">0</div>
               <div class="stat-name">Upcoming Deadlines</div>
-              <div class="stat-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
-                <div
-                  class="stat-fill"
-                  style="width: 50%; background: #fbbf24"
-                ></div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" id="deadlinesBar" style="width: 0%; background: #fbbf24"></div>
               </div>
             </div>
           </div>
@@ -135,19 +129,19 @@
             <h2 id="actions-heading"><i class="fas fa-bolt" aria-hidden="true"></i> Quick Actions</h2>
           </div>
           <div class="quick-actions-grid">
-            <button class="action-card" aria-label="Submit assignment">
+            <button class="action-card" id="actionSubmitAssignment" aria-label="Submit assignment">
               <i class="fas fa-file-upload" aria-hidden="true"></i>
               <span>Submit Assignment</span>
             </button>
-            <button class="action-card" aria-label="Message teacher">
-              <i class="fas fa-message" aria-hidden="true"></i>
+            <button class="action-card" id="actionMessageTeacher" aria-label="Message teacher">
+              <i class="fas fa-envelope" aria-hidden="true"></i>
               <span>Message Teacher</span>
             </button>
-            <button class="action-card" aria-label="Download materials">
+            <button class="action-card" id="actionDownloadMaterials" aria-label="Download materials">
               <i class="fas fa-download" aria-hidden="true"></i>
               <span>Download Materials</span>
             </button>
-            <button class="action-card" aria-label="View results">
+            <button class="action-card" id="actionViewResults" aria-label="View results">
               <i class="fas fa-eye" aria-hidden="true"></i>
               <span>View Results</span>
             </button>
@@ -166,6 +160,147 @@
       // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Load user data on page load
+      window.addEventListener('DOMContentLoaded', () => {
+        loadDashboardData();
+        
+        // Setup quick action buttons
+        setupQuickActions();
+      });
+
+      function loadDashboardData() {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        
+        if (userData) {
+          // Update header username
+          const headerUserName = document.getElementById('headerUserName');
+          if (headerUserName) {
+            headerUserName.textContent = userData.name || 'User';
+          }
+          
+          // Update dashboard username
+          const dashboardUserName = document.getElementById('dashboardUserName');
+          if (dashboardUserName) {
+            dashboardUserName.textContent = userData.name ? userData.name.split(' ')[0] : 'User';
+          }
+          
+          // Update role display
+          const userRole = userData.role || 'student';
+          document.title = userRole === 'instructor' ? 'Darkboard - Instructor Dashboard' : 'Darkboard - Student Dashboard';
+        }
+        
+        // Load subjects for stats
+        loadStatsData();
+      }
+
+      function loadStatsData() {
+        const subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        
+        // Update subjects count
+        const subjectsCount = document.getElementById('subjectsCount');
+        const subjectsBar = document.getElementById('subjectsBar');
+        const subjectCount = subjects.length || 0;
+        if (subjectsCount) {
+          subjectsCount.textContent = subjectCount;
+          subjectsCount.setAttribute('aria-label', subjectCount + ' subjects enrolled');
+        }
+        if (subjectsBar) {
+          const progress = Math.min(subjectCount * 20, 100); // Assume max 5 subjects for full bar
+          subjectsBar.style.width = progress + '%';
+        }
+        
+        // Calculate upcoming deadlines (tasks/assignments due within 7 days)
+        let deadlines = 0;
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        subjects.forEach(subject => {
+          // Check tasks
+          if (subject.tasks) {
+            subject.tasks.forEach(task => {
+              if (task.dueDate) {
+                const dueDate = new Date(task.dueDate);
+                if (dueDate >= now && dueDate <= sevenDaysFromNow && task.status !== 'completed') {
+                  deadlines++;
+                }
+              }
+            });
+          }
+          // Check assignments
+          if (subject.assignments) {
+            subject.assignments.forEach(assignment => {
+              if (assignment.dueDate) {
+                const dueDate = new Date(assignment.dueDate);
+                if (dueDate >= now && dueDate <= sevenDaysFromNow && assignment.status !== 'graded') {
+                  deadlines++;
+                }
+              }
+            });
+          }
+        });
+        
+        const deadlinesCount = document.getElementById('deadlinesCount');
+        const deadlinesBar = document.getElementById('deadlinesBar');
+        if (deadlinesCount) {
+          deadlinesCount.textContent = deadlines;
+          deadlinesCount.setAttribute('aria-label', deadlines + ' upcoming deadlines');
+        }
+        if (deadlinesBar) {
+          const progress = Math.min(deadlines * 25, 100);
+          deadlinesBar.style.width = progress + '%';
+        }
+        
+        // Average grade (placeholder - would need grades data)
+        const averageGrade = document.getElementById('averageGrade');
+        const gradeBar = document.getElementById('gradeBar');
+        if (averageGrade) {
+          averageGrade.textContent = '--';
+        }
+        if (gradeBar) {
+          gradeBar.style.width = '0%';
+        }
+      }
+
+      function setupQuickActions() {
+        // Submit Assignment - go to Subjects page
+        const submitAssignmentBtn = document.getElementById('actionSubmitAssignment');
+        if (submitAssignmentBtn) {
+          submitAssignmentBtn.addEventListener('click', () => {
+            window.location.href = 'Subjects.html';
+          });
+        }
+        
+        // Message Teacher - show info (could be expanded to messaging system)
+        const messageTeacherBtn = document.getElementById('actionMessageTeacher');
+        if (messageTeacherBtn) {
+          messageTeacherBtn.addEventListener('click', () => {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (userData && userData.role === 'instructor') {
+              alert('Messaging system coming soon! You can contact students through announcements.');
+            } else {
+              alert('Messaging system coming soon! You can contact your teachers through the Subjects page.');
+            }
+          });
+        }
+        
+        // Download Materials - go to Subjects page
+        const downloadMaterialsBtn = document.getElementById('actionDownloadMaterials');
+        if (downloadMaterialsBtn) {
+          downloadMaterialsBtn.addEventListener('click', () => {
+            window.location.href = 'Subjects.html';
+          });
+        }
+        
+        // View Results - go to Grades page
+        const viewResultsBtn = document.getElementById('actionViewResults');
+        if (viewResultsBtn) {
+          viewResultsBtn.addEventListener('click', () => {
+            window.location.href = 'Grades.html';
+          });
+        }
+      }
 
       // Add animation on the web page using ScrollReveal
       ScrollReveal().reveal(".school-banner", {
@@ -201,34 +336,6 @@
         backSpeed: 50,
         loop: true,
       });
-
-      // Search functionality (commented out as no search bar exists in HTML)
-      // const searchInput = document.querySelector('.search-bar input');
-      // const clearSearchBtn = document.querySelector('.clear-search');
-
-      // if (searchInput) {
-      //   searchInput.addEventListener('input', (e) => {
-      //     const query = e.target.value.toLowerCase();
-      //     const actions = document.querySelectorAll('.action-card');
-      //     actions.forEach(action => {
-      //       const text = action.textContent.toLowerCase();
-      //       action.style.display = text.includes(query) ? 'block' : 'none';
-      //     });
-      //     // Show/hide clear button
-      //     if (clearSearchBtn) clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
-      //   });
-      // }
-
-      // // Clear search functionality
-      // if (clearSearchBtn) {
-      //   clearSearchBtn.addEventListener('click', () => {
-      //     if (searchInput) {
-      //       searchInput.value = '';
-      //       searchInput.dispatchEvent(new Event('input'));
-      //       searchInput.focus();
-      //     }
-      //   });
-      // }
     </script>
 
   </body>
