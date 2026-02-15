@@ -749,6 +749,12 @@ async function loadSubjectsFromFirestore(courseId, onLoad) {
 // =========================
 function initializeSubjects() {
     console.log('initializeSubjects called');
+
+    // This initializer is only for Subjects page UI.
+    const isSubjectsPage = window.location.pathname.toLowerCase().includes('subjects.html');
+    if (!isSubjectsPage) {
+        return;
+    }
     
     const listContainer = document.getElementById('subjectsList');
     const detailsContainer = document.getElementById('subjectDetailsPanel');
@@ -771,7 +777,7 @@ function initializeSubjects() {
     });
 
     if (!listContainer || !detailsContainer) {
-        console.error('Missing required elements, exiting');
+        console.warn('Subjects page is missing required elements; skipping subjects initialization.');
         return;
     }
 
@@ -3019,12 +3025,34 @@ function checkAuth() {
     return true;
 }
 
+function ensureSharedDomScaffold() {
+    const path = window.location.pathname.toLowerCase();
+    const isSubjectsPage = path.includes('subjects.html');
+    if (isSubjectsPage) return;
+
+    if (document.getElementById('sharedDomScaffold')) return;
+
+    const scaffold = document.createElement('div');
+    scaffold.id = 'sharedDomScaffold';
+    scaffold.style.display = 'none';
+    scaffold.setAttribute('aria-hidden', 'true');
+    scaffold.innerHTML = `
+        <div id="subjectsList"></div>
+        <div id="subjectDetailsPanel"></div>
+    `;
+
+    document.body.appendChild(scaffold);
+}
+
 // =========================
 // INITIALIZE EVERYTHING ON DOM
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
     // Run auth check first
     if (!checkAuth()) return;
+
+    // Keep required DOM hooks available on non-owner pages.
+    ensureSharedDomScaffold();
     
     initializeTheme();
     initializeLogin();
