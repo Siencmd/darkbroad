@@ -6332,6 +6332,23 @@ body.light-mode .btn-submit {
     color: #fff;
 }
 
+/* Delete submission button in Submissions page */
+.btn-delete-submission {
+    padding: 8px 12px;
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid #ff6b6b;
+    color: #ff6b6b;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 8px;
+}
+
+.btn-delete-submission:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
 /* Instructor & Student Actions for Assignments */
 .instructor-actions,
 .student-actions {
