@@ -4295,6 +4295,29 @@ body.light-mode .theme-toggle-btn:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 15px;
+}
+
+.btn-read-more {
+    padding: 8px 16px;
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    color: var(--accent, #00d4ff);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.btn-read-more:hover {
+    background: rgba(0, 212, 255, 0.25);
+    border-color: var(--accent, #00d4ff);
+    transform: translateY(-2px);
+}
+
+.btn-read-more:active {
+    transform: translateY(0);
 }
 
 .announcement-author {
@@ -5082,6 +5105,17 @@ body.light-mode .announcement-category {
 body.light-mode .announcement-content {
     border-top-color: rgba(0, 0, 0, 0.1);
     border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .btn-read-more {
+    background: rgba(0, 150, 200, 0.15);
+    border-color: rgba(0, 150, 200, 0.4);
+    color: #0096c8;
+}
+
+body.light-mode .btn-read-more:hover {
+    background: rgba(0, 150, 200, 0.25);
+    border-color: #0096c8;
 }
 
 /* Light Mode - All Cards and Boxes */
@@ -6867,6 +6901,14 @@ body.light-mode .detail-row {
 .btn-grade:hover {
     background: #22c55e;
     transform: translateY(-2px);
+}
+
+/* Table action buttons */
+.table-row .btn-grade,
+.table-row .btn-edit-grade {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    min-width: auto;
 }
 
 .btn-edit-grade {
