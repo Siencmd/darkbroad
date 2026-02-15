@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <links
+    <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
     />
@@ -150,6 +150,90 @@
         '#f472b6', '#34d399', '#818cf8', '#fcd34d', '#fb7185'
       ];
 
+      const dayToIndex = {
+        sunday: 0,
+        monday: 1,
+        tuesday: 2,
+        wednesday: 3,
+        thursday: 4,
+        friday: 5,
+        saturday: 6
+      };
+
+      function extractDaysFromTimeText(timeText) {
+        const matches = String(timeText || '').match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/gi) || [];
+        const normalized = matches.map(day => day.toLowerCase());
+        return [...new Set(normalized)];
+      }
+
+      function parseTimeRange(timeText) {
+        const match = String(timeText || '').match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
+        if (!match) return null;
+        return { start: match[1], end: match[2] };
+      }
+
+      function toEventDateTime(baseDate, timeValue) {
+        const time = String(timeValue || '').trim();
+        const parsed = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+        if (!parsed) return null;
+
+        let hours = Number(parsed[1]);
+        const minutes = Number(parsed[2]);
+        const ampm = parsed[3] ? parsed[3].toUpperCase() : '';
+
+        if (ampm === 'PM' && hours < 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+
+        const date = new Date(baseDate);
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+      }
+
+      function createClassEvents(subject, index, color) {
+        const classEvents = [];
+        const days = extractDaysFromTimeText(subject.time);
+        if (days.length === 0) return classEvents;
+
+        const now = new Date();
+        const timeRange = parseTimeRange(subject.time);
+        const totalWeeks = 8;
+
+        days.forEach((dayName) => {
+          const targetDayIndex = dayToIndex[dayName];
+          if (targetDayIndex === undefined) return;
+
+          const baseOffset = (targetDayIndex - now.getDay() + 7) % 7;
+          for (let week = 0; week < totalWeeks; week++) {
+            const classDate = new Date(now);
+            classDate.setHours(0, 0, 0, 0);
+            classDate.setDate(classDate.getDate() + baseOffset + (week * 7));
+
+            const startDate = timeRange ? toEventDateTime(classDate, timeRange.start) : null;
+            const endDate = timeRange ? toEventDateTime(classDate, timeRange.end) : null;
+            const hasTimedRange = !!(startDate && endDate);
+
+            classEvents.push({
+              id: `class-${subject.id || index}-${dayName}-${week}`,
+              title: `Class: ${subject.name}`,
+              start: hasTimedRange ? startDate.toISOString() : classDate.toISOString().split('T')[0],
+              end: hasTimedRange ? endDate.toISOString() : undefined,
+              allDay: !hasTimedRange,
+              backgroundColor: color,
+              borderColor: color,
+              extendedProps: {
+                type: 'class',
+                subject: subject.name,
+                subjectIndex: index,
+                itemTitle: subject.name,
+                classTime: subject.time || ''
+              }
+            });
+          }
+        });
+
+        return classEvents;
+      }
+
       // Initialize page
       async function initializeSchedulePage() {
         userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -200,7 +284,7 @@
               if (assignment.dueDate) {
                 allEvents.push({
                   id: `assignment-${assignment.id}`,
-                  title: `📝 ${assignment.title}`,
+                  title: `Assignment: ${assignment.title}`,
                   start: assignment.dueDate,
                   allDay: true,
                   backgroundColor: '#60a5fa',
@@ -223,7 +307,7 @@
               if (task.dueDate) {
                 allEvents.push({
                   id: `task-${task.id}`,
-                  title: `📋 ${task.title}`,
+                  title: `Task: ${task.title}`,
                   start: task.dueDate,
                   allDay: true,
                   backgroundColor: '#a78bfa',
@@ -246,7 +330,7 @@
               if (quiz.dueDate) {
                 allEvents.push({
                   id: `quiz-${quiz.id}`,
-                  title: `📝 ${quiz.title}`,
+                  title: `Quiz: ${quiz.title}`,
                   start: quiz.dueDate,
                   allDay: true,
                   backgroundColor: '#fb923c',
@@ -262,6 +346,9 @@
               }
             });
           }
+
+          const classEvents = createClassEvents(subject, index, color);
+          classEvents.forEach(event => allEvents.push(event));
         });
       }
 
@@ -306,24 +393,22 @@
         calendar.removeAllEvents();
         calendar.addEventSource(filteredEvents);
       }
-
       // Handle event click
       function handleEventClick(info) {
         const event = info.event;
         const props = event.extendedProps;
 
         alert(`
-📅 ${props.itemTitle}
+${props.itemTitle}
 
-📚 Subject: ${props.subject}
-📌 Type: ${props.type}
-${props.points ? `⭐ Points: ${props.points}` : ''}
-${props.priority ? `� Priority: ${props.priority}` : ''}
-
+Subject: ${props.subject}
+Type: ${props.type}
+${props.points ? `Points: ${props.points}` : ''}
+${props.priority ? `Priority: ${props.priority}` : ''}
+${props.classTime ? `Time: ${props.classTime}` : ''}
 Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
         `);
       }
-
       // Render weekly schedule
       function renderWeeklySchedule() {
         const grid = document.getElementById('weeklyScheduleGrid');
@@ -348,10 +433,9 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
         // Add schedule items from subjects
         subjects.forEach(subject => {
           if (subject.time) {
-            // Parse time (simplified - assumes format like "08:00 AM - 09:30 AM")
-            const dayMatch = subject.time.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/i);
-            if (dayMatch) {
-              const day = dayMatch[1].charAt(0).toUpperCase() + dayMatch[1].slice(1).toLowerCase();
+            const dayMatches = subject.time.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/gi) || [];
+            dayMatches.forEach((matchedDay) => {
+              const day = matchedDay.charAt(0).toUpperCase() + matchedDay.slice(1).toLowerCase();
               const dayKey = day.toLowerCase();
               const dayContainer = document.getElementById(`schedule-${dayKey}`);
               
@@ -364,7 +448,7 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
                 `;
                 dayContainer.appendChild(item);
               }
-            }
+            });
           }
         });
       }
@@ -375,11 +459,14 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
         
         // Get upcoming events (next 7 days)
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
         
         const upcomingEvents = allEvents.filter(event => {
+          if (event?.extendedProps?.type === 'class') return false;
           if (!event.start) return false;
           const eventDate = new Date(event.start);
+          eventDate.setHours(0, 0, 0, 0);
           return eventDate >= today && eventDate <= nextWeek;
         }).sort((a, b) => new Date(a.start) - new Date(b.start));
 
@@ -410,7 +497,7 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
               </div>
               <div class="deadline-info">
                 <h4>${props.itemTitle}</h4>
-                <p>${props.subject} • ${props.type}</p>
+                <p>${props.subject} � ${props.type}</p>
               </div>
               <div class="deadline-days">
                 ${daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
@@ -801,3 +888,6 @@ END:VEVENT
     </style>
   </body>
 </html>
+
+
+
