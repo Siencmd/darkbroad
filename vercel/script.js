@@ -2,7 +2,7 @@
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth, db } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { doc, setDoc, getDoc, getDocs, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
@@ -463,7 +463,7 @@ function initializeDashboard() {
 
     const userNameEl = document.getElementById("headerUserName");
     const dashboardNameEl = document.getElementById("dashboardUserName");
-    const greetingEl = document.getElementById("greetingMessage");
+    const greetingEl = document.getElementById("greetingMessage") || document.querySelector(".greetingMessage");
 
     if (userNameEl) userNameEl.textContent = userData.name;
     if (dashboardNameEl) dashboardNameEl.textContent = userData.name.split(" ")[0];
@@ -479,10 +479,16 @@ function initializeDashboard() {
 // =========================
 // LOGOUT
 // =========================
-function logout(e) {
+async function logout(e) {
     if (e) e.preventDefault();
-    localStorage.clear();
-    location.href = "Login.html";
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.warn("Firebase signOut failed:", error?.message || error);
+    } finally {
+        localStorage.clear();
+        location.href = "Login.html";
+    }
 }
 
 // =========================
