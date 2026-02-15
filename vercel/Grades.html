@@ -205,6 +205,7 @@
       let userData = null;
       let allRows = [];
       let allGrades = [];
+      let displayedRows = [];
       let charts = {};
       const pageParams = new URLSearchParams(window.location.search);
       const focusSubject = pageParams.get('subject');
@@ -213,6 +214,24 @@
 
       function isInstructorRole() {
         return ['instructor', 'teacher', 'admin'].includes((userData?.role || '').toLowerCase());
+      }
+
+      function normalizeTerm(termValue) {
+        const term = String(termValue || '').trim().toLowerCase();
+        if (term === 'prelim') return 'prelim';
+        if (term === 'midterm') return 'midterm';
+        if (term === 'final' || term === 'finals') return 'finals';
+        return '';
+      }
+
+      function inferTermFromDate(dateValue) {
+        if (!dateValue) return '';
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return '';
+        const month = date.getMonth() + 1;
+        if (month >= 1 && month <= 4) return 'prelim';
+        if (month >= 5 && month <= 8) return 'midterm';
+        return 'finals';
       }
 
       // Initialize page
@@ -282,7 +301,8 @@
                     itemType: 'assignment',
                     itemId: assignment.id,
                     itemPoints: assignment.points || 100,
-                    dueDate: assignment.dueDate
+                    dueDate: assignment.dueDate,
+                    term: normalizeTerm(row.term || assignment.term) || inferTermFromDate(assignment.dueDate)
                   });
                 });
               }
@@ -302,7 +322,8 @@
                     itemType: 'task',
                     itemId: task.id,
                     itemPoints: 100,
-                    dueDate: task.dueDate
+                    dueDate: task.dueDate,
+                    term: normalizeTerm(row.term || task.term) || inferTermFromDate(task.dueDate)
                   });
                 });
               }
@@ -322,7 +343,8 @@
                     itemType: 'quiz',
                     itemId: quiz.id,
                     itemPoints: quiz.points || 100,
-                    dueDate: quiz.dueDate
+                    dueDate: quiz.dueDate,
+                    term: normalizeTerm(row.term || quiz.term) || inferTermFromDate(quiz.dueDate)
                   });
                 });
               }
@@ -474,6 +496,7 @@
 
       // Render grades table
       function renderGradesTable(grades) {
+        displayedRows = [...grades];
         const tbody = document.getElementById('gradesTableBody');
         const instructorView = isInstructorRole();
         
@@ -533,8 +556,9 @@
           filtered = filtered.filter(g => String(g.itemId) === String(focusItemId));
         }
 
-        // Term filtering (simplified - could be enhanced)
-        // For now, we'll just show all
+        if (termFilter !== 'all') {
+          filtered = filtered.filter(g => normalizeTerm(g.term) === termFilter);
+        }
 
         renderGradesTable(filtered);
       }
@@ -815,14 +839,15 @@
 
       // Export grades
       window.exportGrades = function() {
-        if (allGrades.length === 0) {
+        if (displayedRows.length === 0) {
           alert('No grades to export');
           return;
         }
 
         let csv = 'Subject,Teacher,Assignment,Type,Score,Total,Percentage,Grade\n';
         
-        allGrades.forEach(grade => {
+        displayedRows.forEach(grade => {
+          if (grade.grade === undefined || grade.status !== 'graded') return;
           const percentage = grade.itemPoints > 0 ? ((grade.grade / grade.itemPoints) * 100) : 0;
           const letterGrade = getLetterGrade(percentage);
           csv += `"${grade.subjectName}","${grade.teacher}","${grade.itemTitle}","${grade.itemType}",${grade.grade},${grade.itemPoints},${percentage.toFixed(1)},${letterGrade}\n`;
