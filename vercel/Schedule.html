@@ -15,6 +15,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
     />
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   </head>
   <body>
     <!-- Main Navigation - Horizontal for All -->
@@ -46,102 +48,747 @@
     <main class="content">
       <div class="welcome-section">
         <div class="welcome-text">
-          <h1>My Schedule</h1>
-          <p>View your class schedule and upcoming events.</p>
+          <h1><i class="fas fa-calendar-alt"></i> My Schedule</h1>
+          <p>View your class schedule, deadlines, and upcoming events.</p>
         </div>
       </div>
 
-      <!-- Schedule Grid -->
-      <div class="card">
-        <div class="card-header">
-          <h2><i class="fas fa-calendar-week"></i> Weekly Schedule</h2>
-        </div>
-        <div class="schedule-grid">
-          <div class="schedule-day">
-            <h3>Monday</h3>
-            <div class="schedule-item">
-              <span class="time">08:00 AM - 09:30 AM</span>
-              <span class="subject">Mathematics</span>
-              <span class="room">Room 101</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">10:00 AM - 11:30 AM</span>
-              <span class="subject">Physics</span>
-              <span class="room">Room 205</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">01:00 PM - 02:30 PM</span>
-              <span class="subject">Computer Science</span>
-              <span class="room">Lab 3</span>
-            </div>
-          </div>
-          <div class="schedule-day">
-            <h3>Tuesday</h3>
-            <div class="schedule-item">
-              <span class="time">09:00 AM - 10:30 AM</span>
-              <span class="subject">English</span>
-              <span class="room">Room 112</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">11:00 AM - 12:30 PM</span>
-              <span class="subject">History</span>
-              <span class="room">Room 108</span>
-            </div>
-          </div>
-          <div class="schedule-day">
-            <h3>Wednesday</h3>
-            <div class="schedule-item">
-              <span class="time">08:00 AM - 09:30 AM</span>
-              <span class="subject">Mathematics</span>
-              <span class="room">Room 101</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">10:00 AM - 11:30 AM</span>
-              <span class="subject">Physics</span>
-              <span class="room">Room 205</span>
-            </div>
-          </div>
-          <div class="schedule-day">
-            <h3>Thursday</h3>
-            <div class="schedule-item">
-              <span class="time">09:00 AM - 10:30 AM</span>
-              <span class="subject">English</span>
-              <span class="room">Room 112</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">01:00 PM - 02:30 PM</span>
-              <span class="subject">Computer Science</span>
-              <span class="room">Lab 3</span>
-            </div>
-          </div>
-          <div class="schedule-day">
-            <h3>Friday</h3>
-            <div class="schedule-item">
-              <span class="time">08:00 AM - 09:30 AM</span>
-              <span class="subject">Mathematics</span>
-              <span class="room">Room 101</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">10:00 AM - 11:30 AM</span>
-              <span class="subject">Physics</span>
-              <span class="room">Room 205</span>
-            </div>
-            <div class="schedule-item">
-              <span class="time">01:00 PM - 02:30 PM</span>
-              <span class="subject">Computer Science</span>
-              <span class="room">Lab 3</span>
-            </div>
-          </div>
+      <!-- Loading State -->
+      <div id="loadingState" class="loading-container">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading schedule...</p>
         </div>
       </div>
+
+      <!-- Calendar View -->
+      <div id="calendarContainer" style="display: none;">
+        <div class="calendar-controls">
+          <div class="calendar-filters">
+            <label>
+              <input type="checkbox" id="showAssignments" checked> Assignments
+            </label>
+            <label>
+              <input type="checkbox" id="showTasks" checked> Tasks
+            </label>
+            <label>
+              <input type="checkbox" id="showQuizzes" checked> Quizzes
+            </label>
+            <label>
+              <input type="checkbox" id="showClasses" checked> Classes
+            </label>
+          </div>
+          <button class="btn-export-calendar" onclick="exportCalendar()">
+            <i class="fas fa-download"></i> Export to Calendar
+          </button>
+        </div>
+
+        <div class="card">
+          <div id="calendar"></div>
+        </div>
+      </div>
+
+      <!-- Upcoming Deadlines -->
+      <div id="upcomingDeadlines" class="card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fas fa-clock"></i> Upcoming Deadlines</h2>
+        </div>
+        <div class="deadlines-list" id="deadlinesList">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Weekly Schedule (Traditional View) -->
+      <div id="weeklySchedule" class="card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fas fa-calendar-week"></i> Weekly Class Schedule</h2>
+        </div>
+        <div class="schedule-grid" id="weeklyScheduleGrid">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state-container" style="display: none;">
+        <div class="empty-state">
+          <i class="fas fa-calendar-plus"></i>
+          <h3>No Schedule Yet</h3>
+          <p>Your class schedule and deadlines will appear here once added by your instructors.</p>
+          <a href="Subjects.html" class="btn-primary">Go to Subjects</a>
+        </div>
+      </div>
+
     </main>
 
     <script type="module" src="firebase.js"></script>
     <script type="module" src="script.js"></script>
     <script type="module">
       import { logout } from "./script.js";
+      import { auth, db } from './firebase.js';
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
+
+      let calendar;
+      let subjects = [];
+      let userData = null;
+      let allEvents = [];
+
+      // Subject colors
+      const subjectColors = [
+        '#4ade80', '#60a5fa', '#a78bfa', '#fbbf24', '#fb923c', 
+        '#f472b6', '#34d399', '#818cf8', '#fcd34d', '#fb7185'
+      ];
+
+      // Initialize page
+      async function initializeSchedulePage() {
+        userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        
+        // Load subjects from localStorage
+        subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
+
+        if (subjects.length === 0) {
+          showEmptyState();
+          return;
+        }
+
+        // Load events from subjects
+        loadEvents();
+        
+        // Initialize calendar
+        initializeCalendar();
+        
+        // Render weekly schedule
+        renderWeeklySchedule();
+        
+        // Show upcoming deadlines
+        renderUpcomingDeadlines();
+
+        // Show all sections
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('calendarContainer').style.display = 'block';
+        document.getElementById('upcomingDeadlines').style.display = 'block';
+        document.getElementById('weeklySchedule').style.display = 'block';
+
+        // Setup filter.getElementById('showAssignments'). listeners
+        documentaddEventListener('change', updateCalendarEvents);
+        document.getElementById('showTasks').addEventListener('change', updateCalendarEvents);
+        document.getElementById('showQuizzes').addEventListener('change', updateCalendarEvents);
+        document.getElementById('showClasses').addEventListener('change', updateCalendarEvents);
+      }
+
+      // Load events from subjects
+      function loadEvents() {
+        allEvents = [];
+
+        subjects.forEach((subject, index) => {
+          const color = subjectColors[index % subjectColors.length];
+
+          // Add assignments
+          if (subject.assignments) {
+            subject.assignments.forEach(assignment => {
+              if (assignment.dueDate) {
+                allEvents.push({
+                  id: `assignment-${assignment.id}`,
+                  title: `📝 ${assignment.title}`,
+                  start: assignment.dueDate,
+                  allDay: true,
+                  backgroundColor: '#60a5fa',
+                  borderColor: '#60a5fa',
+                  extendedProps: {
+                    type: 'assignment',
+                    subject: subject.name,
+                    subjectIndex: index,
+                    itemTitle: assignment.title,
+                    points: assignment.points
+                  }
+                });
+              }
+            });
+          }
+
+          // Add tasks
+          if (subject.tasks) {
+            subject.tasks.forEach(task => {
+              if (task.dueDate) {
+                allEvents.push({
+                  id: `task-${task.id}`,
+                  title: `📋 ${task.title}`,
+                  start: task.dueDate,
+                  allDay: true,
+                  backgroundColor: '#a78bfa',
+                  borderColor: '#a78bfa',
+                  extendedProps: {
+                    type: 'task',
+                    subject: subject.name,
+                    subjectIndex: index,
+                    itemTitle: task.title,
+                    priority: task.priority
+                  }
+                });
+              }
+            });
+          }
+
+          // Add quizzes
+          if (subject.quizzes) {
+            subject.quizzes.forEach(quiz => {
+              if (quiz.dueDate) {
+                allEvents.push({
+                  id: `quiz-${quiz.id}`,
+                  title: `📝 ${quiz.title}`,
+                  start: quiz.dueDate,
+                  allDay: true,
+                  backgroundColor: '#fb923c',
+                  borderColor: '#fb923c',
+                  extendedProps: {
+                    type: 'quiz',
+                    subject: subject.name,
+                    subjectIndex: index,
+                    itemTitle: quiz.title,
+                    points: quiz.points
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+
+      // Initialize FullCalendar
+      function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        
+        calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+          },
+          events: allEvents,
+          eventClick: handleEventClick,
+          eventDidMount: function(info) {
+            // Add tooltip
+            info.el.title = `${info.event.title}\n${info.event.extendedProps.subject}`;
+          }
+        });
+
+        calendar.render();
+      }
+
+      // Update calendar events based on filters
+      function updateCalendarEvents() {
+        const showAssignments = document.getElementById('showAssignments').checked;
+        const showTasks = document.getElementById('showTasks').checked;
+        const showQuizzes = document.getElementById('showQuizzes').checked;
+        const showClasses = document.getElementById('showClasses').checked;
+
+        const filteredEvents = allEvents.filter(event => {
+          const type = event.extendedProps.type;
+          if (type === 'assignment' && !showAssignments) return false;
+          if (type === 'task' && !showTasks) return false;
+          if (type === 'quiz' && !showQuizzes) return false;
+          if (type === 'class' && !showClasses) return false;
+          return true;
+        });
+
+        calendar.removeAllEvents();
+        calendar.addEventSource(filteredEvents);
+      }
+
+      // Handle event click
+      function handleEventClick(info) {
+        const event = info.event;
+        const props = event.extendedProps;
+
+        alert(`
+📅 ${props.itemTitle}
+
+📚 Subject: ${props.subject}
+📌 Type: ${props.type}
+${props.points ? `⭐ Points: ${props.points}` : ''}
+${props.priority ? `� Priority: ${props.priority}` : ''}
+
+Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
+        `);
+      }
+
+      // Render weekly schedule
+      function renderWeeklySchedule() {
+        const grid = document.getElementById('weeklyScheduleGrid');
+        
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        let html = '';
+        
+        days.forEach(day => {
+          html += `
+            <div class="schedule-day">
+              <h3>${day}</h3>
+              <div class="schedule-items" id="schedule-${day.toLowerCase()}">
+                <!-- Items will be added here -->
+              </div>
+            </div>
+          `;
+        });
+        
+        grid.innerHTML = html;
+
+        // Add schedule items from subjects
+        subjects.forEach(subject => {
+          if (subject.time) {
+            // Parse time (simplified - assumes format like "08:00 AM - 09:30 AM")
+            const dayMatch = subject.time.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/i);
+            if (dayMatch) {
+              const day = dayMatch[1].charAt(0).toUpperCase() + dayMatch[1].slice(1).toLowerCase();
+              const dayKey = day.toLowerCase();
+              const dayContainer = document.getElementById(`schedule-${dayKey}`);
+              
+              if (dayContainer) {
+                const item = document.createElement('div');
+                item.className = 'schedule-item';
+                item.innerHTML = `
+                  <span class="time">${subject.time}</span>
+                  <span class="subject">${subject.name}</span>
+                `;
+                dayContainer.appendChild(item);
+              }
+            }
+          }
+        });
+      }
+
+      // Render upcoming deadlines
+      function renderUpcomingDeadlines() {
+        const container = document.getElementById('deadlinesList');
+        
+        // Get upcoming events (next 7 days)
+        const today = new Date();
+        const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        const upcomingEvents = allEvents.filter(event => {
+          if (!event.start) return false;
+          const eventDate = new Date(event.start);
+          return eventDate >= today && eventDate <= nextWeek;
+        }).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+        if (upcomingEvents.length === 0) {
+          container.innerHTML = `
+            <div class="empty-deadline">
+              <i class="fas fa-check-circle"></i>
+              <p>No upcoming deadlines in the next 7 days!</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = upcomingEvents.map(event => {
+          const props = event.extendedProps;
+          const eventDate = new Date(event.start);
+          const daysLeft = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+          
+          let urgencyClass = '';
+          if (daysLeft <= 1) urgencyClass = 'urgent';
+          else if (daysLeft <= 3) urgencyClass = 'soon';
+
+          return `
+            <div class="deadline-item ${urgencyClass}">
+              <div class="deadline-date">
+                <span class="day">${eventDate.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                <span class="date">${eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              </div>
+              <div class="deadline-info">
+                <h4>${props.itemTitle}</h4>
+                <p>${props.subject} • ${props.type}</p>
+              </div>
+              <div class="deadline-days">
+                ${daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Export calendar
+      window.exportCalendar = function() {
+        // Create ICS file
+        let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Darkboard//Schedule//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+
+        allEvents.forEach(event => {
+          const startDate = event.start ? new Date(event.start) : new Date();
+          const dateStr = startDate.toISOString().replace(/[-:]/g, '').split('T')[0];
+          
+          icsContent += `BEGIN:VEVENT
+DTSTART;VALUE=DATE:${dateStr}
+DTEND;VALUE=DATE:${dateStr}
+SUMMARY:${event.title}
+DESCRIPTION:Subject: ${event.extendedProps.subject}
+STATUS:CONFIRMED
+END:VEVENT
+`;
+        });
+
+        icsContent += 'END:VCALENDAR';
+
+        const blob = new Blob([icsContent], { type: 'text/calendar' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'darkboard-schedule.ics';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      // Show empty state
+      function showEmptyState() {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'flex';
+      }
+
+      // Initialize on load
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          initializeSchedulePage();
+        } else {
+          window.location.href = 'Login.html';
+        }
+      });
     </script>
+
+    <style>
+      /* Calendar Styles */
+      .calendar-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .calendar-filters {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .calendar-filters label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .calendar-filters input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary-color);
+      }
+
+      .btn-export-calendar {
+        padding: 10px 20px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+      }
+
+      .btn-export-calendar:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+      }
+
+      #calendar {
+        padding: 20px;
+        background: var(--card-bg);
+        min-height: 600px;
+      }
+
+      .fc {
+        --fc-border-color: var(--border-color);
+        --fc-button-bg-color: var(--primary-color);
+        --fc-button-border-color: var(--primary-color);
+        --fc-button-hover-bg-color: var(--primary-hover);
+        --fc-button-hover-border-color: var(--primary-hover);
+        --fc-button-active-bg-color: var(--primary-active);
+        --fc-today-bg-color: rgba(74, 222, 128, 0.1);
+        --fc-event-bg-color: var(--primary-color);
+        --fc-event-border-color: var(--primary-color);
+      }
+
+      .fc .fc-toolbar-title {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+      }
+
+      .fc .fc-button {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+      }
+
+      .fc .fc-col-header-cell-cushion,
+      .fc .fc-daygrid-day-number {
+        font-family: 'Poppins', sans-serif;
+      }
+
+      /* Deadlines List */
+      .deadlines-list {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .deadline-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .deadline-item.soon {
+        border-left-color: #fbbf24;
+      }
+
+      .deadline-item.urgent {
+        border-left-color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      .deadline-date {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 60px;
+      }
+
+      .deadline-date .day {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+      }
+
+      .deadline-date .date {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .deadline-info {
+        flex: 1;
+      }
+
+      .deadline-info h4 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+      }
+
+      .deadline-info p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .deadline-days {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(74, 222, 128, 0.2);
+        color: #4ade80;
+      }
+
+      .deadline-item.urgent .deadline-days {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+
+      .deadline-item.soon .deadline-days {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+      }
+
+      .empty-deadline {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-secondary);
+      }
+
+      .empty-deadline i {
+        font-size: 2.5rem;
+        color: #4ade80;
+        margin-bottom: 15px;
+      }
+
+      /* Schedule Grid */
+      .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        padding: 20px;
+      }
+
+      .schedule-day {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 15px;
+      }
+
+      .schedule-day h3 {
+        margin: 0 0 10px 0;
+        font-size: 0.9rem;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .schedule-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .schedule-item {
+        padding: 8px;
+        background: var(--card-bg);
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .schedule-item .time {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .schedule-item .subject {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      /* Loading and Empty States */
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 300px;
+        width: 100%;
+      }
+
+      .loading-spinner {
+        text-align: center;
+        color: var(--text-secondary);
+      }
+
+      .loading-spinner i {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .empty-state-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+        width: 100%;
+      }
+
+      .empty-state-container .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+      }
+
+      .empty-state-container .empty-state i {
+        font-size: 4rem;
+        color: var(--text-secondary);
+        opacity: 0.5;
+        margin-bottom: 20px;
+      }
+
+      .empty-state-container .empty-state h3 {
+        margin-bottom: 10px;
+        color: var(--text-primary);
+      }
+
+      .empty-state-container .empty-state p {
+        margin-bottom: 20px;
+        color: var(--text-secondary);
+      }
+
+      .btn-primary {
+        display: inline-block;
+        padding: 12px 24px;
+        background: var(--primary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .calendar-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        
+        .calendar-filters {
+          justify-content: flex-start;
+        }
+        
+        .btn-export-calendar {
+          width: 100%;
+          justify-content: center;
+        }
+        
+        .schedule-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .deadline-item {
+          flex-direction: column;
+          text-align: center;
+        }
+        
+        .deadline-date {
+          flex-direction: row;
+          gap: 10px;
+        }
+      }
+    </style>
   </body>
 </html>
