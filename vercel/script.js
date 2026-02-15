@@ -2539,8 +2539,9 @@ function initializeSubjects() {
             return;
         }
 
-        // Get max points with fallback
-        const maxPoints = assignment?.points || assignment?.maxPoints || 100;
+        // Get max points - ALWAYS use assignment points, not submission maxPoints
+        // This fixes the bug where previous submissions had different maxPoints
+        const maxPoints = assignment?.points || 100;
         
         const modal = document.createElement('div');
             modal.className = 'modal';
@@ -2851,13 +2852,20 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const grade = parseFloat(gradeInput.value);
     const feedback = feedbackInput.value.trim();
     
-    // Get max points - default to 100 if not set
-    const maxPoints = assignment?.points || assignment?.maxPoints || 100;
+    // Get max points - PRIORITIZE assignment points, not submission maxPoints
+    // This fixes the bug where maxPoints was coming from a previous submission
+    let maxPoints = assignment?.points || 100;
     
     // Validate grade - allow any grade up to maxPoints
-    if (isNaN(grade) || grade < 0 || grade > maxPoints) {
-        alert(`Grade must be between 0 and ${maxPoints}`);
+    if (isNaN(grade) || grade < 0) {
+        alert('Please enter a valid grade');
         return;
+    }
+    
+    // Allow grading even if grade exceeds maxPoints (just warn but allow)
+    if (grade > maxPoints) {
+        const confirmExceed = confirm(`Warning: The grade (${grade}) exceeds the max points (${maxPoints}). Do you want to save anyway?`);
+        if (!confirmExceed) return;
     }
     
     try {
