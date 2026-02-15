@@ -2543,18 +2543,76 @@ function initializeSubjects() {
         modal.className = 'modal';
         modal.id = 'viewSubmissionsModal';
         modal.innerHTML = `
-            <div class="modal-content">
+            <div class="modal-content large-modal">
                 <span class="close">&times;</span>
                 <div class="modal-body">
                     <h2>Submissions for: ${assignment.title}</h2>
+                    <p class="assignment-info">Due: ${assignment.dueDate} | Total Points: ${assignment.points}</p>
                     <div class="submissions-list">
-                        ${submissions.map(submission => `
+                        ${submissions.map((submission, idx) => `
                             <div class="submission-item">
-                                <p><strong>Student ID:</strong> ${submission.studentId || submission.id}</p>
-                                <p><strong>Name:</strong> ${submission.studentName || "N/A"}</p>
-                                <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a></p>
-                                <p><strong>Submitted At:</strong> ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}</p>
+                                <div class="submission-header">
+                                    <h3>${submission.studentName || "Unknown Student"}</h3>
+                                    <span class="submission-date">
+                                        Submitted: ${submission.submittedAt?.toDate ? submission.submittedAt.toDate().toLocaleString() : new Date(submission.submittedAt).toLocaleString()}
+                                    </span>
+                                </div>
+                                
+                                <div class="submission-file">
+                                    <i class="fas fa-file"></i>
+                                    <a href="${submission.fileUrl}" target="_blank">${submission.fileName}</a>
+                                </div>
+                                
+                                ${isInstructorRole ? `
+                                    <div class="grading-section">
+                                        <div class="grade-input-group">
+                                            <label>Grade:</label>
+                                            <input
+                                                type="number"
+                                                class="grade-input"
+                                                id="grade-${submission.studentId}"
+                                                value="${submission.grade !== undefined ? submission.grade : ''}"
+                                                min="0"
+                                                max="${assignment.points}"
+                                                placeholder="0"
+                                            /> / ${assignment.points} points
+                                        </div>
+                                        
+                                        <div class="feedback-input-group">
+                                            <label>Feedback:</label>
+                                            <textarea
+                                                class="feedback-input"
+                                                id="feedback-${submission.studentId}"
+                                                rows="3"
+                                                placeholder="Enter feedback for student..."
+                                            >${submission.feedback || ''}</textarea>
+                                        </div>
+                                        
+                                        <div class="grade-actions">
+                                            <button
+                                                class="btn-save-grade"
+                                                onclick="window.saveGrade(${subjectIndex}, ${assignmentIndex}, '${submission.studentId}')">
+                                                <i class="fas fa-save"></i> Save Grade
+                                            </button>
+                                            ${submission.status === 'graded' ? `
+                                                <span class="graded-badge">
+                                                    <i class="fas fa-check-circle"></i> Graded
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                ` : `
+                                    ${submission.grade !== undefined ? `
+                                        <div class="student-grade-view">
+                                            <p><strong>Grade:</strong> ${submission.grade} / ${assignment.points}</p>
+                                            ${submission.feedback ? `
+                                                <p><strong>Feedback:</strong> ${submission.feedback}</p>
+                                            ` : ''}
+                                        </div>
+                                    ` : '<p class="pending-grade">Pending grading</p>'}
+                                `}
                             </div>
+                            ${idx < submissions.length - 1 ? '<hr class="submission-divider">' : ''}
                         `).join('')}
                     </div>
                 </div>
@@ -2768,6 +2826,72 @@ function initializeGradesFilter() {
 }
 
 
+
+// =========================
+// SAVE GRADE FUNCTIONALITY
+// =========================
+window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
+    const sub = subjects[subjectIndex];
+    const assignment = sub.assignments[assignmentIndex];
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    const courseId = normalizeCourseId(userData?.course);
+    
+    // Get grade and feedback from inputs
+    const gradeInput = document.getElementById(`grade-${studentId}`);
+    const feedbackInput = document.getElementById(`feedback-${studentId}`);
+    
+    if (!gradeInput || !feedbackInput) {
+        alert('Error: Could not find grade inputs');
+        return;
+    }
+    
+    const grade = parseFloat(gradeInput.value);
+    const feedback = feedbackInput.value.trim();
+    
+    // Validate grade
+    if (isNaN(grade) || grade < 0 || grade > assignment.points) {
+        alert(`Grade must be between 0 and ${assignment.points}`);
+        return;
+    }
+    
+    try {
+        // Save to Firestore
+        const submissionRef = doc(db, "subjects", courseId, "assignments", assignment.id, "submissions", studentId);
+        await setDoc(submissionRef, {
+            grade: grade,
+            maxPoints: assignment.points,
+            feedback: feedback,
+            gradedAt: serverTimestamp(),
+            gradedBy: auth.currentUser.uid,
+            status: "graded"
+        }, { merge: true });
+        
+        // Create notification for student
+        try {
+            const notificationRef = doc(collection(db, "notifications", studentId, "items"));
+            await setDoc(notificationRef, {
+                type: "grade_received",
+                title: `Grade Posted: ${assignment.title}`,
+                message: `You received ${grade}/${assignment.points} points`,
+                link: `/Subjects.html?subject=${subjectIndex}&tab=assignments`,
+                read: false,
+                timestamp: serverTimestamp()
+            });
+        } catch (notifError) {
+            console.warn("Could not create notification:", notifError.message);
+        }
+        
+        alert('Grade saved successfully!');
+        
+        // Refresh the modal
+        document.getElementById('viewSubmissionsModal').remove();
+        viewSubmissions(subjectIndex, assignmentIndex);
+        
+    } catch (error) {
+        console.error("Error saving grade:", error);
+        alert("Failed to save grade: " + error.message);
+    }
+};
 
 // =========================
 // MENU FILTER FUNCTIONALITY
