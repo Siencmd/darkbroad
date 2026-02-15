@@ -45,7 +45,7 @@
       <div class="nav-right">
         <div class="user-menu-right">
           <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
-          <span id="headerUserName">Ace</span>
+          <span id="headerUserName">Loading...</span>
         </div>
       </div>
     </nav>
@@ -493,5 +493,23 @@
     <!-- Scripts -->
     <script type="module" src="firebase.js"></script>
     <script type="module" src="script.js"></script>
+    <script type="module">
+      import { logout } from "./script.js";
+      
+      // Logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => logout(e));
+      }
+      
+      // Load user data on page load
+      window.addEventListener('DOMContentLoaded', () => {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName && userData) {
+          headerUserName.textContent = userData.name || 'User';
+        }
+      });
+    </script>
   </body>
 </html>
