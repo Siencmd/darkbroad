@@ -280,7 +280,12 @@
           const submissionsSnap = await getDocs(submissionsRef);
           const submissions = [];
           submissionsSnap.forEach((doc) => {
-            submissions.push({ id: doc.id, ...doc.data() });
+            const submissionData = doc.data() || {};
+            submissions.push({
+              id: doc.id,
+              ...submissionData,
+              studentId: submissionData.studentId || doc.id
+            });
           });
           return submissions;
         } catch (error) {
