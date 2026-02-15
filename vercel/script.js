@@ -2835,8 +2835,26 @@ function initializeGradesFilter() {
 // SAVE GRADE FUNCTIONALITY
 // =========================
 window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
+    console.log('saveGrade called:', { subjectIndex, assignmentIndex, studentId });
+    console.log('subjects array:', subjects);
+    
     const sub = subjects[subjectIndex];
+    if (!sub) {
+        alert('Error: Subject not found');
+        return;
+    }
+    
+    console.log('Subject:', sub.name);
+    console.log('Assignments:', sub.assignments);
+    
     const assignment = sub.assignments[assignmentIndex];
+    if (!assignment) {
+        alert('Error: Assignment not found');
+        return;
+    }
+    
+    console.log('Assignment:', assignment);
+    
     const userData = JSON.parse(localStorage.getItem("userData"));
     const courseId = normalizeCourseId(userData?.course);
     
@@ -2844,21 +2862,41 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const gradeInput = document.getElementById(`grade-${studentId}`);
     const feedbackInput = document.getElementById(`feedback-${studentId}`);
     
-    if (!gradeInput || !feedbackInput) {
-        alert('Error: Could not find grade inputs');
+    if (!gradeInput) {
+        alert('Error: Grade input field not found. Make sure you are viewing submissions.');
+        return;
+    }
+    if (!feedbackInput) {
+        alert('Error: Feedback input field not found');
         return;
     }
     
-    const grade = parseFloat(gradeInput.value);
+    const gradeValue = gradeInput.value.trim();
+    const grade = parseFloat(gradeValue);
     const feedback = feedbackInput.value.trim();
     
     // Get max points - PRIORITIZE assignment points, not submission maxPoints
-    // This fixes the bug where maxPoints was coming from a previous submission
     let maxPoints = assignment?.points || 100;
     
-    // Validate grade - allow any grade up to maxPoints
-    if (isNaN(grade) || grade < 0) {
-        alert('Please enter a valid grade');
+    // Debug log
+    console.log('Grade input value:', gradeValue);
+    console.log('Parsed grade:', grade);
+    console.log('Is NaN:', isNaN(grade));
+    console.log('Assignment points:', assignment?.points);
+    
+    // Validate grade - check if it's a valid number
+    if (gradeValue === '') {
+        alert('Please enter a grade');
+        return;
+    }
+    
+    if (isNaN(grade)) {
+        alert('Please enter a valid number for the grade');
+        return;
+    }
+    
+    if (grade < 0) {
+        alert('Grade cannot be negative');
         return;
     }
     
