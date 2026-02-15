@@ -124,8 +124,9 @@
     <script type="module" src="script.js"></script>
     <script type="module">
       import { logout } from "./script.js";
-      import { auth, db } from './firebase.js';
+      import { auth } from './firebase.js';
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { setupRealtimeSubjects } from "./realtime.js";
 
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
@@ -143,6 +144,7 @@
       let subjects = [];
       let userData = null;
       let allEvents = [];
+      let subjectsRealtimeUnsubscribe = null;
 
       // Subject colors
       const subjectColors = [
@@ -269,6 +271,21 @@
         document.getElementById('showTasks').addEventListener('change', updateCalendarEvents);
         document.getElementById('showQuizzes').addEventListener('change', updateCalendarEvents);
         document.getElementById('showClasses').addEventListener('change', updateCalendarEvents);
+
+        // Keep schedule in sync with subject updates from Firestore.
+        if (!subjectsRealtimeUnsubscribe && userData?.course) {
+          subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+            if (!Array.isArray(updatedSubjects)) return;
+            subjects = updatedSubjects;
+            localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
+            loadEvents();
+            updateCalendarEvents();
+            renderWeeklySchedule();
+            renderUpcomingDeadlines();
+          }, (error) => {
+            console.warn("Schedule realtime subjects failed:", error?.message || error);
+          });
+        }
       }
 
       // Load events from subjects
@@ -382,7 +399,8 @@
         const showClasses = document.getElementById('showClasses').checked;
 
         const filteredEvents = allEvents.filter(event => {
-          const type = event.extendedProps.type;
+          const type = event?.extendedProps?.type;
+          if (!type) return false;
           if (type === 'assignment' && !showAssignments) return false;
           if (type === 'task' && !showTasks) return false;
           if (type === 'quiz' && !showQuizzes) return false;
@@ -554,6 +572,13 @@ END:VEVENT
           initializeSchedulePage();
         } else {
           window.location.href = 'Login.html';
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof subjectsRealtimeUnsubscribe === 'function') {
+          subjectsRealtimeUnsubscribe();
+          subjectsRealtimeUnsubscribe = null;
         }
       });
     </script>
