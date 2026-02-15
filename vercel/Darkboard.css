@@ -6392,4 +6392,231 @@ body.light-mode .detail-row {
         margin: auto;
         border-radius: 18px;
     }
+}/* =========================
+   GRADING INTERFACE STYLES
+   ========================= */
+
+/* Large modal for submissions */
+.large-modal .modal-content {
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Assignment info header */
+.assignment-info {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+/* Submission item container */
+.submission-item {
+    padding: 20px;
+    margin-bottom: 20px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* Submission header */
+.submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.submission-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.submission-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Submission file display */
+.submission-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.submission-file i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.submission-file a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.submission-file a:hover {
+    text-decoration: underline;
+}
+
+/* Grading section */
+.grading-section {
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.grade-input-group,
+.feedback-input-group {
+    margin-bottom: 15px;
+}
+
+.grade-input-group label,
+.feedback-input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Grade input field */
+.grade-input {
+    width: 80px;
+    padding: 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    text-align: center;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    transition: border-color 0.3s;
+}
+
+.grade-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Feedback textarea */
+.feedback-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-family: inherit;
+    resize: vertical;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    transition: border-color 0.3s;
+}
+
+.feedback-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Grade actions */
+.grade-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Save grade button */
+.btn-save-grade {
+    padding: 10px 20px;
+    background: #4ade80;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-save-grade:hover {
+    background: #22c55e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+}
+
+.btn-save-grade:active {
+    transform: translateY(0);
+}
+
+/* Graded badge */
+.graded-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: #4ade80;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Student grade view (for students) */
+.student-grade-view {
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.student-grade-view p {
+    margin: 8px 0;
+}
+
+/* Pending grade message */
+.pending-grade {
+    color: #fbbf24;
+    font-style: italic;
+    padding: 10px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+/* Submission divider */
+.submission-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 20px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .large-modal .modal-content {
+        max-width: 95%;
+        margin: 10px;
+    }
+    
+    .submission-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .grade-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-save-grade {
+        width: 100%;
+        justify-content: center;
+    }
 }
