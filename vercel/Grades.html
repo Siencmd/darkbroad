@@ -426,7 +426,7 @@
 
         // Calculate completion rate
         const gradedCount = allGrades.length;
-        const totalItems = gradedCount; // This could be expanded to include all assignments
+        const totalItems = allRows.length;
         const completionRate = totalItems > 0 ? (gradedCount / totalItems) * 100 : 0;
 
         // Update UI
