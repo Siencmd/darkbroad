@@ -37,7 +37,7 @@
       <div class="nav-right">
         <div class="user-menu-right">
           <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
-          <span id="headerUserName">Ace</span>
+          <span id="headerUserName">Loading...</span>
         </div>
       </div>
     </nav>
@@ -131,8 +131,61 @@
     <script type="module" src="script.js"></script>
     <script type="module">
       import { logout } from "./script.js";
+      
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
+      
+      // Load user data for header
+      window.addEventListener('DOMContentLoaded', () => {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName && userData) {
+          headerUserName.textContent = userData.name || 'User';
+        }
+        
+        // Load announcements from localStorage
+        loadAnnouncements();
+      });
+      
+      function loadAnnouncements() {
+        const announcementsList = document.querySelector('.announcements-list');
+        
+        // Get announcements from localStorage
+        const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+        
+        if (announcements.length === 0) {
+          // Show empty state message but keep sample announcements
+          console.log('No announcements in localStorage, showing defaults');
+          return;
+        }
+        
+        // Clear current announcements
+        announcementsList.innerHTML = '';
+        
+        // Render announcements
+        announcements.forEach(announcement => {
+          const card = document.createElement('div');
+          card.className = 'card announcement-card';
+          card.innerHTML = `
+            <div class="announcement-header">
+              <div class="announcement-icon">
+                <i class="fas fa-${announcement.icon || 'bell'}"></i>
+              </div>
+              <div class="announcement-meta">
+                <span class="announcement-date">${announcement.date || new Date().toLocaleDateString()}</span>
+                <span class="announcement-category">${announcement.category || 'General'}</span>
+              </div>
+            </div>
+            <h3>${announcement.title || 'Untitled'}</h3>
+            <p>${announcement.message || announcement.content || ''}</p>
+            <div class="announcement-footer">
+              <span class="announcement-author">Posted by: ${announcement.author || 'Admin'}</span>
+              <button class="btn-read-more">Read More</button>
+            </div>
+          `;
+          announcementsList.appendChild(card);
+        });
+      }
     </script>
   </body>
 </html>
