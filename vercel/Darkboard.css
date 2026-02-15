@@ -3768,13 +3768,66 @@ body.light-mode .theme-toggle-btn:hover {
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
-    transition: color 0.3s ease;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    user-select: none;
 }
 
 .calendar-filters label:hover {
-    color: var(--accent);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.calendar-filters label::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Color-coded dots for each filter type */
+.calendar-filters label:nth-child(1)::before {
+    background: #4CAF50; /* Assignments - green */
+}
+
+.calendar-filters label:nth-child(2)::before {
+    background: #FF9800; /* Tasks - orange */
+}
+
+.calendar-filters label:nth-child(3)::before {
+    background: #E91E63; /* Quizzes - pink */
+}
+
+.calendar-filters label:nth-child(4)::before {
+    background: #2196F3; /* Classes - blue */
+}
+
+/* Active/checked state pill styling */
+.calendar-filters label:has(input:checked):nth-child(1) {
+    border-color: rgba(76, 175, 80, 0.5);
+    background: rgba(76, 175, 80, 0.15);
+}
+
+.calendar-filters label:has(input:checked):nth-child(2) {
+    border-color: rgba(255, 152, 0, 0.5);
+    background: rgba(255, 152, 0, 0.15);
+}
+
+.calendar-filters label:has(input:checked):nth-child(3) {
+    border-color: rgba(233, 30, 99, 0.5);
+    background: rgba(233, 30, 99, 0.15);
+}
+
+.calendar-filters label:has(input:checked):nth-child(4) {
+    border-color: rgba(33, 150, 243, 0.5);
+    background: rgba(33, 150, 243, 0.15);
 }
 
 .calendar-filters input[type="checkbox"] {
