@@ -2656,6 +2656,19 @@ function initializeSubjects() {
         if (itemId) params.set('itemId', String(itemId));
         window.location.href = `Grades.html?${params.toString()}`;
     };
+    // Backward-compatible handlers for older inline onclick usages.
+    window.subjectsViewSubmissions = (subjectIndex, assignmentIndex) => {
+        const assignment = subjects?.[parseInt(subjectIndex)]?.assignments?.[parseInt(assignmentIndex)];
+        window.subjectsOpenGradesForItem(parseInt(subjectIndex), 'assignment', assignment?.id || '');
+    };
+    window.subjectsViewTaskSubmissions = (subjectIndex, taskIndex) => {
+        const task = subjects?.[parseInt(subjectIndex)]?.tasks?.[parseInt(taskIndex)];
+        window.subjectsOpenGradesForItem(parseInt(subjectIndex), 'task', task?.id || '');
+    };
+    window.subjectsViewQuizSubmissions = (subjectIndex, quizIndex) => {
+        const quiz = subjects?.[parseInt(subjectIndex)]?.quizzes?.[parseInt(quizIndex)];
+        window.subjectsOpenGradesForItem(parseInt(subjectIndex), 'quiz', quiz?.id || '');
+    };
     window.subjectsSwitchTab = (tab) => switchTab(tab);
     window.subjectsSyncToCloud = () => {
         saveSubjects(false);
