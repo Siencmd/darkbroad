@@ -38,7 +38,7 @@
       <div class="nav-right">
         <div class="user-menu-right">
           <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
-          <span id="headerUserName">Ace</span>
+          <span id="headerUserName">Loading...</span>
         </div>
       </div>
     </nav>
@@ -131,6 +131,15 @@
 
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
+      
+      // Load user data for header
+      window.addEventListener('DOMContentLoaded', () => {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName && userData) {
+          headerUserName.textContent = userData.name || 'User';
+        }
+      });
 
       // Initialize submissions page
       let subjects = [];
