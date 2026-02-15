@@ -2862,8 +2862,11 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     const gradeInput = document.getElementById(`grade-${studentId}`);
     const feedbackInput = document.getElementById(`feedback-${studentId}`);
     
+    console.log('Looking for grade input with ID: grade-' + studentId);
+    console.log('Grade input element:', gradeInput);
+    
     if (!gradeInput) {
-        alert('Error: Grade input field not found. Make sure you are viewing submissions.');
+        alert('Error: Grade input field not found for student. Please refresh the page and try again.');
         return;
     }
     if (!feedbackInput) {
@@ -2871,18 +2874,17 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
         return;
     }
     
-    const gradeValue = gradeInput.value.trim();
+    // Get the raw value directly from the input element
+    const gradeValue = gradeInput.value;
+    const feedbackValue = feedbackInput.value;
+    
+    console.log('Grade value from input:', gradeValue);
+    
     const grade = parseFloat(gradeValue);
-    const feedback = feedbackInput.value.trim();
+    const feedback = feedbackValue;
     
     // Get max points - PRIORITIZE assignment points, not submission maxPoints
     let maxPoints = assignment?.points || 100;
-    
-    // Debug log
-    console.log('Grade input value:', gradeValue);
-    console.log('Parsed grade:', grade);
-    console.log('Is NaN:', isNaN(grade));
-    console.log('Assignment points:', assignment?.points);
     
     // Validate grade - check if it's a valid number
     if (gradeValue === '') {
