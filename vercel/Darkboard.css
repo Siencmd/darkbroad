@@ -7,7 +7,12 @@
 
 /* Modern Global Styles */
 * {
-    transition: all var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1),
+                background-color var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1),
+                border-color var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1),
+                opacity var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1),
+                transform var(--anim-normal) cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
 }
 
@@ -818,6 +823,7 @@ body.light-mode .theme-toggle-btn:hover {
     mask-composite: exclude;
     opacity: 0;
     transition: opacity var(--anim-normal) ease;
+    pointer-events: none;
 }
 
 .card::after {
@@ -828,6 +834,7 @@ body.light-mode .theme-toggle-btn:hover {
     border-radius: inherit;
     opacity: 0;
     transition: opacity var(--anim-normal) ease;
+    pointer-events: none;
 }
 
 .card:hover {
@@ -6923,11 +6930,12 @@ body.light-mode .detail-row {
     border: 2px solid var(--border-color);
     border-radius: 12px;
     padding: 20px;
-    transition: all 0.3s;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+    transform: translateZ(0);
 }
 
 .submission-card:hover {
-    transform: translateY(-4px);
+    transform: translateZ(0);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
@@ -7071,7 +7079,7 @@ body.light-mode .detail-row {
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
-    transition: all 0.3s;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -7088,7 +7096,7 @@ body.light-mode .detail-row {
 
 .btn-grade:hover {
     background: #22c55e;
-    transform: translateY(-2px);
+    transform: none;
 }
 
 /* Table action buttons */
@@ -7106,7 +7114,7 @@ body.light-mode .detail-row {
 
 .btn-edit-grade:hover {
     background: #3b82f6;
-    transform: translateY(-2px);
+    transform: none;
 }
 
 /* Grading form in modal */
