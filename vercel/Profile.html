@@ -37,7 +37,7 @@
       <div class="nav-right">
         <div class="user-menu-right">
           <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
-          <span id="headerUserName">Ace</span>
+          <span id="headerUserName">Loading...</span>
         </div>
       </div>
     </nav>
@@ -52,10 +52,10 @@
               <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="Profile Picture">
             </div>
             <div class="profile-name-section">
-              <h1>John Doe</h1>
-              <p class="profile-role">Computer Science Student</p>
-              <p class="profile-id">Student ID: 2024-0001</p>
-              <button class="edit-profile-btn">
+              <h1 id="fullName">Loading...</h1>
+              <p class="profile-role" id="displayRole">Student</p>
+              <p class="profile-id" id="displayCourse">Course: ---</p>
+              <button class="edit-profile-btn" id="editProfileBtn">
                 <i class="fas fa-edit"></i> Edit Profile
               </button>
             </div>
@@ -67,19 +67,23 @@
                 <h3>Personal Information</h3>
                 <div class="detail-row">
                   <span class="detail-label">Full Name:</span>
-                  <span class="detail-value">John Doe</span>
+                  <span class="detail-value" id="fullNameDisplay">Loading...</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Email:</span>
-                  <span class="detail-value">john.doe@student.edu</span>
+                  <span class="detail-value" id="infoEmail">Loading...</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Phone:</span>
-                  <span class="detail-value">+1 234 567 890</span>
+                  <span class="detail-value" id="infoPhone">Not set</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Address:</span>
-                  <span class="detail-value">123 Main Street, City, Country</span>
+                  <span class="detail-label">Date of Birth:</span>
+                  <span class="detail-value" id="infoDOB">Not set</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Gender:</span>
+                  <span class="detail-value" id="infoGender">Not set</span>
                 </div>
               </div>
 
@@ -87,19 +91,15 @@
                 <h3>Academic Information</h3>
                 <div class="detail-row">
                   <span class="detail-label">Course:</span>
-                  <span class="detail-value">Bachelor of Science in Computer Science</span>
+                  <span class="detail-value" id="infoCourse">Loading...</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Year Level:</span>
-                  <span class="detail-value">2nd Year</span>
+                  <span class="detail-label">Role:</span>
+                  <span class="detail-value" id="infoRole">Student</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Semester:</span>
-                  <span class="detail-value">1st Semester 2026</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Adviser:</span>
-                  <span class="detail-value">Dr. Jane Smith</span>
+                  <span class="detail-label">Account Status:</span>
+                  <span class="detail-value"><span class="status-active">Active</span></span>
                 </div>
               </div>
             </div>
@@ -111,12 +111,138 @@
       </section>
     </main>
 
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editProfileModal">
+      <div class="modal-content">
+        <span class="close" id="closeModalBtn">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-user-edit"></i> Edit Profile</h2>
+          <form id="editForm">
+            <div class="form-group">
+              <label for="editName">Full Name</label>
+              <input type="text" id="editName" placeholder="Your full name" />
+            </div>
+            <div class="form-group">
+              <label for="editEmail">Email</label>
+              <input type="email" id="editEmail" placeholder="your.email@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="editPhone">Phone Number</label>
+              <input type="tel" id="editPhone" placeholder="+1 234 567 890" />
+            </div>
+            <div class="form-group">
+              <label for="editDOB">Date of Birth</label>
+              <input type="date" id="editDOB" />
+            </div>
+            <div class="form-group">
+              <label for="editGender">Gender</label>
+              <select id="editGender">
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> Save Changes
+              </button>
+              <button type="button" class="btn-cancel" id="cancelModalBtn">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="firebase.js"></script>
     <script type="module" src="script.js"></script>
     <script type="module">
       import { logout } from "./script.js";
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
+      
+      // Load user data on page load
+      window.addEventListener('DOMContentLoaded', () => {
+        loadUserProfileData();
+      });
+      
+      function loadUserProfileData() {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        
+        if (userData) {
+          // Update header username
+          const headerUserName = document.getElementById('headerUserName');
+          if (headerUserName) {
+            headerUserName.textContent = userData.name || 'User';
+          }
+          
+          // Update profile name
+          const fullName = document.getElementById('fullName');
+          const fullNameDisplay = document.getElementById('fullNameDisplay');
+          const name = savedProfile.fullName || userData.name || 'User';
+          if (fullName) fullName.textContent = name;
+          if (fullNameDisplay) fullNameDisplay.textContent = name;
+          
+          // Update email
+          const email = document.getElementById('infoEmail');
+          const editEmail = document.getElementById('editEmail');
+          const userEmail = savedProfile.email || userData.email || 'Not set';
+          if (email) email.textContent = userEmail;
+          if (editEmail) editEmail.value = userEmail !== 'Not set' ? userEmail : '';
+          
+          // Update phone
+          const phone = document.getElementById('infoPhone');
+          const editPhone = document.getElementById('editPhone');
+          const phoneVal = savedProfile.phone || userData.phone || 'Not set';
+          if (phone) phone.textContent = phoneVal;
+          if (editPhone) editPhone.value = phoneVal !== 'Not set' ? phoneVal : '';
+          
+          // Update course
+          const course = document.getElementById('infoCourse');
+          const displayCourse = document.getElementById('displayCourse');
+          const courseVal = userData.course || 'Not set';
+          if (course) course.textContent = courseVal;
+          if (displayCourse) displayCourse.textContent = 'Course: ' + courseVal;
+          
+          // Update role
+          const role = document.getElementById('infoRole');
+          const displayRole = document.getElementById('displayRole');
+          const roleVal = userData.role || 'student';
+          const roleDisplay = roleVal.charAt(0).toUpperCase() + roleVal.slice(1);
+          if (role) role.textContent = roleDisplay;
+          if (displayRole) displayRole.textContent = roleDisplay;
+          
+          // Update DOB
+          const dob = document.getElementById('infoDOB');
+          const editDOB = document.getElementById('editDOB');
+          const dobVal = savedProfile.dob || 'Not set';
+          if (dob) dob.textContent = dobVal;
+          if (editDOB && dobVal !== 'Not set') {
+            // Convert "Month DD, YYYY" to "YYYY-MM-DD" for date input
+            const dateObj = new Date(dobVal);
+            if (!isNaN(dateObj.getTime())) {
+              editDOB.value = dateObj.toISOString().split('T')[0];
+            }
+          }
+          
+          // Update gender
+          const gender = document.getElementById('infoGender');
+          const editGender = document.getElementById('editGender');
+          const genderVal = savedProfile.gender || 'Not set';
+          if (gender) gender.textContent = genderVal;
+          if (editGender) editGender.value = genderVal !== 'Not set' ? genderVal : '';
+        }
+        
+        // Update edit form name
+        const editName = document.getElementById('editName');
+        if (editName) {
+          editName.value = savedProfile.fullName || userData?.name || '';
+        }
+      }
     </script>
   </body>
 </html>
