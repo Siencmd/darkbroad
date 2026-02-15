@@ -6620,3 +6620,344 @@ body.light-mode .detail-row {
         justify-content: center;
     }
 }
+
+/* =========================
+   SUBMISSIONS PAGE STYLES
+   ========================= */
+
+/* Submissions filters */
+.submissions-filters {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.filter-select {
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Submissions stats */
+.submissions-stats {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.stat-badge.pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.stat-badge.graded {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+}
+
+/* Submissions container */
+.submissions-container {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+/* Submission card */
+.submission-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s;
+}
+
+.submission-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.submission-card.graded {
+    border-left: 4px solid #4ade80;
+}
+
+.submission-card.pending {
+    border-left: 4px solid #fbbf24;
+}
+
+/* Submission card header */
+.submission-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.submission-info h3 {
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.submission-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.subject-badge,
+.type-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.subject-badge {
+    background: var(--primary-color);
+    color: white;
+}
+
+.type-badge {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.type-badge.assignment {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.type-badge.task {
+    background: rgba(168, 139, 250, 0.2);
+    color: #a78bfa;
+}
+
+.type-badge.quiz {
+    background: rgba(251, 146, 60, 0.2);
+    color: #fb923c;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge.graded {
+    background: #4ade80;
+    color: white;
+}
+
+.status-badge.pending {
+    background: #fbbf24;
+    color: white;
+}
+
+/* Submission card body */
+.submission-card-body {
+    margin-bottom: 15px;
+}
+
+.submission-card-body p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+}
+
+.submission-card-body a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.submission-card-body a:hover {
+    text-decoration: underline;
+}
+
+/* Grade display */
+.grade-display {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.grade-value {
+    color: #4ade80;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.feedback-text {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Submission card footer */
+.submission-card-footer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-grade,
+.btn-edit-grade {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-grade {
+    background: #4ade80;
+    color: white;
+}
+
+.btn-grade:hover {
+    background: #22c55e;
+    transform: translateY(-2px);
+}
+
+.btn-edit-grade {
+    background: #60a5fa;
+    color: white;
+}
+
+.btn-edit-grade:hover {
+    background: #3b82f6;
+    transform: translateY(-2px);
+}
+
+/* Grading form in modal */
+.grading-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.submission-details {
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.submission-details p {
+    margin: 8px 0;
+}
+
+.grade-input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Loading and empty states */
+.loading,
+.empty-state,
+.error-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.loading i,
+.empty-state i,
+.error-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.loading i {
+    color: var(--primary-color);
+}
+
+.error-state i {
+    color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .submissions-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .submissions-filters {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        min-width: 100%;
+    }
+    
+    .submissions-stats {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .submission-card-header {
+        flex-direction: column;
+    }
+}
