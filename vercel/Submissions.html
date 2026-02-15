@@ -127,7 +127,8 @@
       import { logout } from "./script.js";
       import { auth, db } from './firebase.js';
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, getDoc, getDocs, collection, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { doc, getDoc, getDocs, collection, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { setupRealtimeSubjects } from "./realtime.js";
 
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
@@ -150,6 +151,90 @@
       const focusSubject = pageParams.get('subject');
       const focusType = pageParams.get('type');
       const focusItemId = pageParams.get('itemId');
+      let subjectsRealtimeUnsubscribe = null;
+      let submissionRealtimeUnsubscribers = [];
+      let realtimeRefreshTimer = null;
+
+      function populateSubjectFilterOptions() {
+        const subjectFilter = document.getElementById('subjectFilter');
+        if (!subjectFilter) return;
+
+        const currentValue = subjectFilter.value;
+        subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
+
+        subjects.forEach((subject, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = subject.name;
+          subjectFilter.appendChild(option);
+        });
+
+        if (focusSubject !== null && focusSubject !== '') {
+          subjectFilter.value = String(focusSubject);
+          return;
+        }
+
+        const valueExists = Array.from(subjectFilter.options).some(opt => opt.value === String(currentValue));
+        if (valueExists) {
+          subjectFilter.value = String(currentValue);
+        }
+      }
+
+      function getSubmissionStatus(submission) {
+        return submission?.status === 'graded' ? 'graded' : 'pending';
+      }
+
+      function clearSubmissionRealtimeListeners() {
+        submissionRealtimeUnsubscribers.forEach(unsubscribe => {
+          try {
+            unsubscribe();
+          } catch (error) {
+            console.warn('Failed to unsubscribe submission listener:', error?.message || error);
+          }
+        });
+        submissionRealtimeUnsubscribers = [];
+      }
+
+      function scheduleRealtimeSubmissionsReload() {
+        if (realtimeRefreshTimer) {
+          clearTimeout(realtimeRefreshTimer);
+        }
+
+        realtimeRefreshTimer = setTimeout(async () => {
+          realtimeRefreshTimer = null;
+          await loadAllSubmissions();
+          filterSubmissions();
+        }, 250);
+      }
+
+      function setupSubmissionRealtimeListeners() {
+        clearSubmissionRealtimeListeners();
+
+        const courseId = userData?.course;
+        if (!courseId) return;
+
+        const listenToItems = (items, type) => {
+          if (!Array.isArray(items)) return;
+
+          items.forEach((item) => {
+            if (!item?.id) return;
+            const collectionName = type === 'task' ? 'tasks' : type === 'assignment' ? 'assignments' : 'quizzes';
+            const submissionsRef = collection(db, 'subjects', courseId, collectionName, item.id, 'submissions');
+            const unsubscribe = onSnapshot(submissionsRef, () => {
+              scheduleRealtimeSubmissionsReload();
+            }, (error) => {
+              console.warn("Realtime submissions listener failed:", error?.message || error);
+            });
+            submissionRealtimeUnsubscribers.push(unsubscribe);
+          });
+        };
+
+        subjects.forEach((subject) => {
+          listenToItems(subject?.assignments, 'assignment');
+          listenToItems(subject?.tasks, 'task');
+          listenToItems(subject?.quizzes, 'quiz');
+        });
+      }
 
       // Load user data and subjects
       async function initializeSubmissionsPage() {
@@ -167,19 +252,8 @@
 
         // Load subjects from localStorage
         subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
-        
         // Populate subject filter
-        const subjectFilter = document.getElementById('subjectFilter');
-        subjects.forEach((subject, index) => {
-          const option = document.createElement('option');
-          option.value = index;
-          option.textContent = subject.name;
-          subjectFilter.appendChild(option);
-        });
-
-        if (focusSubject !== null && focusSubject !== '') {
-          subjectFilter.value = String(focusSubject);
-        }
+        populateSubjectFilterOptions();
         if (focusType) {
           const typeFilterEl = document.getElementById('typeFilter');
           if (typeFilterEl) typeFilterEl.value = String(focusType).toLowerCase();
@@ -187,6 +261,22 @@
 
         // Load all submissions
         await loadAllSubmissions();
+        setupSubmissionRealtimeListeners();
+
+        // Keep subject metadata synced in realtime without duplicating listeners.
+        if (!subjectsRealtimeUnsubscribe && userData?.course) {
+          subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, async (updatedSubjects) => {
+            if (!Array.isArray(updatedSubjects)) return;
+            subjects = updatedSubjects;
+            localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
+            populateSubjectFilterOptions();
+            setupSubmissionRealtimeListeners();
+            await loadAllSubmissions();
+            filterSubmissions();
+          }, (error) => {
+            console.warn('Submissions realtime subjects failed:', error?.message || error);
+          });
+        }
         
         // Setup filter listeners
         document.getElementById('subjectFilter').addEventListener('change', filterSubmissions);
@@ -321,7 +411,7 @@
         }
 
         container.innerHTML = submissions.map(sub => `
-          <div class="submission-card ${sub.status === 'graded' ? 'graded' : 'pending'}">
+          <div class="submission-card ${getSubmissionStatus(sub) === 'graded' ? 'graded' : 'pending'}">
             <div class="submission-card-header">
               <div class="submission-info">
                 <h3>${sub.itemTitle}</h3>
@@ -331,7 +421,7 @@
                 </p>
               </div>
               <div class="submission-status">
-                ${sub.status === 'graded' ? 
+                ${getSubmissionStatus(sub) === 'graded' ? 
                   `<span class="status-badge graded"><i class="fas fa-check-circle"></i> Graded</span>` :
                   `<span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>`
                 }
@@ -354,12 +444,12 @@
             </div>
             
             <div class="submission-card-footer">
-              ${isInstructor && sub.status !== 'graded' ? `
+              ${isInstructor && getSubmissionStatus(sub) !== 'graded' ? `
                 <button class="btn-grade" onclick="openGradingModal('${sub.subjectIndex}', '${sub.itemType}', '${sub.itemId}', '${sub.studentId}', ${sub.itemPoints})">
                   <i class="fas fa-edit"></i> Grade Submission
                 </button>
               ` : ''}
-              ${isInstructor && sub.status === 'graded' ? `
+              ${isInstructor && getSubmissionStatus(sub) === 'graded' ? `
                 <button class="btn-edit-grade" onclick="openGradingModal('${sub.subjectIndex}', '${sub.itemType}', '${sub.itemId}', '${sub.studentId}', ${sub.itemPoints})">
                   <i class="fas fa-edit"></i> Edit Grade
                 </button>
@@ -382,7 +472,7 @@
         }
 
         if (statusFilter !== 'all') {
-          filtered = filtered.filter(sub => sub.status === statusFilter);
+          filtered = filtered.filter(sub => getSubmissionStatus(sub) === statusFilter);
         }
 
         if (typeFilter !== 'all') {
@@ -405,8 +495,8 @@
 
       // Update statistics
       function updateStats(submissions = allSubmissions) {
-        const pending = submissions.filter(sub => sub.status !== 'graded').length;
-        const graded = submissions.filter(sub => sub.status === 'graded').length;
+        const pending = submissions.filter(sub => getSubmissionStatus(sub) !== 'graded').length;
+        const graded = submissions.filter(sub => getSubmissionStatus(sub) === 'graded').length;
         
         document.getElementById('pendingCount').textContent = pending;
         document.getElementById('gradedCount').textContent = graded;
@@ -550,6 +640,18 @@
           initializeSubmissionsPage();
         } else {
           window.location.href = 'Login.html';
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof subjectsRealtimeUnsubscribe === 'function') {
+          subjectsRealtimeUnsubscribe();
+          subjectsRealtimeUnsubscribe = null;
+        }
+        clearSubmissionRealtimeListeners();
+        if (realtimeRefreshTimer) {
+          clearTimeout(realtimeRefreshTimer);
+          realtimeRefreshTimer = null;
         }
       });
     </script>
