@@ -195,7 +195,8 @@
       import { logout } from "./script.js";
       import { auth, db } from './firebase.js';
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, getDoc, getDocs, collection, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { doc, getDoc, getDocs, collection, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { setupRealtimeSubjects } from "./realtime.js";
 
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
@@ -211,6 +212,9 @@
       const focusSubject = pageParams.get('subject');
       const focusType = pageParams.get('type');
       const focusItemId = pageParams.get('itemId');
+      let subjectsRealtimeUnsubscribe = null;
+      let gradeRealtimeUnsubscribers = [];
+      let realtimeRefreshTimer = null;
 
       function isInstructorRole() {
         return ['instructor', 'teacher', 'admin'].includes((userData?.role || '').toLowerCase());
@@ -222,6 +226,83 @@
         if (term === 'midterm') return 'midterm';
         if (term === 'final' || term === 'finals') return 'finals';
         return '';
+      }
+
+      function populateSubjectFilterOptions() {
+        const subjectFilter = document.getElementById('subjectFilter');
+        if (!subjectFilter) return;
+
+        const currentValue = subjectFilter.value;
+        subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
+
+        subjects.forEach((subject, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = subject.name;
+          subjectFilter.appendChild(option);
+        });
+
+        if (focusSubject !== null && focusSubject !== '') {
+          subjectFilter.value = String(focusSubject);
+          return;
+        }
+
+        const valueExists = Array.from(subjectFilter.options).some(opt => opt.value === String(currentValue));
+        if (valueExists) {
+          subjectFilter.value = String(currentValue);
+        }
+      }
+
+      function clearGradeRealtimeListeners() {
+        gradeRealtimeUnsubscribers.forEach((unsubscribe) => {
+          try {
+            unsubscribe();
+          } catch (error) {
+            console.warn('Failed to unsubscribe grade listener:', error?.message || error);
+          }
+        });
+        gradeRealtimeUnsubscribers = [];
+      }
+
+      function scheduleRealtimeGradesReload() {
+        if (realtimeRefreshTimer) {
+          clearTimeout(realtimeRefreshTimer);
+        }
+
+        realtimeRefreshTimer = setTimeout(async () => {
+          realtimeRefreshTimer = null;
+          await loadGrades();
+          filterGrades();
+        }, 250);
+      }
+
+      function setupGradeRealtimeListeners() {
+        clearGradeRealtimeListeners();
+
+        const courseId = userData?.course;
+        if (!courseId) return;
+
+        const listenToItems = (items, type) => {
+          if (!Array.isArray(items)) return;
+
+          items.forEach((item) => {
+            if (!item?.id) return;
+            const collectionName = type === 'task' ? 'tasks' : type === 'assignment' ? 'assignments' : 'quizzes';
+            const submissionsRef = collection(db, 'subjects', courseId, collectionName, item.id, 'submissions');
+            const unsubscribe = onSnapshot(submissionsRef, () => {
+              scheduleRealtimeGradesReload();
+            }, (error) => {
+              console.warn('Realtime grade listener failed:', error?.message || error);
+            });
+            gradeRealtimeUnsubscribers.push(unsubscribe);
+          });
+        };
+
+        subjects.forEach((subject) => {
+          listenToItems(subject?.assignments, 'assignment');
+          listenToItems(subject?.tasks, 'task');
+          listenToItems(subject?.quizzes, 'quiz');
+        });
       }
 
       function inferTermFromDate(dateValue) {
@@ -242,17 +323,8 @@
         subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
         
         // Populate subject filter
-        const subjectFilter = document.getElementById('subjectFilter');
-        subjects.forEach((subject, index) => {
-          const option = document.createElement('option');
-          option.value = index;
-          option.textContent = subject.name;
-          subjectFilter.appendChild(option);
-        });
+        populateSubjectFilterOptions();
 
-        if (focusSubject !== null && focusSubject !== '') {
-          subjectFilter.value = String(focusSubject);
-        }
 
         if (isInstructorRole()) {
           const welcomeTitle = document.querySelector('.welcome-text h1');
@@ -263,6 +335,22 @@
 
         // Load grades from Firestore
         await loadGrades();
+        setupGradeRealtimeListeners();
+
+        // Keep subject metadata synced in realtime without duplicating listeners.
+        if (!subjectsRealtimeUnsubscribe && userData?.course) {
+          subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, async (updatedSubjects) => {
+            if (!Array.isArray(updatedSubjects)) return;
+            subjects = updatedSubjects;
+            localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
+            populateSubjectFilterOptions();
+            setupGradeRealtimeListeners();
+            await loadGrades();
+            filterGrades();
+          }, (error) => {
+            console.warn('Grades realtime subjects failed:', error?.message || error);
+          });
+        }
         
         // Setup filter listeners
         document.getElementById('subjectFilter').addEventListener('change', filterGrades);
@@ -886,6 +974,18 @@
           initializeGradesPage();
         } else {
           window.location.href = 'Login.html';
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof subjectsRealtimeUnsubscribe === 'function') {
+          subjectsRealtimeUnsubscribe();
+          subjectsRealtimeUnsubscribe = null;
+        }
+        clearGradeRealtimeListeners();
+        if (realtimeRefreshTimer) {
+          clearTimeout(realtimeRefreshTimer);
+          realtimeRefreshTimer = null;
         }
       });
     </script>
