@@ -386,10 +386,10 @@
         modalTitle.textContent = `Grade: ${itemTitle}`;
 
         // Find the submission
-        const submission = allSubmissions.find(sub => 
-          sub.subjectIndex == subjectIndex && 
-          sub.itemType === itemType && 
-          sub.itemId === itemId && 
+        const submission = allSubmissions.find(sub =>
+          sub.subjectIndex == subjectIndex &&
+          sub.itemType === itemType &&
+          sub.itemId === itemId &&
           sub.studentId === studentId
         );
 
@@ -397,6 +397,9 @@
           alert('Submission not found');
           return;
         }
+
+        // Use itemPoints from function parameter or fallback to submission's itemPoints or default to 100
+        const maxPoints = itemPoints || submission.itemPoints || 100;
 
         modalContent.innerHTML = `
           <div class="grading-form">
@@ -409,15 +412,15 @@
             <div class="grade-input-section">
               <div class="form-group">
                 <label for="gradeInput">Grade:</label>
-                <input 
-                  type="number" 
-                  id="gradeInput" 
-                  class="grade-input" 
+                <input
+                  type="number"
+                  id="gradeInput"
+                  class="grade-input"
                   value="${submission.grade !== undefined ? submission.grade : ''}"
-                  min="0" 
-                  max="${itemPoints}"
+                  min="0"
+                  max="${maxPoints}"
                   placeholder="0"
-                /> / ${itemPoints} points
+                /> / ${maxPoints} points
               </div>
 
               <div class="form-group">
@@ -448,8 +451,11 @@
         const grade = parseFloat(gradeInput.value);
         const feedback = feedbackInput.value.trim();
 
-        if (isNaN(grade) || grade < 0 || grade > itemPoints) {
-          alert(`Grade must be between 0 and ${itemPoints}`);
+        // Use fallback value if itemPoints is undefined
+        const maxPoints = itemPoints || 100;
+
+        if (isNaN(grade) || grade < 0 || grade > maxPoints) {
+          alert(`Grade must be between 0 and ${maxPoints}`);
           return;
         }
 
@@ -459,7 +465,7 @@
           
           await setDoc(submissionRef, {
             grade: grade,
-            maxPoints: itemPoints,
+            maxPoints: maxPoints,
             feedback: feedback,
             gradedAt: serverTimestamp(),
             gradedBy: auth.currentUser.uid,
@@ -472,7 +478,7 @@
             await setDoc(notificationRef, {
               type: "grade_received",
               title: `Grade Posted`,
-              message: `You received ${grade}/${itemPoints} points`,
+              message: `You received ${grade}/${maxPoints} points`,
               read: false,
               timestamp: serverTimestamp()
             });
