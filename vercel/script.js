@@ -1195,6 +1195,12 @@ function initializeSubjects() {
     // OPEN EDIT MODAL
     // -------------------------
     const openEditModal = (index) => {
+        // Prevent students from editing subjects
+        if (!isInstructorRole) {
+            alert('Only instructors can edit subjects.');
+            return;
+        }
+
         const sub = subjects[index];
         if (!sub) return;
 
@@ -1274,6 +1280,13 @@ function initializeSubjects() {
             if (form.id === 'editSubjectForm') {
                 e.preventDefault();
                 e.stopImmediatePropagation();
+
+                // Prevent students from editing subjects
+                if (!isInstructorRole) {
+                    alert('Only instructors can edit subjects.');
+                    closeAllModals();
+                    return;
+                }
 
                 const index = parseInt(document.getElementById('editSubjectIndex').value);
                 if (Number.isNaN(index) || !subjects[index]) return;
@@ -1523,6 +1536,13 @@ function initializeSubjects() {
     editForm?.addEventListener('submit', e => {
         e.preventDefault();
 
+        // Prevent students from editing subjects
+        if (!isInstructorRole) {
+            alert('Only instructors can edit subjects.');
+            closeAllModals();
+            return;
+        }
+
         const index = parseInt(document.getElementById('editSubjectIndex').value);
 
         subjects[index] = {
@@ -1544,6 +1564,12 @@ function initializeSubjects() {
     // DELETE SUBJECT
     // -------------------------
     deleteBtn?.addEventListener('click', () => {
+        // Prevent students from deleting subjects
+        if (!isInstructorRole) {
+            alert('Only instructors can delete subjects.');
+            return;
+        }
+
         const index = parseInt(document.getElementById('editSubjectIndex').value);
 
         if (confirm('Are you sure you want to delete this subject?')) {
