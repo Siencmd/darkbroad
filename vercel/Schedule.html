@@ -49,7 +49,7 @@
       <div class="welcome-section">
         <div class="welcome-text">
           <h1><i class="fas fa-calendar-alt"></i> My Schedule</h1>
-          <p>View your class schedule, deadlines, and upcoming events.</p>
+          <p>View your subject schedule, deadlines, and upcoming events.</p>
         </div>
       </div>
 
@@ -75,7 +75,7 @@
               <input type="checkbox" id="showQuizzes" checked> Quizzes
             </label>
             <label>
-              <input type="checkbox" id="showClasses" checked> Classes
+              <input type="checkbox" id="showSubjects" checked> Subjects
             </label>
           </div>
           <button class="btn-export-calendar" onclick="exportCalendar()">
@@ -101,7 +101,7 @@
       <!-- Weekly Schedule (Traditional View) -->
       <div id="weeklySchedule" class="card" style="display: none;">
         <div class="card-header">
-          <h2><i class="fas fa-calendar-week"></i> Weekly Class Schedule</h2>
+          <h2><i class="fas fa-calendar-week"></i> Weekly Subject Schedule</h2>
         </div>
         <div class="schedule-grid" id="weeklyScheduleGrid">
           <!-- Will be populated dynamically -->
@@ -113,7 +113,7 @@
         <div class="empty-state">
           <i class="fas fa-calendar-plus"></i>
           <h3>No Schedule Yet</h3>
-          <p>Your class schedule and deadlines will appear here once added by your instructors.</p>
+          <p>Your subject schedule and deadlines will appear here once added by your instructors.</p>
           <a href="Subjects.html" class="btn-primary">Go to Subjects</a>
         </div>
       </div>
@@ -216,14 +216,14 @@
 
             classEvents.push({
               id: `class-${subject.id || index}-${dayName}-${week}`,
-              title: `Class: ${subject.name}`,
+              title: `${subject.name}`,
               start: hasTimedRange ? startDate.toISOString() : classDate.toISOString().split('T')[0],
               end: hasTimedRange ? endDate.toISOString() : undefined,
               allDay: !hasTimedRange,
               backgroundColor: color,
               borderColor: color,
               extendedProps: {
-                type: 'class',
+                type: 'subject',
                 subject: subject.name,
                 subjectIndex: index,
                 itemTitle: subject.name,
@@ -270,7 +270,7 @@
         document.getElementById('showAssignments').addEventListener('change', updateCalendarEvents);
         document.getElementById('showTasks').addEventListener('change', updateCalendarEvents);
         document.getElementById('showQuizzes').addEventListener('change', updateCalendarEvents);
-        document.getElementById('showClasses').addEventListener('change', updateCalendarEvents);
+        document.getElementById('showSubjects').addEventListener('change', updateCalendarEvents);
 
         // Keep schedule in sync with subject updates from Firestore.
         if (!subjectsRealtimeUnsubscribe && userData?.course) {
@@ -396,7 +396,7 @@
         const showAssignments = document.getElementById('showAssignments').checked;
         const showTasks = document.getElementById('showTasks').checked;
         const showQuizzes = document.getElementById('showQuizzes').checked;
-        const showClasses = document.getElementById('showClasses').checked;
+        const showSubjects = document.getElementById('showSubjects').checked;
 
         const filteredEvents = allEvents.filter(event => {
           const type = event?.extendedProps?.type;
@@ -404,7 +404,7 @@
           if (type === 'assignment' && !showAssignments) return false;
           if (type === 'task' && !showTasks) return false;
           if (type === 'quiz' && !showQuizzes) return false;
-          if (type === 'class' && !showClasses) return false;
+          if (type === 'subject' && !showSubjects) return false;
           return true;
         });
 
@@ -481,7 +481,7 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
         const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
         
         const upcomingEvents = allEvents.filter(event => {
-          if (event?.extendedProps?.type === 'class') return false;
+          if (event?.extendedProps?.type === 'subject') return false;
           if (!event.start) return false;
           const eventDate = new Date(event.start);
           eventDate.setHours(0, 0, 0, 0);
