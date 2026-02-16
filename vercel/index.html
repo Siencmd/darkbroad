@@ -309,32 +309,27 @@
       }
 
       // Add animation on the web page using ScrollReveal
-      // Disable on mobile for performance
-      const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
-      
-      if (!isMobile) {
-        ScrollReveal().reveal(".school-banner", {
-          delay: 1000,
-        });
+      ScrollReveal().reveal(".school-banner", {
+        delay: 1000,
+      });
 
-        ScrollReveal().reveal(".welcome-section", {
-          delay: 1500,
-        });
+      ScrollReveal().reveal(".welcome-section", {
+        delay: 1500,
+      });
 
-        ScrollReveal().reveal(".stat-card", {
-          delay: 1700,
-          interval: 500,
-        });
+      ScrollReveal().reveal(".stat-card", {
+        delay: 1700,
+        interval: 500,
+      });
 
-        ScrollReveal().reveal(".card", {
-          delay: 1000,
-        });
+      ScrollReveal().reveal(".card", {
+        delay: 1000,
+      });
 
-        ScrollReveal().reveal(".action-card", {
-          interval: 200,
-          delay: 500,
-        });
-      }
+      ScrollReveal().reveal(".action-card", {
+        interval: 200,
+        delay: 500,
+      });
 
       // Typing animation in the user name
       const typed = new Typed(".greetingMessage", {
