@@ -739,6 +739,10 @@ body.light-mode .theme-toggle-btn:hover {
         margin-left: 0.25rem;
     }
     
+    .main-nav {
+        z-index: 10000 !important;
+    }
+    
     .user-menu-right {
         position: relative !important;
         padding: 0.3rem 0.5rem !important;
