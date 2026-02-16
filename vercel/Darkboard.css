@@ -465,6 +465,11 @@ body.light-mode .theme-toggle-btn:hover {
     border: 2px solid var(--accent);
 }
 
+/* Hide username in user menu - shown in dropdown instead */
+#headerUserName {
+    display: none;
+}
+
 .user-menu-right:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: var(--accent);
