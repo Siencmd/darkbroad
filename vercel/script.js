@@ -23,6 +23,59 @@ function debugLog(...args) {
     if (DEBUG_MODE) console.log(...args);
 }
 
+// =========================
+// REUSABLE CONFIRMATION MODAL
+// =========================
+// Creates a styled confirmation modal instead of using native confirm()
+// Returns a promise that resolves to true (confirm) or false (cancel)
+window.showConfirmModal = function(message) {
+    return new Promise((resolve) => {
+        // Remove existing confirm modal if any
+        const existingModal = document.getElementById('confirmModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create modal elements
+        const modal = document.createElement('div');
+        modal.id = 'confirmModal';
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        
+        modal.innerHTML = `
+            <div class="modal-content confirm-modal-content">
+                <div class="modal-body">
+                    <h2><i class="fas fa-exclamation-circle"></i> Confirm</h2>
+                    <p class="confirm-message">${message}</p>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="confirmModalCancel">Cancel</button>
+                        <button type="button" class="btn-confirm" id="confirmModalConfirm">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const cancelBtn = document.getElementById('confirmModalCancel');
+        const confirmBtn = document.getElementById('confirmModalConfirm');
+        
+        const closeModal = (result) => {
+            modal.remove();
+            resolve(result);
+        };
+        
+        cancelBtn.onclick = () => closeModal(false);
+        confirmBtn.onclick = () => closeModal(true);
+        
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                closeModal(false);
+            }
+        };
+    });
+};
+
 // db is now imported from firebase.js
 
 function normalizeSubject(subject, index = 0) {
@@ -1891,7 +1944,7 @@ function initializeSubjects() {
     // -------------------------
     // DELETE SUBJECT
     // -------------------------
-    deleteBtn?.addEventListener('click', () => {
+    deleteBtn?.addEventListener('click', async () => {
         // Prevent students from deleting subjects
         if (!isInstructorRole) {
             alert('Only instructors can delete subjects.');
@@ -1900,7 +1953,8 @@ function initializeSubjects() {
 
         const index = parseInt(document.getElementById('editSubjectIndex').value);
 
-        if (confirm('Are you sure you want to delete this subject?')) {
+        const confirmed = await showConfirmModal('Are you sure you want to delete this subject?');
+        if (confirmed) {
             subjects.splice(index, 1);
             saveSubjects();
             renderSubjects();
@@ -2230,8 +2284,9 @@ function initializeSubjects() {
                 modal.remove();
             });
 
-            modal.querySelector('#deleteQuizBtn').addEventListener('click', () => {
-                if (confirm('Are you sure you want to delete this quiz?')) {
+            modal.querySelector('#deleteQuizBtn').addEventListener('click', async () => {
+                const confirmed = await showConfirmModal('Are you sure you want to delete this quiz?');
+                if (confirmed) {
                     sub.quizzes.splice(itemIndex, 1);
                     saveSubjects();
                     renderSubjectDetails(subjectIndex);
@@ -2812,7 +2867,8 @@ function initializeSubjects() {
         // Get course ID for Firestore operations
         const courseId = normalizeCourseId(userData?.course);
         
-        if (confirm(`Are you sure you want to delete this ${type}?`)) {
+        const confirmed = await showConfirmModal(`Are you sure you want to delete this ${type}?`);
+        if (confirmed) {
             // Delete from Firestore if item has an ID
             if (itemId && courseId) {
                 try {
@@ -3005,89 +3061,162 @@ function updateProfileUI(data) {
 // SETTINGS PAGE FUNCTIONALITY
 // =========================
 function initializeSettings() {
-    // Change Password Button
+    // Change Password Button - use unique ID
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', async () => {
+            const modal = document.getElementById('changePasswordModal');
+            const closeBtn = document.getElementById('closeChangePasswordModal');
+            const cancelBtn = document.getElementById('cancelChangePassword');
+            const form = document.getElementById('changePasswordForm');
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            
+            // Clear previous values
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Close modal functions
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            
+            closeBtn.onclick = closeModal;
+            cancelBtn.onclick = closeModal;
+            
+            // Close on outside click
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Handle form submission
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const newPassword = newPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                
+                if (newPassword.length < 6) {
+                    alert('Password must be at least 6 characters long');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+                
+                try {
+                    const user = auth.currentUser;
+                    if (user) {
+                        await updatePassword(user, newPassword);
+                        alert('Password updated successfully!');
+                        closeModal();
+                    } else {
+                        alert('No user is currently logged in');
+                    }
+                } catch (error) {
+                    if (error.code === 'auth/requires-recent-login') {
+                        alert('For security reasons, please log out and log back in before changing your password.');
+                    } else {
+                        alert('Error updating password: ' + error.message);
+                    }
+                }
+            };
+        });
+    }
+    
+    // Delete Account Button - use unique ID
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', async () => {
+            const modal = document.getElementById('deleteAccountModal');
+            const closeBtn = document.getElementById('closeDeleteAccountModal');
+            const cancelBtn = document.getElementById('cancelDeleteAccount');
+            const form = document.getElementById('deleteAccountForm');
+            const confirmInput = document.getElementById('deleteConfirmation');
+            
+            // Clear previous value
+            confirmInput.value = '';
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Close modal functions
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            
+            closeBtn.onclick = closeModal;
+            cancelBtn.onclick = closeModal;
+            
+            // Close on outside click
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Handle form submission
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const finalConfirmation = confirmInput.value.trim();
+                
+                if (finalConfirmation !== 'DELETE') {
+                    alert('Account deletion cancelled');
+                    return;
+                }
+                
+                try {
+                    const user = auth.currentUser;
+                    if (user) {
+                        // Delete user data from Firestore
+                        await deleteDoc(doc(db, 'users', user.uid));
+                        
+                        // Delete the user account
+                        await deleteUser(user);
+                        
+                        alert('Your account has been deleted successfully');
+                        window.location.href = 'Login.html';
+                    } else {
+                        alert('No user is currently logged in');
+                    }
+                } catch (error) {
+                    if (error.code === 'auth/requires-recent-login') {
+                        alert('For security reasons, please log out and log back in before deleting your account.');
+                    } else {
+                        alert('Error deleting account: ' + error.message);
+                    }
+                }
+            };
+        });
+    }
+    
+    // Legacy support - Change Password for other pages
     const changePasswordBtns = document.querySelectorAll('.btn-setting-action');
     
     if (changePasswordBtns.length > 0) {
         changePasswordBtns.forEach((btn, index) => {
             const btnText = btn.textContent.trim();
             
-            // Change Password
-            if (btnText.includes('Change') && index === 0) {
-                btn.addEventListener('click', async () => {
-                    const newPassword = prompt('Enter your new password (minimum 6 characters):');
-                    
-                    if (!newPassword) {
-                        return;
-                    }
-                    
-                    if (newPassword.length < 6) {
-                        alert('Password must be at least 6 characters long');
-                        return;
-                    }
-                    
-                    try {
-                        const user = auth.currentUser;
-                        if (user) {
-                            await updatePassword(user, newPassword);
-                            alert('Password updated successfully!');
-                        } else {
-                            alert('No user is currently logged in');
-                        }
-                    } catch (error) {
-                        if (error.code === 'auth/requires-recent-login') {
-                            alert('For security reasons, please log out and log back in before changing your password.');
-                        } else {
-                            alert('Error updating password: ' + error.message);
-                        }
-                    }
-                });
-            }
+            // Skip if it's already the change password button with ID
+            if (btn.id === 'changePasswordBtn') return;
             
-            // Two-Factor Authentication (Enable)
+            // Skip if it's already the delete account button with ID
+            if (btn.id === 'deleteAccountBtn') return;
+            
+            // Legacy: Two-Factor Authentication (Enable) - only for buttons without unique ID
             if (btnText.includes('Enable') && index === 1) {
                 btn.addEventListener('click', () => {
                     alert('Two-Factor Authentication feature is coming soon! This will add an extra layer of security to your account.');
-                });
-            }
-            
-            // Delete Account
-            if (btnText.includes('Delete') && btn.classList.contains('danger')) {
-                btn.addEventListener('click', async () => {
-                    const confirmation = confirm('Are you sure you want to delete your account? This action cannot be undone!');
-                    
-                    if (!confirmation) {
-                        return;
-                    }
-                    
-                    const finalConfirmation = prompt('Type "DELETE" to confirm account deletion:');
-                    
-                    if (finalConfirmation !== 'DELETE') {
-                        alert('Account deletion cancelled');
-                        return;
-                    }
-                    
-                    try {
-                        const user = auth.currentUser;
-                        if (user) {
-                            // Delete user data from Firestore
-                            await deleteDoc(doc(db, 'users', user.uid));
-                            
-                            // Delete the user account
-                            await deleteUser(user);
-                            
-                            alert('Your account has been deleted successfully');
-                            window.location.href = 'Login.html';
-                        } else {
-                            alert('No user is currently logged in');
-                        }
-                    } catch (error) {
-                        if (error.code === 'auth/requires-recent-login') {
-                            alert('For security reasons, please log out and log back in before deleting your account.');
-                        } else {
-                            alert('Error deleting account: ' + error.message);
-                        }
-                    }
                 });
             }
         });
@@ -3245,8 +3374,8 @@ window.saveGrade = async function(subjectIndex, assignmentIndex, studentId) {
     
     // Allow grading even if grade exceeds maxPoints (just warn but allow)
     if (grade > maxPoints) {
-        const confirmExceed = confirm(`Warning: The grade (${grade}) exceeds the max points (${maxPoints}). Do you want to save anyway?`);
-        if (!confirmExceed) return;
+        const confirmed = await showConfirmModal(`Warning: The grade (${grade}) exceeds the max points (${maxPoints}). Do you want to save anyway?`);
+        if (!confirmed) return;
     }
     
     try {
