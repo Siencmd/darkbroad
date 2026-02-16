@@ -218,7 +218,7 @@
           subjectsBar.style.width = progress + '%';
         }
         
-        // Calculate upcoming deadlines (tasks/assignments due within 7 days)
+        // Calculate upcoming deadlines (tasks/assignments/quizzes due within 7 days)
         let deadlines = 0;
         const now = new Date();
         const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -241,6 +241,17 @@
               if (assignment.dueDate) {
                 const dueDate = new Date(assignment.dueDate);
                 if (dueDate >= now && dueDate <= sevenDaysFromNow && assignment.status !== 'graded') {
+                  deadlines++;
+                }
+              }
+            });
+          }
+          // Check quizzes
+          if (subject.quizzes) {
+            subject.quizzes.forEach(quiz => {
+              if (quiz.dueDate) {
+                const dueDate = new Date(quiz.dueDate);
+                if (dueDate >= now && dueDate <= sevenDaysFromNow && quiz.status !== 'completed') {
                   deadlines++;
                 }
               }
