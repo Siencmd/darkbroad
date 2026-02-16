@@ -5557,6 +5557,30 @@ body.light-mode .nav-item.active {
     background: rgba(0, 150, 200, 0.1);
 }
 
+/* Light Mode - Profile Dropdown */
+body.light-mode #headerProfileDropdown {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 150, 200, 0.2);
+}
+
+body.light-mode .profile-dropdown-header {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .profile-dropdown-header span {
+    color: #1a1a1a !important;
+}
+
+body.light-mode .profile-dropdown-item {
+    color: #1a1a1a !important;
+}
+
+body.light-mode .profile-dropdown-item:hover,
+body.light-mode .profile-dropdown-item:focus {
+    background: rgba(0, 150, 200, 0.1) !important;
+    color: #0096c8 !important;
+}
+
 body.light-mode .dashboard-content {
     background: #f5f7fa;
 }
