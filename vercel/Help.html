@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0a1929" />
     <title>Help - Darkboard</title>
     <link rel="stylesheet" href="Darkboard.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -40,6 +43,7 @@
           <span id="headerUserName">Loading...</span>
         </div>
       </div>
+      <div class="top-user-name" id="topUserName"></div>
     </nav>
 
     <!-- Main Content -->
@@ -57,6 +61,20 @@
           <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
         </div>
         <div class="faq-container">
+          <div class="faq-item">
+            <div class="faq-question">
+              <span><i class="fas fa-chevron-right"></i> How does the term system work (Prelim, Midterm, Finals)?</span>
+            </div>
+            <div class="faq-answer">
+              <p>Darkboard uses a three-term grading system to track your academic progress throughout the semester:</p>
+              <ul>
+                <li><strong>Prelim</strong> (Weeks 1-5) - The first evaluation period covering the initial weeks of the semester. This sets the baseline for your initial grades.</li>
+                <li><strong>Midterm</strong> (Weeks 6-10) - The halfway point of the semester, covering content from the first half. This is a major assessment that counts significantly toward your final grade.</li>
+                <li><strong>Finals</strong> (Weeks 11-16) - The end-of-semester examination covering all material taught throughout the term. This is typically the most weighted assessment and occurs during the last weeks of the semester.</li>
+              </ul>
+              <p>Your overall grade is calculated by combining scores from all three terms. The average is displayed on the Grades page for each subject, helping you track your progress throughout the semester.</p>
+            </div>
+          </div>
           <div class="faq-item">
             <div class="faq-question">
               <span><i class="fas fa-chevron-right"></i> How do I view my grades?</span>
