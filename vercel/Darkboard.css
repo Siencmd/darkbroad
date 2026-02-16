@@ -8751,6 +8751,11 @@ body.light-mode #calendar .fc .fc-list-day-cushion {
     background: rgba(var(--bg-secondary-rgb), 0.9);
 }
 
+/* FullCalendar list day cushion - match theme */
+.fc-theme-standard .fc-list-day-cushion {
+    background: var(--bg-secondary) !important;
+}
+
 body.light-mode #calendar .fc .fc-list-event td {
     background: rgba(var(--bg-primary-rgb), 0.85);
 }
