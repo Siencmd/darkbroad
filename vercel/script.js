@@ -578,21 +578,28 @@ function initializePasswordToggles() {
 // DASHBOARD USER INFO
 // =========================
 function initializeDashboard() {
-    const userData = JSON.parse(localStorage.getItem("userData"));
-    if (!userData) return;
+    try {
+        const userDataStr = localStorage.getItem("userData");
+        if (!userDataStr) return;
+        
+        const userData = JSON.parse(userDataStr);
+        if (!userData || !userData.name) return;
 
-    const userNameEl = document.getElementById("headerUserName");
-    const dashboardNameEl = document.getElementById("dashboardUserName");
-    const greetingEl = document.getElementById("greetingMessage") || document.querySelector(".greetingMessage");
+        const userNameEl = document.getElementById("headerUserName");
+        const dashboardNameEl = document.getElementById("dashboardUserName");
+        const greetingEl = document.getElementById("greetingMessage") || document.querySelector(".greetingMessage");
 
-    if (userNameEl) userNameEl.textContent = userData.name;
-    if (dashboardNameEl) dashboardNameEl.textContent = userData.name.split(" ")[0];
+        if (userNameEl) userNameEl.textContent = userData.name;
+        if (dashboardNameEl) dashboardNameEl.textContent = userData.name.split(" ")[0];
 
-    if (greetingEl) {
-        const hour = new Date().getHours();
-        greetingEl.textContent = hour < 12 ? "Good morning 🌅" :
-                                 hour < 17 ? "Good afternoon ☀️" :
-                                             "Good evening 🌙";
+        if (greetingEl) {
+            const hour = new Date().getHours();
+            greetingEl.textContent = hour < 12 ? "Good morning 🌅" :
+                                     hour < 17 ? "Good afternoon ☀️" :
+                                                 "Good evening 🌙";
+        }
+    } catch (e) {
+        console.error("Error initializing dashboard:", e);
     }
 }
 
@@ -683,24 +690,43 @@ function initializeHeaderProfileMenu() {
         setOpen(!isOpen);
     };
 
+    // Click event for desktop
     userMenu.addEventListener('click', (event) => {
         if (event.target.closest('.profile-dropdown-item')) return;
         toggleMenu();
     });
 
-    userMenu.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            toggleMenu();
-        }
-        if (event.key === 'Escape') setOpen(false);
-    });
+    // Touch event for mobile
+    userMenu.addEventListener('touchstart', (event) => {
+        if (event.target.closest('.profile-dropdown-item')) return;
+        toggleMenu();
+    }, { passive: true });
 
+    // Close dropdown when clicking outside (for both click and touch)
     document.addEventListener('click', (event) => {
         if (!userMenu.contains(event.target)) setOpen(false);
     });
 
+    document.addEventListener('touchstart', (event) => {
+        if (!userMenu.contains(event.target)) setOpen(false);
+    }, { passive: true });
+
     dropdown.addEventListener('click', async (event) => {
+        const actionLink = event.target.closest('.profile-dropdown-item');
+        if (!actionLink) return;
+
+        const { action } = actionLink.dataset;
+        if (action !== 'logout') {
+            setOpen(false);
+            return;
+        }
+
+        event.preventDefault();
+        await logout();
+    });
+
+    // Touch support for dropdown items on mobile
+    dropdown.addEventListener('touchend', async (event) => {
         const actionLink = event.target.closest('.profile-dropdown-item');
         if (!actionLink) return;
 
