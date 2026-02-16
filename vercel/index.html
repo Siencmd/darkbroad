@@ -66,6 +66,8 @@
           <span id="headerUserName">Loading...</span>
         </div>
       </div>
+      <!-- Top right username -->
+      <div class="top-user-name" id="topUserName"></div>
     </nav>
 
     <!-- Main Content -->
@@ -167,7 +169,11 @@
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
 
-      // Load user data on page load
+      // Add this to the loadDashboardData function
+      const topUserName = document.getElementById('topUserName');
+      if (topUserName) {
+        topUserName.textContent = userData.name || 'User';
+      }
       window.addEventListener('DOMContentLoaded', () => {
         loadDashboardData();
         
