@@ -8179,6 +8179,60 @@ select option {
 }
 
 /* ===== Horizontal Scroll Parity (Analytics + Calendar) ===== */
+/* FullCalendar theme parity for both dark/light modes */
+#calendar .fc {
+    color: var(--text-primary);
+}
+
+#calendar .fc .fc-toolbar-title,
+#calendar .fc .fc-col-header-cell-cushion,
+#calendar .fc .fc-daygrid-day-number {
+    color: var(--text-primary);
+}
+
+#calendar .fc .fc-col-header-cell-cushion {
+    text-decoration: none;
+}
+
+#calendar .fc .fc-scrollgrid,
+#calendar .fc .fc-scrollgrid td,
+#calendar .fc .fc-scrollgrid th {
+    border-color: var(--border-color);
+}
+
+#calendar .fc .fc-button-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+#calendar .fc .fc-button-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+#calendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+#calendar .fc .fc-button-primary:not(:disabled):active {
+    background: var(--primary-active);
+    border-color: var(--primary-active);
+}
+
+#calendar .fc .fc-day-today {
+    background: rgba(var(--accent-rgb), 0.12) !important;
+}
+
+/* Keep horizontal scroll but hide the scrollbar for a cleaner look */
+#calendarContainer > .card {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+#calendarContainer > .card::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
 /* Keep FullCalendar date numbers consistently aligned */
 #calendar .fc .fc-daygrid-day-frame {
     min-height: 96px;
