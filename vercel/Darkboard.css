@@ -740,11 +740,24 @@ body.light-mode .theme-toggle-btn:hover {
     }
     
     .main-nav {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
         z-index: 10000 !important;
+    }
+    
+    body {
+        padding-top: 70px !important;
+    }
+    
+    .content {
+        margin-top: 0 !important;
     }
     
     .user-menu-right {
         position: relative !important;
+        z-index: 10001 !important;
         padding: 0.3rem 0.5rem !important;
     }
     
@@ -753,7 +766,7 @@ body.light-mode .theme-toggle-btn:hover {
         top: calc(100% + 10px) !important;
         right: 0 !important;
         min-width: 200px !important;
-        z-index: 9999 !important;
+        z-index: 10002 !important;
     }
     
     /* Make dropdown items more touch-friendly on mobile */
