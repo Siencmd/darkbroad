@@ -746,12 +746,14 @@ function initializeHeaderProfileMenu() {
     });
 
     const setOpen = (open) => {
+        console.log('[ProfileMenu] setOpen called with:', open, 'dropdown display:', dropdown.style.display);
         dropdown.style.display = open ? 'block' : 'none';
         userMenu.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
 
     const toggleMenu = () => {
         const isOpen = dropdown.style.display === 'block';
+        console.log('[ProfileMenu] toggleMenu - isOpen:', isOpen);
         setOpen(!isOpen);
     };
 
