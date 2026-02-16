@@ -93,6 +93,47 @@ function normalizeRole(roleValue) {
     return typeof roleValue === 'string' ? roleValue.trim().toLowerCase() : '';
 }
 
+// Helper function to combine day and time for schedule
+function combineDayAndTime(day, time) {
+    if (!day && !time) return '';
+    if (!day) return time;
+    if (!time) return day;
+    // Check if time already contains a day
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const timeLower = time.toLowerCase();
+    for (const d of days) {
+        if (timeLower.includes(d.toLowerCase())) {
+            return time; // Time already has day, return as-is
+        }
+    }
+    return `${day} ${time}`;
+}
+
+// Helper function to extract day from time string for editing
+function extractDayFromTime(time) {
+    if (!time) return '';
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const timeLower = time.toLowerCase();
+    for (const day of days) {
+        if (timeLower.includes(day.toLowerCase())) {
+            return day;
+        }
+    }
+    return '';
+}
+
+// Helper function to extract just the time (without day) from time string
+function extractTimeFromTime(time) {
+    if (!time) return '';
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let result = time;
+    for (const day of days) {
+        const regex = new RegExp(day + '\\s+', 'i');
+        result = result.replace(regex, '');
+    }
+    return result.trim();
+}
+
 async function getUserProfileByUid(uid) {
     if (!uid) return { source: "none", data: null };
 
@@ -1494,7 +1535,8 @@ function initializeSubjects() {
         document.getElementById('editSubjectIndex').value = index;
         document.getElementById('editSubjectName').value = sub.name;
         document.getElementById('editTeacherName').value = sub.teacher;
-        document.getElementById('editSubjectTime').value = sub.time;
+        document.getElementById('editSubjectDay').value = extractDayFromTime(sub.time);
+        document.getElementById('editSubjectTime').value = extractTimeFromTime(sub.time);
         document.getElementById('editSubjectDescription').value = sub.description || '';
 
         editModal.style.display = 'block';
@@ -1548,7 +1590,7 @@ function initializeSubjects() {
                     id: Date.now().toString(),
                     name: document.getElementById('newSubjectName').value.trim(),
                     teacher: document.getElementById('newTeacherName').value.trim(),
-                    time: document.getElementById('newSubjectTime').value.trim(),
+                    time: combineDayAndTime(document.getElementById('newSubjectDay').value, document.getElementById('newSubjectTime').value.trim()),
                     description: document.getElementById('newSubjectDescription').value.trim(),
                     lessons: [],
                     tasks: [],
@@ -1582,7 +1624,7 @@ function initializeSubjects() {
                     ...subjects[index],
                     name: document.getElementById('editSubjectName').value.trim(),
                     teacher: document.getElementById('editTeacherName').value.trim(),
-                    time: document.getElementById('editSubjectTime').value.trim(),
+                    time: combineDayAndTime(document.getElementById('editSubjectDay').value, document.getElementById('editSubjectTime').value.trim()),
                     description: document.getElementById('editSubjectDescription').value.trim()
                 };
 
