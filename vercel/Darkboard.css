@@ -191,6 +191,8 @@ button, input, textarea, select {
     .school-logo {
         width: 50px !important;
         height: 50px !important;
+        object-fit: contain !important;
+        border-radius: 50% !important;
     }
     
     .school-banner h2 {
@@ -851,6 +853,14 @@ body.light-mode .theme-toggle-btn:hover {
         height: 80px;
         bottom: -30px;
         left: 20px;
+        border-radius: 50%;
+    }
+    
+    .school-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 50%;
     }
 }
 
