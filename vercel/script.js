@@ -773,7 +773,14 @@ function initializeHeaderProfileMenu() {
             event.preventDefault();
             await logout();
         } else {
+            event.preventDefault();
             setOpen(false);
+            // Navigate to the href
+            const href = actionLink.getAttribute('href');
+            console.log('[ProfileMenu] Navigating to:', href);
+            if (href && href !== '#') {
+                window.location.href = href;
+            }
         }
     });
 
