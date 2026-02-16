@@ -8225,6 +8225,8 @@ select option {
 #calendarContainer > .card {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: contain;
 }
 
 #calendarContainer > .card::-webkit-scrollbar {
@@ -8255,6 +8257,27 @@ select option {
     line-height: 1;
     text-align: center;
     font-variant-numeric: tabular-nums;
+}
+
+/* Mobile: remove tap/focus artifacts that can look like a blue line while scrolling */
+@media (hover: none) and (pointer: coarse) {
+    #calendar .fc,
+    #calendar .fc * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #calendar .fc .fc-daygrid-day-number,
+    #calendar .fc .fc-col-header-cell-cushion {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    #calendar .fc .fc-daygrid-day-number:focus,
+    #calendar .fc .fc-col-header-cell-cushion:focus,
+    #calendar .fc .fc-button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
 }
 
 @media (max-width: 1024px) {
