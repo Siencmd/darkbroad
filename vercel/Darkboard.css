@@ -7875,11 +7875,19 @@ select option {
     .analytics-grid {
         grid-template-columns: 1fr;
         justify-items: center;
+        padding: 15px 10px;
+        gap: 15px;
     }
     
     .analytics-card {
         width: 100%;
-        max-width: 350px;
+        max-width: 320px;
+        min-height: auto;
+        padding: 15px;
+    }
+    
+    .analytics-card canvas {
+        max-height: 200px;
     }
     
     .filter-controls {
