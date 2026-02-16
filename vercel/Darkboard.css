@@ -785,6 +785,10 @@ body.light-mode .theme-toggle-btn:hover {
         min-height: 44px !important;
         display: flex !important;
         align-items: center !important;
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
     }
     
     .user-menu-right .user-avatar {
