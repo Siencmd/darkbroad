@@ -203,7 +203,7 @@
       import { setupRealtimeSubjects } from "./realtime.js";
 
       const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", (e) => logout(e));
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
 
       // Global data
       let subjects = [];
