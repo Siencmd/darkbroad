@@ -169,7 +169,7 @@
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
       import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", (e) => logout(e));
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
       
       let profileRealtimeUnsubscribe = null;
 
