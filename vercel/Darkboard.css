@@ -674,8 +674,14 @@ body.light-mode .theme-toggle-btn:hover {
     }
     
     .user-menu-right {
-        position: static !important;
+        position: relative !important;
         padding: 0.3rem 0.5rem !important;
+    }
+    
+    .user-menu-right #headerProfileDropdown {
+        position: absolute !important;
+        top: calc(100% + 10px) !important;
+        right: 0 !important;
     }
     
     .user-menu-right .user-avatar {
