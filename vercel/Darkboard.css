@@ -97,7 +97,145 @@ button, input, textarea, select {
     font-size: inherit;
     line-height: inherit;
 }
-/* Theme Variables */
+/* Mobile Performance Optimizations */
+/* Reduce motion preferences for accessibility and performance */
+@media (prefers-reduced-motion: reduce), (max-width: 768px) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    body {
+        animation: none !important;
+        background: #0a1929 !important;
+    }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+    /* Disable backdrop-filter on mobile for performance */
+    .main-nav,
+    .top-bar,
+    .user-menu-right,
+    .card,
+    .glass,
+    [class*="glass"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    
+    /* Reduce padding on mobile */
+    .main-nav {
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .content {
+        padding: 1rem !important;
+        margin-top: 60px !important;
+    }
+    
+    /* Make navigation scrollable horizontally */
+    .nav-list {
+        display: flex !important;
+        overflow-x: auto !important;
+        gap: 0.25rem !important;
+        padding-bottom: 0.5rem !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    .nav-list::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-item {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap;
+    }
+    
+    .nav-item span {
+        display: none !important;
+    }
+    
+    .nav-item i {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Larger touch targets */
+    button,
+    .action-card,
+    .nav-item,
+    .theme-btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Grid adjustments */
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+    
+    .grades-stats {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .stat-card {
+        padding: 0.75rem !important;
+    }
+    
+    /* Smaller fonts on mobile */
+    h1 { font-size: 1.5rem !important; }
+    h2 { font-size: 1.25rem !important; }
+    
+    .card {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* School banner mobile */
+    .school-banner {
+        min-height: 120px !important;
+        background-size: cover !important;
+        background-position: center !important;
+    }
+    
+    .school-logo {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .school-banner h2 {
+        font-size: 1rem !important;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    button:hover,
+    .nav-item:hover,
+    .action-card:hover,
+    .card:hover {
+        transform: none !important;
+    }
+    
+    button:active,
+    .nav-item:active,
+    .action-card:active {
+        transform: scale(0.97) !important;
+        opacity: 0.8;
+    }
+}
+
+/*
+ * Theme Variables
+ */
 :root {
     --bg-primary: #050505;
     --bg-secondary: #0a0a0a;
