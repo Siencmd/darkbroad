@@ -34,6 +34,7 @@ body {
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
+    overflow-y: scroll;
     animation: gradientShift 20s ease infinite;
 }
 
@@ -2414,7 +2415,8 @@ body.light-mode .theme-toggle-btn:hover {
     justify-content: center;
     padding: 5rem 1.25rem 1.25rem;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     animation: gradientShift 20s ease infinite;
 }
 
@@ -2439,6 +2441,7 @@ body.light-mode .theme-toggle-btn:hover {
     align-items: center;
     position: relative;
     z-index: 1;
+    overflow: visible;
 }
 
 .login-box {
