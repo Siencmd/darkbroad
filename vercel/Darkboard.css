@@ -7874,6 +7874,12 @@ select option {
 @media (max-width: 768px) {
     .analytics-grid {
         grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    
+    .analytics-card {
+        width: 100%;
+        max-width: 350px;
     }
     
     .filter-controls {
