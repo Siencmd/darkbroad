@@ -645,8 +645,13 @@ function initializeDashboard() {
 }
 
 function initializeHeaderProfileMenu() {
+    console.log('[ProfileMenu] Initializing header profile menu...');
     const nav = document.querySelector('.main-nav');
-    if (!nav) return;
+    if (!nav) {
+        console.log('[ProfileMenu] ERROR: .main-nav not found');
+        return;
+    }
+    console.log('[ProfileMenu] Found .main-nav');
 
     const navList = nav.querySelector('.nav-list');
     if (navList) {
@@ -666,7 +671,12 @@ function initializeHeaderProfileMenu() {
     }
 
     const userMenu = nav.querySelector('.user-menu-right');
-    if (!userMenu || userMenu.dataset.dropdownInitialized === 'true') return;
+    console.log('[ProfileMenu] userMenu found:', !!userMenu);
+    if (!userMenu || userMenu.dataset.dropdownInitialized === 'true') {
+        console.log('[ProfileMenu] Skipping - already initialized or no userMenu');
+        return;
+    }
+    console.log('[ProfileMenu] Creating dropdown...');
     userMenu.dataset.dropdownInitialized = 'true';
 
     const userName = userMenu.querySelector('#headerUserName');
@@ -714,6 +724,7 @@ function initializeHeaderProfileMenu() {
         <a href="#" class="profile-dropdown-item" data-action="logout">Logout</a>
     `;
     userMenu.appendChild(dropdown);
+    console.log('[ProfileMenu] Dropdown appended to userMenu');
 
     const dropdownLinks = dropdown.querySelectorAll('.profile-dropdown-item');
     dropdownLinks.forEach((link) => {
@@ -746,6 +757,7 @@ function initializeHeaderProfileMenu() {
 
     // Click event for desktop
     userMenu.addEventListener('click', (event) => {
+        console.log('[ProfileMenu] Click detected on userMenu');
         if (event.target.closest('.profile-dropdown-item')) return;
         toggleMenu();
     });
