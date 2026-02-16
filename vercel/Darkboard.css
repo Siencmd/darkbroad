@@ -733,9 +733,46 @@ body.light-mode .theme-toggle-btn:hover {
     }
 }
 
-@media (min-width: 768px) {
-    .content {
-        padding: 2rem;
+@media (min-width: 769px) {
+    /* Desktop Navigation - Show full nav with text */
+    .main-nav {
+        flex-wrap: nowrap !important;
+        overflow: visible;
+    }
+    
+    .nav-list {
+        order: 0 !important;
+        width: auto !important;
+        flex: 1 !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+        white-space: normal !important;
+        gap: 0.5rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .nav-item {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        white-space: normal !important;
+    }
+    
+    .nav-item span {
+        display: inline !important;
+    }
+    
+    .nav-right {
+        flex-shrink: 0;
+    }
+    
+    .user-menu-right {
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .user-menu-right span {
+        display: inline !important;
     }
 }
 
