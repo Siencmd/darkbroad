@@ -570,7 +570,7 @@ Due: ${event.start ? (parseDateLocal(event.start)?.toLocaleDateString() || 'N/A'
               </div>
               <div class="deadline-info">
                 <h4>${props.itemTitle}</h4>
-                <p>${props.subject} � ${props.type}</p>
+                <p>${props.subject} &middot; ${props.type}</p>
               </div>
               <div class="deadline-days">
                 ${daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
@@ -639,55 +639,9 @@ END:VEVENT
     </script>
 
     <style>
-      /* Calendar Styles */
-      .calendar-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        background: var(--card-bg);
-        border-bottom: 1px solid var(--border-color);
-        flex-wrap: wrap;
-        gap: 15px;
-      }
-
-      .calendar-filters {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-      }
-
-      .calendar-filters label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        font-size: 0.9rem;
-      }
-
-      .calendar-filters input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        accent-color: var(--primary-color);
-      }
-
-      .btn-export-calendar {
-        padding: 10px 20px;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s;
-      }
-
-      .btn-export-calendar:hover {
-        background: var(--primary-hover);
-        transform: translateY(-2px);
+      /* Calendar Styles (base controls come from Darkboard.css) */
+      #calendarContainer > .card {
+        overflow: hidden;
       }
 
       #calendar {
@@ -937,20 +891,6 @@ END:VEVENT
 
       /* Responsive */
       @media (max-width: 768px) {
-        .calendar-controls {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        
-        .calendar-filters {
-          justify-content: flex-start;
-        }
-        
-        .btn-export-calendar {
-          width: 100%;
-          justify-content: center;
-        }
-        
         .schedule-grid {
           grid-template-columns: 1fr;
         }
