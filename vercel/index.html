@@ -167,7 +167,7 @@
 
       // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", (e) => logout(e));
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
 
       window.addEventListener('DOMContentLoaded', () => {
         loadDashboardData();
