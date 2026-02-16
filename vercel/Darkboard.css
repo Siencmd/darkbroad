@@ -8349,7 +8349,7 @@ select option {
 }
 
 #calendar .fc .fc-list-day-cushion {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(var(--bg-secondary-rgb), 0.85);
     color: var(--text-primary);
 }
 
@@ -8360,13 +8360,13 @@ select option {
 }
 
 #calendar .fc .fc-list-event td {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(var(--bg-primary-rgb), 0.7);
     border-color: var(--border-color);
     color: var(--text-primary);
 }
 
 #calendar .fc .fc-list-event:hover td {
-    background: rgba(var(--accent-rgb), 0.12);
+    background: rgba(var(--accent-rgb), 0.16);
 }
 
 #calendar .fc .fc-list-event-time {
@@ -8410,6 +8410,19 @@ select option {
     padding: 4px 6px 0 6px;
 }
 
+/* Prevent month-view scrollbar from covering the rightmost day numbers (Saturday) */
+#calendar .fc .fc-scroller {
+    scrollbar-gutter: stable;
+}
+
+#calendar .fc-dayGridMonth-view .fc-scroller {
+    overflow-y: hidden !important;
+}
+
+#calendar .fc-dayGridMonth-view .fc-daygrid-day-top {
+    padding-right: 12px;
+}
+
 #calendar .fc .fc-daygrid-day-number {
     display: inline-flex;
     justify-content: center;
@@ -8423,11 +8436,11 @@ select option {
 }
 
 body.light-mode #calendar .fc .fc-list-day-cushion {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(var(--bg-secondary-rgb), 0.9);
 }
 
 body.light-mode #calendar .fc .fc-list-event td {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(var(--bg-primary-rgb), 0.85);
 }
 
 body.light-mode #calendar .fc .fc-list-event:hover td {
