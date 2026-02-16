@@ -784,19 +784,19 @@ function initializeHeaderProfileMenu() {
         }
     });
 
-    // Touch support for dropdown items on mobile
-    dropdown.addEventListener('touchend', async (event) => {
-        const actionLink = event.target.closest('.profile-dropdown-item');
-        if (!actionLink) return;
-
-        const { action } = actionLink.dataset;
-        if (action === 'logout') {
-            event.preventDefault();
-            await logout();
-        } else {
-            setOpen(false);
-        }
-    });
+    // Touch support for dropdown items on mobile - disabled to prevent interference with click
+    // dropdown.addEventListener('touchend', async (event) => {
+    //     const actionLink = event.target.closest('.profile-dropdown-item');
+    //     if (!actionLink) return;
+    //
+    //     const { action } = actionLink.dataset;
+    //     if (action === 'logout') {
+    //         event.preventDefault();
+    //         await logout();
+    //     } else {
+    //         setOpen(false);
+    //     }
+    // });
 }
 
 // =========================
