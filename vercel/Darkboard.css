@@ -2063,8 +2063,6 @@ body.light-mode .theme-toggle-btn:hover {
     backdrop-filter: blur(20px);
     animation: fadeIn 0.4s ease;
     overflow-y: auto;
-    align-items: center;
-    justify-content: center;
 }
 
 @keyframes fadeIn {
@@ -2074,7 +2072,7 @@ body.light-mode .theme-toggle-btn:hover {
 
 .modal-content {
     background: var(--glass-bg);
-    margin: auto;
+    margin: 5% auto;
     padding: 40px;
     border: 1px solid var(--glass-border);
     border-radius: 20px;
@@ -2088,6 +2086,13 @@ body.light-mode .theme-toggle-btn:hover {
     opacity: 1;
     position: relative;
     z-index: 2001;
+}
+
+/* Desktop modal position - lower on screen */
+@media (min-width: 769px) {
+    .modal-content {
+        margin: 15% auto;
+    }
 }
 
 .modal-content::before {
@@ -7506,7 +7511,7 @@ body.light-mode .profile-section {
     max-width: 520px;
     height: auto;
     max-height: 90vh;
-    margin: auto;
+    margin: 15% auto;
     border-radius: 20px;
     overflow-y: auto;
     animation: slideIn 0.3s ease;
