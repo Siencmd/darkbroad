@@ -4297,7 +4297,7 @@ body.light-mode .theme-toggle-btn:hover {
         font-size: 0.75rem !important;
     }
     
-    .fc-daygrid-day,
+    /* Avoid forcing month cells to fixed height; it misaligns date numbers */
     .fc-timegrid-slot {
         height: 30px !important;
     }
@@ -8185,11 +8185,12 @@ select option {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    min-width: 1.75rem;
+    min-width: 2ch;
     height: 1.75rem;
     padding: 0;
     line-height: 1;
     text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 1024px) {
