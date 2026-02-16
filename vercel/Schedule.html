@@ -195,6 +195,31 @@
         return date;
       }
 
+      function formatLocalDate(dateValue) {
+        const date = new Date(dateValue);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDateLocal(value) {
+        if (!value) return null;
+        if (value instanceof Date) return new Date(value);
+
+        const text = String(value).trim();
+        const dateOnlyMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (dateOnlyMatch) {
+          const year = Number(dateOnlyMatch[1]);
+          const month = Number(dateOnlyMatch[2]) - 1;
+          const day = Number(dateOnlyMatch[3]);
+          return new Date(year, month, day);
+        }
+
+        const parsed = new Date(text);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+
       function createClassEvents(subject, index, color) {
         const classEvents = [];
         const days = extractDaysFromTimeText(subject.time);
@@ -221,8 +246,8 @@
             classEvents.push({
               id: `class-${subject.id || index}-${dayName}-${week}`,
               title: `${subject.name}`,
-              start: hasTimedRange ? startDate.toISOString() : classDate.toISOString().split('T')[0],
-              end: hasTimedRange ? endDate.toISOString() : undefined,
+              start: hasTimedRange ? startDate : formatLocalDate(classDate),
+              end: hasTimedRange ? endDate : undefined,
               allDay: !hasTimedRange,
               backgroundColor: color,
               borderColor: color,
@@ -428,7 +453,7 @@ Type: ${props.type}
 ${props.points ? `Points: ${props.points}` : ''}
 ${props.priority ? `Priority: ${props.priority}` : ''}
 ${props.classTime ? `Time: ${props.classTime}` : ''}
-Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
+Due: ${event.start ? (parseDateLocal(event.start)?.toLocaleDateString() || 'N/A') : 'N/A'}
         `);
       }
       // Render weekly schedule
@@ -507,10 +532,16 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
         const upcomingEvents = allEvents.filter(event => {
           if (event?.extendedProps?.type === 'subject') return false;
           if (!event.start) return false;
-          const eventDate = new Date(event.start);
+          const eventDate = parseDateLocal(event.start);
+          if (!eventDate) return false;
           eventDate.setHours(0, 0, 0, 0);
           return eventDate >= today && eventDate <= nextWeek;
-        }).sort((a, b) => new Date(a.start) - new Date(b.start));
+        }).sort((a, b) => {
+          const aDate = parseDateLocal(a.start);
+          const bDate = parseDateLocal(b.start);
+          if (!aDate || !bDate) return 0;
+          return aDate - bDate;
+        });
 
         if (upcomingEvents.length === 0) {
           container.innerHTML = `
@@ -524,7 +555,7 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
 
         container.innerHTML = upcomingEvents.map(event => {
           const props = event.extendedProps;
-          const eventDate = new Date(event.start);
+          const eventDate = parseDateLocal(event.start) || new Date();
           const daysLeft = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
           
           let urgencyClass = '';
@@ -560,8 +591,8 @@ METHOD:PUBLISH
 `;
 
         allEvents.forEach(event => {
-          const startDate = event.start ? new Date(event.start) : new Date();
-          const dateStr = startDate.toISOString().replace(/[-:]/g, '').split('T')[0];
+          const startDate = parseDateLocal(event.start) || new Date();
+          const dateStr = formatLocalDate(startDate).replace(/-/g, '');
           
           icsContent += `BEGIN:VEVENT
 DTSTART;VALUE=DATE:${dateStr}
