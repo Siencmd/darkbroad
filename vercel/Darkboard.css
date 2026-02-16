@@ -734,10 +734,16 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 @media (min-width: 769px) {
-    /* Desktop Navigation - Show full nav with text */
+    /* Desktop Navigation - Show full nav with text, centered */
     .main-nav {
         flex-wrap: nowrap !important;
         overflow: visible;
+        justify-content: center;
+    }
+    
+    .nav-header {
+        position: absolute;
+        left: 2rem;
     }
     
     .nav-list {
@@ -748,14 +754,15 @@ body.light-mode .theme-toggle-btn:hover {
         flex-wrap: nowrap !important;
         overflow: visible !important;
         white-space: normal !important;
-        gap: 0.5rem !important;
+        gap: 0.25rem !important;
         padding: 0 !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
+        justify-content: center;
     }
     
     .nav-item {
-        padding: 0.5rem 1rem !important;
-        font-size: 0.9rem !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8rem !important;
         white-space: normal !important;
     }
     
@@ -764,6 +771,8 @@ body.light-mode .theme-toggle-btn:hover {
     }
     
     .nav-right {
+        position: absolute;
+        right: 2rem;
         flex-shrink: 0;
     }
     
