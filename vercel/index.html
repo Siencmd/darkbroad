@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0a1929" />
     <title>Darkboard - Student Dashboard for College of Computer Studies</title>
     <meta name="description" content="Access your personalized student dashboard at Darkboard. Manage subjects, grades, schedule, announcements, and more for College of Computer Studies students." />
     <meta name="keywords" content="student dashboard, college management, subjects, grades, schedule, announcements, education platform" />
@@ -10,6 +14,7 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://darkboard.edu/index.html" />
     <link rel="icon" href="Gemini_Generated_Image_g3iakg3iakg3iakg.png" type="image/png" />
+    <link rel="preload" href="Gemini_Generated_Image_g3iakg3iakg3iakg.png" as="image" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -57,7 +62,7 @@
       </ul>
       <div class="nav-right">
         <div class="user-menu-right">
-          <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
+          <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar" loading="lazy">
           <span id="headerUserName">Loading...</span>
         </div>
       </div>
@@ -77,6 +82,7 @@
                 src="Gemini_Generated_Image_g3iakg3iakg3iakg.png"
                 alt="College of Computer Studies logo"
                 class="school-logo"
+                loading="lazy"
               />
             </div>
             <h2 id="school-banner-heading">College of Computer Studies</h2>
@@ -303,27 +309,32 @@
       }
 
       // Add animation on the web page using ScrollReveal
-      ScrollReveal().reveal(".school-banner", {
-        delay: 1000,
-      });
+      // Disable on mobile for performance
+      const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+      
+      if (!isMobile) {
+        ScrollReveal().reveal(".school-banner", {
+          delay: 1000,
+        });
 
-      ScrollReveal().reveal(".welcome-section", {
-        delay: 1500,
-      });
+        ScrollReveal().reveal(".welcome-section", {
+          delay: 1500,
+        });
 
-      ScrollReveal().reveal(".stat-card", {
-        delay: 1700,
-        interval: 500,
-      });
+        ScrollReveal().reveal(".stat-card", {
+          delay: 1700,
+          interval: 500,
+        });
 
-      ScrollReveal().reveal(".card", {
-        delay: 1000,
-      });
+        ScrollReveal().reveal(".card", {
+          delay: 1000,
+        });
 
-      ScrollReveal().reveal(".action-card", {
-        interval: 200,
-        delay: 500,
-      });
+        ScrollReveal().reveal(".action-card", {
+          interval: 200,
+          delay: 500,
+        });
+      }
 
       // Typing animation in the user name
       const typed = new Typed(".greetingMessage", {
