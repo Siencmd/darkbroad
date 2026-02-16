@@ -99,6 +99,15 @@ button, input, textarea, select {
 }
 /* Mobile Performance Optimizations - Keep Animations */
 @media (max-width: 768px) {
+    /* Hide top user name on mobile */
+    .top-user-name {
+        display: none !important;
+    }
+    
+    /* Also hide it in the nav */
+    .user-menu-right span {
+        display: none !important;
+    }
     /* Disable backdrop-filter on mobile for performance */
     .main-nav,
     .top-bar,
@@ -783,6 +792,8 @@ body.light-mode .theme-toggle-btn:hover {
         position: absolute;
         right: 2rem;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
     }
     
     .user-menu-right {
@@ -794,8 +805,22 @@ body.light-mode .theme-toggle-btn:hover {
         height: 35px !important;
     }
     
+    /* Hide name in nav, show only icon */
     .user-menu-right span {
-        display: inline !important;
+        display: none !important;
+    }
+    
+    /* Profile name in top right corner */
+    .top-user-name {
+        display: inline-block !important;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-left: 10px;
+        position: absolute;
+        right: 120px;
+        top: 50%;
+        transform: translateY(-50%);
     }
 }
 
