@@ -571,7 +571,7 @@ body.light-mode .theme-toggle-btn:hover {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 10000;
 }
 
 .nav-list {
@@ -745,19 +745,23 @@ body.light-mode .theme-toggle-btn:hover {
         left: 0 !important;
         right: 0 !important;
         z-index: 10000 !important;
+        overflow: visible !important;
     }
     
     body {
         padding-top: 70px !important;
+        overflow-x: hidden;
     }
     
     .content {
         margin-top: 0 !important;
+        overflow: visible !important;
     }
     
     .user-menu-right {
         position: relative !important;
         z-index: 10001 !important;
+        overflow: visible !important;
         padding: 0.3rem 0.5rem !important;
     }
     
@@ -765,6 +769,7 @@ body.light-mode .theme-toggle-btn:hover {
         position: absolute !important;
         top: calc(100% + 10px) !important;
         right: 0 !important;
+        left: auto !important;
         min-width: 200px !important;
         z-index: 10002 !important;
     }
