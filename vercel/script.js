@@ -645,13 +645,8 @@ function initializeDashboard() {
 }
 
 function initializeHeaderProfileMenu() {
-    console.log('[ProfileMenu] Initializing header profile menu...');
     const nav = document.querySelector('.main-nav');
-    if (!nav) {
-        console.log('[ProfileMenu] ERROR: .main-nav not found');
-        return;
-    }
-    console.log('[ProfileMenu] Found .main-nav');
+    if (!nav) return;
 
     const navList = nav.querySelector('.nav-list');
     if (navList) {
@@ -671,12 +666,7 @@ function initializeHeaderProfileMenu() {
     }
 
     const userMenu = nav.querySelector('.user-menu-right');
-    console.log('[ProfileMenu] userMenu found:', !!userMenu);
-    if (!userMenu || userMenu.dataset.dropdownInitialized === 'true') {
-        console.log('[ProfileMenu] Skipping - already initialized or no userMenu');
-        return;
-    }
-    console.log('[ProfileMenu] Creating dropdown...');
+    if (!userMenu || userMenu.dataset.dropdownInitialized === 'true') return;
     userMenu.dataset.dropdownInitialized = 'true';
 
     const userName = userMenu.querySelector('#headerUserName');
@@ -724,7 +714,6 @@ function initializeHeaderProfileMenu() {
         <a href="#" class="profile-dropdown-item" data-action="logout">Logout</a>
     `;
     userMenu.appendChild(dropdown);
-    console.log('[ProfileMenu] Dropdown appended to userMenu');
 
     const dropdownLinks = dropdown.querySelectorAll('.profile-dropdown-item');
     dropdownLinks.forEach((link) => {
@@ -746,39 +735,18 @@ function initializeHeaderProfileMenu() {
     });
 
     const setOpen = (open) => {
-        console.log('[ProfileMenu] setOpen called with:', open, 'dropdown display:', dropdown.style.display);
         dropdown.style.display = open ? 'block' : 'none';
         userMenu.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
 
     const toggleMenu = () => {
         const isOpen = dropdown.style.display === 'block';
-        console.log('[ProfileMenu] toggleMenu - isOpen:', isOpen);
         setOpen(!isOpen);
     };
 
-    // Click event for desktop
-    userMenu.addEventListener('click', (event) => {
-        console.log('[ProfileMenu] Click detected on userMenu');
-        if (event.target.closest('.profile-dropdown-item')) return;
-        toggleMenu();
-    });
-
-    // Touch event for mobile - use click instead of touchstart for better compatibility
-    let touchTimer = null;
+    // Click event for desktop and mobile
     userMenu.addEventListener('click', (event) => {
         if (event.target.closest('.profile-dropdown-item')) return;
-        // Prevent double-firing on touch devices
-        if (event.type === 'touchend') {
-            if (touchTimer) {
-                clearTimeout(touchTimer);
-                touchTimer = null;
-                return;
-            }
-            touchTimer = setTimeout(() => {
-                touchTimer = null;
-            }, 300);
-        }
         toggleMenu();
     });
 
