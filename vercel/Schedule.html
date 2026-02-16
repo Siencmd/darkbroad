@@ -455,22 +455,42 @@ Due: ${event.start ? event.start.toLocaleDateString() : 'N/A'}
         // Add schedule items from subjects
         subjects.forEach(subject => {
           if (subject.time) {
+            // Extract day(s) from time string - handle both "Monday 08:00 AM" and just "08:00 AM" formats
             const dayMatches = subject.time.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/gi) || [];
-            dayMatches.forEach((matchedDay) => {
-              const day = matchedDay.charAt(0).toUpperCase() + matchedDay.slice(1).toLowerCase();
-              const dayKey = day.toLowerCase();
-              const dayContainer = document.getElementById(`schedule-${dayKey}`);
-              
+            
+            if (dayMatches.length > 0) {
+              // New format with day in the time string
+              dayMatches.forEach((matchedDay) => {
+                const day = matchedDay.charAt(0).toUpperCase() + matchedDay.slice(1).toLowerCase();
+                const dayKey = day.toLowerCase();
+                const dayContainer = document.getElementById(`schedule-${dayKey}`);
+                
+                if (dayContainer) {
+                  const item = document.createElement('div');
+                  item.className = 'schedule-item';
+                  item.innerHTML = `
+                    <span class="time">${subject.time}</span>
+                    <span class="subject">${subject.name}</span>
+                  `;
+                  dayContainer.appendChild(item);
+                }
+              });
+            } else {
+              // Old format without day - show in all days or add a message
+              // For backward compatibility, show as "Time TBD" on all days
+              const item = document.createElement('div');
+              item.className = 'schedule-item';
+              item.innerHTML = `
+                <span class="time">${subject.time}</span>
+                <span class="subject">${subject.name}</span>
+                <span class="room" style="font-size: 0.8em;">(Day not set - please edit)</span>
+              `;
+              // Add to Monday as default
+              const dayContainer = document.getElementById('schedule-monday');
               if (dayContainer) {
-                const item = document.createElement('div');
-                item.className = 'schedule-item';
-                item.innerHTML = `
-                  <span class="time">${subject.time}</span>
-                  <span class="subject">${subject.name}</span>
-                `;
                 dayContainer.appendChild(item);
               }
-            });
+            }
           }
         });
       }
