@@ -154,7 +154,7 @@
     <script type="module">
       import { logout } from "./script.js";
       const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", (e) => logout(e));
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
     </script>
   </body>
 </html>
