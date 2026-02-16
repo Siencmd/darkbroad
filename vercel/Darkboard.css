@@ -8167,3 +8167,57 @@ select option {
         line-height: 1.45;
     }
 }
+
+/* ===== Horizontal Scroll Parity (Analytics + Calendar) ===== */
+@media (max-width: 1024px) {
+    .analytics-section .card {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .analytics-section .analytics-grid {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 16px !important;
+        min-width: 980px;
+    }
+
+    .analytics-section .analytics-card {
+        flex: 0 0 300px !important;
+        min-width: 300px;
+        max-width: 300px !important;
+    }
+
+    #calendarContainer {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #calendar {
+        min-width: 980px;
+    }
+
+    #calendar .fc-scrollgrid {
+        min-width: 980px;
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-section .analytics-grid {
+        min-width: 860px;
+    }
+
+    .analytics-section .analytics-card {
+        flex-basis: 260px !important;
+        min-width: 260px;
+        max-width: 260px !important;
+    }
+
+    #calendar {
+        min-width: 860px;
+    }
+
+    #calendar .fc-scrollgrid {
+        min-width: 860px;
+    }
+}
