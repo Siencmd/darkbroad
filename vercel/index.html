@@ -169,12 +169,18 @@
       const logoutBtn = document.getElementById("logoutBtn");
       logoutBtn.addEventListener("click", (e) => logout(e));
 
-      // Add this to the loadDashboardData function
-      const topUserName = document.getElementById('topUserName');
-      if (topUserName) {
-        topUserName.textContent = userData.name || 'User';
-      }
       window.addEventListener('DOMContentLoaded', () => {
+        // Get user data for topUserName
+        try {
+          const userData = JSON.parse(localStorage.getItem('userData'));
+          const topUserName = document.getElementById('topUserName');
+          if (topUserName && userData) {
+            topUserName.textContent = userData.name || 'User';
+          }
+        } catch (e) {
+          console.error('Error loading user data:', e);
+        }
+        
         loadDashboardData();
         
         // Setup quick action buttons
