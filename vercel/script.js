@@ -653,7 +653,20 @@ function initializeHeaderProfileMenu() {
     dropdown.style.boxShadow = 'var(--glass-shadow)';
     dropdown.style.zIndex = '1200';
     dropdown.style.display = 'none';
+    
+    // Get user name for dropdown header
+    let userDisplayName = 'User';
+    try {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        if (userData && userData.name) {
+            userDisplayName = userData.name;
+        }
+    } catch (e) {}
+    
     dropdown.innerHTML = `
+        <div class="profile-dropdown-header" style="padding: 10px 12px; border-bottom: 1px solid var(--glass-border); margin-bottom: 8px;">
+            <span style="font-weight: 600; color: var(--text-primary);">${userDisplayName}</span>
+        </div>
         <a href="Profile.html" class="profile-dropdown-item" data-action="profile">Profile</a>
         <a href="Settings.html" class="profile-dropdown-item" data-action="settings">Settings</a>
         <a href="Help.html" class="profile-dropdown-item" data-action="help">Help</a>
