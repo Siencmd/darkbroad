@@ -279,21 +279,27 @@
 
         // Load events from subjects
         loadEvents();
-        
-        // Initialize calendar
-        initializeCalendar();
-        
-        // Render weekly schedule
-        renderWeeklySchedule();
-        
-        // Show upcoming deadlines
-        renderUpcomingDeadlines();
 
         // Show all sections
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('calendarContainer').style.display = 'block';
         document.getElementById('upcomingDeadlines').style.display = 'block';
         document.getElementById('weeklySchedule').style.display = 'block';
+
+        // Initialize calendar only after container is visible.
+        initializeCalendar();
+        // Force size recompute after paint so FullCalendar doesn't stay collapsed.
+        requestAnimationFrame(() => {
+          if (calendar && typeof calendar.updateSize === 'function') {
+            calendar.updateSize();
+          }
+        });
+        
+        // Render weekly schedule
+        renderWeeklySchedule();
+        
+        // Show upcoming deadlines
+        renderUpcomingDeadlines();
 
         // Setup filter listeners
         document.getElementById('showAssignments').addEventListener('change', updateCalendarEvents);
