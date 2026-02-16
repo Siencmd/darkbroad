@@ -772,6 +772,11 @@ body.light-mode .theme-toggle-btn:hover {
         left: auto !important;
         min-width: 200px !important;
         z-index: 10002 !important;
+        pointer-events: auto !important;
+    }
+    
+    .user-menu-right #headerProfileDropdown * {
+        pointer-events: auto !important;
     }
     
     /* Make dropdown items more touch-friendly on mobile */
