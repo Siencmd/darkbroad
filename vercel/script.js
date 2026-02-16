@@ -692,7 +692,7 @@ function initializeHeaderProfileMenu() {
     dropdown.style.borderRadius = '10px';
     dropdown.style.padding = '8px';
     dropdown.style.boxShadow = 'var(--glass-shadow)';
-    dropdown.style.zIndex = '1200';
+    dropdown.style.zIndex = '10000';
     dropdown.style.display = 'none';
     
     // Get user name for dropdown header
