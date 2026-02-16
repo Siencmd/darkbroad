@@ -739,11 +739,16 @@ body.light-mode .theme-toggle-btn:hover {
         flex-wrap: nowrap !important;
         overflow: visible;
         justify-content: center;
+        padding: 1rem 2rem !important;
     }
     
     .nav-header {
         position: absolute;
         left: 2rem;
+    }
+    
+    .nav-header .brand {
+        font-size: 1.5rem !important;
     }
     
     .nav-list {
@@ -754,20 +759,24 @@ body.light-mode .theme-toggle-btn:hover {
         flex-wrap: nowrap !important;
         overflow: visible !important;
         white-space: normal !important;
-        gap: 0.25rem !important;
+        gap: 0.5rem !important;
         padding: 0 !important;
         margin: 0 auto !important;
         justify-content: center;
     }
     
     .nav-item {
-        padding: 0.5rem 0.75rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
         white-space: normal !important;
     }
     
     .nav-item span {
         display: inline !important;
+    }
+    
+    .nav-item i {
+        font-size: 1em !important;
     }
     
     .nav-right {
@@ -778,6 +787,11 @@ body.light-mode .theme-toggle-btn:hover {
     
     .user-menu-right {
         padding: 0.5rem 1rem !important;
+    }
+    
+    .user-menu-right .user-avatar {
+        width: 35px !important;
+        height: 35px !important;
     }
     
     .user-menu-right span {
