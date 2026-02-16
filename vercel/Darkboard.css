@@ -8193,7 +8193,14 @@ select option {
         -webkit-overflow-scrolling: touch;
     }
 
+    #calendarContainer > .card {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
     #calendar {
+        width: max-content;
         min-width: 980px;
     }
 
@@ -8214,6 +8221,7 @@ select option {
     }
 
     #calendar {
+        width: max-content;
         min-width: 860px;
     }
 
