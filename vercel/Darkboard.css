@@ -97,25 +97,7 @@ button, input, textarea, select {
     font-size: inherit;
     line-height: inherit;
 }
-/* Mobile Performance Optimizations */
-/* Reduce motion preferences for accessibility and performance */
-@media (prefers-reduced-motion: reduce), (max-width: 768px) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-    
-    body {
-        animation: none !important;
-        background: #0a1929 !important;
-    }
-}
-
-/* Mobile-specific optimizations */
+/* Mobile Performance Optimizations - Keep Animations */
 @media (max-width: 768px) {
     /* Disable backdrop-filter on mobile for performance */
     .main-nav,
