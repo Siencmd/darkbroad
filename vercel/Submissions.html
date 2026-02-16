@@ -135,7 +135,7 @@
       import { setupRealtimeSubjects } from "./realtime.js";
 
       const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", (e) => logout(e));
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
       
       // Load user data for header
       window.addEventListener('DOMContentLoaded', () => {
