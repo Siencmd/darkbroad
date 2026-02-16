@@ -8169,6 +8169,29 @@ select option {
 }
 
 /* ===== Horizontal Scroll Parity (Analytics + Calendar) ===== */
+/* Keep FullCalendar date numbers consistently aligned */
+#calendar .fc .fc-daygrid-day-frame {
+    min-height: 96px;
+}
+
+#calendar .fc .fc-daygrid-day-top {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 4px 6px 0 6px;
+}
+
+#calendar .fc .fc-daygrid-day-number {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    line-height: 1;
+    text-align: center;
+}
+
 @media (max-width: 1024px) {
     .analytics-section .card {
         overflow-x: auto;
@@ -8228,5 +8251,9 @@ select option {
     #calendar .fc,
     #calendar .fc-scrollgrid {
         min-width: 860px;
+    }
+
+    #calendar .fc .fc-daygrid-day-frame {
+        min-height: 78px;
     }
 }
