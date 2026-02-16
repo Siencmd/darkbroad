@@ -4321,14 +4321,13 @@ body.light-mode .theme-toggle-btn:hover {
         font-size: 0.65rem;
     }
     
-    /* Prevent horizontal overflow */
+    /* Keep calendar responsive on mobile without trapping page scroll */
     #calendarContainer {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible;
     }
     
     .fc-scrollgrid {
-        min-width: 600px;
+        min-width: 0;
     }
 }
 
@@ -8179,6 +8178,11 @@ select option {
 }
 
 /* ===== Horizontal Scroll Parity (Analytics + Calendar) ===== */
+/* Schedule page should use the page scroller, not a nested content scroller */
+.schedule-page .content {
+    overflow-y: visible !important;
+}
+
 /* FullCalendar theme parity for both dark/light modes */
 #calendar .fc {
     color: var(--text-primary);
@@ -8226,7 +8230,8 @@ select option {
     -ms-overflow-style: none;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y pinch-zoom;
 }
 
 #calendarContainer > .card::-webkit-scrollbar {
@@ -8304,19 +8309,14 @@ select option {
     }
 
     #calendarContainer > .card {
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible !important;
     }
 
-    #calendar {
-        width: 100%;
-        min-width: 980px;
-    }
-
+    #calendar,
     #calendar .fc,
     #calendar .fc-scrollgrid {
-        min-width: 980px;
+        width: 100%;
+        min-width: 0;
     }
 }
 
@@ -8331,14 +8331,11 @@ select option {
         max-width: 260px !important;
     }
 
-    #calendar {
-        width: 100%;
-        min-width: 860px;
-    }
-
+    #calendar,
     #calendar .fc,
     #calendar .fc-scrollgrid {
-        min-width: 860px;
+        width: 100%;
+        min-width: 0;
     }
 
     #calendar .fc .fc-daygrid-day-frame {
