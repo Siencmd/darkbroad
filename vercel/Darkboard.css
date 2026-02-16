@@ -3276,6 +3276,23 @@ body.light-mode .theme-toggle-btn:hover {
         font-size: 0.85em;
         min-height: 40px;
     }
+    
+    /* Remember forgot responsive */
+    .remember-forgot {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center !important;
+    }
+    
+    .remember-me {
+        order: 1;
+    }
+    
+    .forgot-password {
+        order: 2;
+        width: 100%;
+        text-align: center;
+    }
 }
 
 /* Dashboard Responsive */
@@ -6991,7 +7008,7 @@ body.light-mode .profile-section {
     }
 
     .login-box {
-        padding: 15px;
+        padding: 20px 16px;
     }
 
     .profile-card {
@@ -7011,6 +7028,23 @@ body.light-mode .profile-section {
         padding: 10px clamp(15px, 4vw, 30px);
         font-size: 0.9em;
         min-height: 44px;
+    }
+    
+    /* Remember forgot responsive */
+    .remember-forgot {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center !important;
+    }
+    
+    .remember-me {
+        order: 1;
+    }
+    
+    .forgot-password {
+        order: 2;
+        width: 100%;
+        text-align: center;
     }
 }
 
@@ -7934,5 +7968,202 @@ select option {
     .grades-table {
         display: block;
         overflow-x: auto;
+    }
+}
+
+/* ===== Responsive Layout Fixes (CSS-only overrides) ===== */
+@media (max-width: 1024px) {
+    .content {
+        padding: 1rem !important;
+    }
+
+    .welcome-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-text h1 {
+        font-size: clamp(1.8rem, 4vw, 2.4rem) !important;
+        line-height: 1.15;
+    }
+}
+
+@media (max-width: 768px) {
+    body:has(.login-section) {
+        padding-top: 0 !important;
+    }
+
+    .login-section {
+        padding: 1.25rem 0.75rem 0.75rem !important;
+    }
+
+    .login-container {
+        gap: 1rem !important;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 680px;
+        margin: 0 !important;
+    }
+
+    .login-info {
+        padding: 0 !important;
+    }
+
+    .form-group {
+        min-width: 0;
+    }
+
+    .toggle-password {
+        top: calc(50% + 14px);
+    }
+
+    .remember-forgot {
+        gap: 0.75rem;
+    }
+
+    .role-selection {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.625rem !important;
+    }
+
+    .role-option {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .announcements-list {
+        gap: 0.875rem !important;
+    }
+
+    .announcement-card {
+        padding: 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .announcement-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem !important;
+        flex-wrap: wrap;
+    }
+
+    .announcement-icon {
+        flex: 0 0 2.25rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(0, 212, 255, 0.15);
+        color: var(--accent);
+    }
+
+    .announcement-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .announcement-date,
+    .announcement-category {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .announcement-footer {
+        flex-wrap: wrap;
+        gap: 0.625rem !important;
+    }
+
+    .announcement-author {
+        flex: 1 1 100%;
+        word-break: break-word;
+    }
+
+    .btn-read-more {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .filter-controls {
+        padding: 12px !important;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .grades-table {
+        min-width: 860px;
+        font-size: 0.85rem;
+    }
+
+    .grades-table th,
+    .grades-table td {
+        padding: 10px 12px !important;
+        white-space: nowrap;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr !important;
+        justify-items: stretch !important;
+        padding: 12px !important;
+    }
+
+    .analytics-card {
+        max-width: none !important;
+        min-height: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .content {
+        padding: 0.75rem !important;
+    }
+
+    .welcome-text h1 {
+        font-size: 1.35rem !important;
+    }
+
+    .welcome-text p {
+        font-size: 0.92rem;
+    }
+
+    .login-header h1 {
+        font-size: 1.35rem !important;
+    }
+
+    .login-box {
+        padding: 1rem !important;
+        border-radius: 14px !important;
+    }
+
+    .role-selection {
+        grid-template-columns: 1fr !important;
+    }
+
+    .remember-forgot {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .remember-me,
+    .forgot-password {
+        text-align: center;
+        justify-content: center;
+    }
+
+    .announcement-card h3 {
+        font-size: 1rem;
+    }
+
+    .announcement-card p {
+        font-size: 0.9rem;
+        line-height: 1.45;
     }
 }
