@@ -750,11 +750,23 @@ function initializeHeaderProfileMenu() {
         toggleMenu();
     });
 
-    // Touch event for mobile
-    userMenu.addEventListener('touchstart', (event) => {
+    // Touch event for mobile - use click instead of touchstart for better compatibility
+    let touchTimer = null;
+    userMenu.addEventListener('click', (event) => {
         if (event.target.closest('.profile-dropdown-item')) return;
+        // Prevent double-firing on touch devices
+        if (event.type === 'touchend') {
+            if (touchTimer) {
+                clearTimeout(touchTimer);
+                touchTimer = null;
+                return;
+            }
+            touchTimer = setTimeout(() => {
+                touchTimer = null;
+            }, 300);
+        }
         toggleMenu();
-    }, { passive: true });
+    });
 
     // Close dropdown when clicking outside (for both click and touch)
     document.addEventListener('click', (event) => {
