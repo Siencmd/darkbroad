@@ -219,10 +219,15 @@ button, input, textarea, select {
     --bg-primary: #050505;
     --bg-secondary: #0a0a0a;
     --bg-card: #111111;
+    --card-bg: #111111;
     --text-primary: #fff;
     --text-secondary: #b0b9c1;
     --accent: #00f0ff;
     --accent-dark: #0099cc;
+    --primary-color: #00f0ff;
+    --primary-hover: #0099cc;
+    --primary-active: #0099cc;
+    --border-color: rgba(255, 255, 255, 0.15);
     --bg-primary-rgb: 5, 5, 5;
     --bg-secondary-rgb: 10, 10, 10;
     --accent-rgb: 0, 240, 255;
@@ -261,10 +266,15 @@ body.light-mode {
     --bg-primary: #f8f9fa;
     --bg-secondary: #e9ecef;
     --bg-card: #ffffff;
+    --card-bg: #ffffff;
     --text-primary: #212529;
     --text-secondary: #6c757d;
     --accent: #00f0ff;
     --accent-dark: #0099cc;
+    --primary-color: #00f0ff;
+    --primary-hover: #0099cc;
+    --primary-active: #0099cc;
+    --border-color: rgba(0, 0, 0, 0.15);
     --accent-secondary: #00bfff;
     --accent-secondary-dark: #0080ff;
     --bg-primary-rgb: 248, 249, 250;
@@ -4196,7 +4206,7 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 .calendar-filters input[type="checkbox"]:checked::after {
-    content: '✓';
+    content: '\2713';
     position: absolute;
     top: 50%;
     left: 50%;
