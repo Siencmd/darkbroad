@@ -2063,6 +2063,8 @@ body.light-mode .theme-toggle-btn:hover {
     backdrop-filter: blur(20px);
     animation: fadeIn 0.4s ease;
     overflow-y: auto;
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes fadeIn {
@@ -2072,7 +2074,7 @@ body.light-mode .theme-toggle-btn:hover {
 
 .modal-content {
     background: var(--glass-bg);
-    margin: 5% auto;
+    margin: auto;
     padding: 40px;
     border: 1px solid var(--glass-border);
     border-radius: 20px;
