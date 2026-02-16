@@ -764,13 +764,13 @@ function initializeHeaderProfileMenu() {
         if (!actionLink) return;
 
         const { action } = actionLink.dataset;
-        if (action !== 'logout') {
+        if (action === 'logout') {
+            event.preventDefault();
+            await logout();
+        } else {
             setOpen(false);
-            return;
+            // Let the default link navigation happen
         }
-
-        event.preventDefault();
-        await logout();
     });
 
     // Touch support for dropdown items on mobile
@@ -779,13 +779,12 @@ function initializeHeaderProfileMenu() {
         if (!actionLink) return;
 
         const { action } = actionLink.dataset;
-        if (action !== 'logout') {
+        if (action === 'logout') {
+            event.preventDefault();
+            await logout();
+        } else {
             setOpen(false);
-            return;
         }
-
-        event.preventDefault();
-        await logout();
     });
 }
 
