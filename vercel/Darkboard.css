@@ -8189,8 +8189,7 @@ select option {
     }
 
     #calendarContainer {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible !important;
     }
 
     #calendarContainer > .card {
@@ -8200,10 +8199,11 @@ select option {
     }
 
     #calendar {
-        width: max-content;
+        width: 100%;
         min-width: 980px;
     }
 
+    #calendar .fc,
     #calendar .fc-scrollgrid {
         min-width: 980px;
     }
@@ -8221,10 +8221,11 @@ select option {
     }
 
     #calendar {
-        width: max-content;
+        width: 100%;
         min-width: 860px;
     }
 
+    #calendar .fc,
     #calendar .fc-scrollgrid {
         min-width: 860px;
     }
