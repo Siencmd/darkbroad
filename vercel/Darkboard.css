@@ -4096,6 +4096,119 @@ body.light-mode .theme-toggle-btn:hover {
     font-size: 0.85em;
 }
 
+.deadlines-list {
+    display: grid;
+    gap: 12px;
+}
+
+.empty-deadline {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    padding: 24px 16px;
+    border: 1px dashed rgba(74, 222, 128, 0.35);
+    border-radius: 12px;
+    background: rgba(74, 222, 128, 0.08);
+}
+
+.empty-deadline i {
+    font-size: 2.1rem;
+    color: #4ade80;
+}
+
+.empty-deadline p {
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.deadline-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.deadline-item.soon {
+    border-color: rgba(251, 191, 36, 0.45);
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.deadline-item.urgent {
+    border-color: rgba(248, 113, 113, 0.5);
+    background: rgba(248, 113, 113, 0.14);
+}
+
+.deadline-date {
+    min-width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.deadline-date .day {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.deadline-date .date {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.deadline-info h4 {
+    margin: 0 0 2px 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.deadline-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: capitalize;
+}
+
+.deadline-days {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 999px;
+    padding: 6px 10px;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .deadline-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .deadline-date {
+        justify-self: center;
+    }
+
+    .deadline-days {
+        justify-self: center;
+    }
+}
 /* Calendar Controls & Filters */
 .calendar-controls {
     display: flex;
@@ -8194,6 +8307,11 @@ select option {
     color: var(--text-primary);
 }
 
+#calendar .fc .fc-daygrid-day-number {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
 #calendar .fc .fc-col-header-cell-cushion {
     text-decoration: none;
 }
@@ -8223,6 +8341,46 @@ select option {
 
 #calendar .fc .fc-day-today {
     background: rgba(var(--accent-rgb), 0.12) !important;
+}
+
+/* FullCalendar list view color consistency */
+#calendar .fc .fc-list {
+    border-color: var(--border-color);
+}
+
+#calendar .fc .fc-list-day-cushion {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+#calendar .fc .fc-list-day-text,
+#calendar .fc .fc-list-day-side-text {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+#calendar .fc .fc-list-event td {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+#calendar .fc .fc-list-event:hover td {
+    background: rgba(var(--accent-rgb), 0.12);
+}
+
+#calendar .fc .fc-list-event-time {
+    color: var(--text-secondary);
+}
+
+#calendar .fc .fc-list-event-title,
+#calendar .fc .fc-list-event-title a {
+    color: var(--text-primary) !important;
+    text-decoration: none;
+}
+
+#calendar .fc .fc-list-event-dot {
+    border-color: var(--accent);
 }
 
 /* Keep horizontal scroll but hide the scrollbar for a cleaner look */
@@ -8264,6 +8422,18 @@ select option {
     font-variant-numeric: tabular-nums;
 }
 
+body.light-mode #calendar .fc .fc-list-day-cushion {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode #calendar .fc .fc-list-event td {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode #calendar .fc .fc-list-event:hover td {
+    background: rgba(0, 150, 200, 0.12);
+}
+
 /* Mobile: remove tap/focus artifacts that can look like a blue line while scrolling */
 @media (hover: none) and (pointer: coarse) {
     #calendar .fc,
@@ -8287,21 +8457,21 @@ select option {
 
 @media (max-width: 1024px) {
     .analytics-section .card {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: visible;
     }
 
     .analytics-section .analytics-grid {
-        display: flex !important;
-        flex-wrap: nowrap !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 16px !important;
-        min-width: 980px;
+        min-width: 0;
     }
 
     .analytics-section .analytics-card {
-        flex: 0 0 300px !important;
-        min-width: 300px;
-        max-width: 300px !important;
+        width: 100%;
+        min-width: 0;
+        max-width: none !important;
+        flex: none !important;
     }
 
     #calendarContainer {
@@ -8321,14 +8491,19 @@ select option {
 }
 
 @media (max-width: 768px) {
+    #calendar .fc .fc-daygrid-day-number {
+        font-size: 0.95rem;
+    }
+
     .analytics-section .analytics-grid {
-        min-width: 860px;
+        grid-template-columns: 1fr !important;
+        min-width: 0;
     }
 
     .analytics-section .analytics-card {
-        flex-basis: 260px !important;
-        min-width: 260px;
-        max-width: 260px !important;
+        min-width: 0;
+        max-width: none !important;
+        flex-basis: auto !important;
     }
 
     #calendar,
