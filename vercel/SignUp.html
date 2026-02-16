@@ -9,69 +9,64 @@
     <title>Sign Up - Darkboard</title>
     <link rel="stylesheet" href="Darkboard.css" />
     <style>
-      /* Mobile Performance Fix for SignUp Page */
+      /* Mobile Performance Fix - Keep Animations, Remove Heavy Global Transitions */
       @media (max-width: 768px) {
+        /* Remove global transition that causes lag, but keep animations */
         * {
           transition: none !important;
-          animation: none !important;
         }
         
+        /* Keep gradient animation but simplify it */
         body {
-          background: #0a1929 !important;
-          animation: none !important;
+          background: linear-gradient(135deg, #0a1929 0%, #1a365d 50%, #0a1929 100%) !important;
+          background-size: 200% 200% !important;
         }
         
         .login-section {
-          background: #0a1929 !important;
-          animation: none !important;
-          padding: 1rem 0.5rem 0.5rem !important;
+          background: linear-gradient(135deg, #0a1929 0%, #1a365d 50%, #0a1929 100%) !important;
+          background-size: 200% 200% !important;
+          padding: 1.5rem 0.75rem 0.75rem !important;
         }
         
-        .login-section::before {
-          display: none !important;
+        /* Keep floating animation on icon */
+        .login-icon {
+          animation: float 3s ease-in-out infinite !important;
+          filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.4)) !important;
         }
         
+        /* Simplify login box - remove heavy backdrop filter */
         .login-box {
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
-          transform: none !important;
-          margin: 0 4px;
-          padding: 20px 16px !important;
+          background: rgba(10, 25, 41, 0.95) !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+          border: 1px solid rgba(0, 212, 255, 0.2) !important;
         }
         
+        /* Keep hover effect but simplify */
         .login-box:hover {
-          transform: none !important;
+          transform: translateY(-3px) !important;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
         }
         
-        .login-box::before {
-          display: none !important;
-        }
-        
-        .login-icon {
-          animation: none !important;
-          filter: none !important;
-          font-size: 3em !important;
-        }
-        
-        .login-info {
-          display: none !important;
-        }
-        
-        .features {
-          display: none !important;
-        }
-        
+        /* Optimize form inputs */
         .form-group input {
-          padding: 12px 14px !important;
-          font-size: 16px !important; /* Prevents zoom on iOS */
+          padding: 14px 16px !important;
+          font-size: 16px !important;
+          transition: border-color 0.2s, box-shadow 0.2s !important;
         }
         
+        /* Keep button animation */
         .login-btn {
-          padding: 14px 20px !important;
-          transform: none !important;
+          transition: transform 0.2s, box-shadow 0.2s !important;
+          padding: 14px 24px !important;
         }
         
+        .login-btn:hover {
+          transform: translateY(-2px) !important;
+        }
+        
+        /* Role selection optimization */
         .role-selection {
           flex-direction: row !important;
           gap: 10px !important;
@@ -80,7 +75,18 @@
         .role-option {
           flex: 1 !important;
           text-align: center !important;
-          padding: 10px !important;
+          padding: 12px !important;
+          transition: background 0.2s, border-color 0.2s !important;
+        }
+        
+        /* Keep features list visible but simplify */
+        .login-info {
+          padding: 16px !important;
+        }
+        
+        .features li {
+          padding: 8px 0 !important;
+          font-size: 0.9rem !important;
         }
       }
     </style>
