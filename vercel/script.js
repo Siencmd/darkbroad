@@ -760,16 +760,20 @@ function initializeHeaderProfileMenu() {
     }, { passive: true });
 
     dropdown.addEventListener('click', async (event) => {
+        console.log('[ProfileMenu] Dropdown item clicked');
         const actionLink = event.target.closest('.profile-dropdown-item');
-        if (!actionLink) return;
+        if (!actionLink) {
+            console.log('[ProfileMenu] No action link found, target:', event.target);
+            return;
+        }
 
         const { action } = actionLink.dataset;
+        console.log('[ProfileMenu] Action:', action);
         if (action === 'logout') {
             event.preventDefault();
             await logout();
         } else {
             setOpen(false);
-            // Let the default link navigation happen
         }
     });
 
