@@ -2,7 +2,7 @@
 // IMPORT FIREBASE AUTH & SUPABASE
 // =========================
 import { auth, db } from './firebase.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut, sendPasswordResetEmail, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { doc, setDoc, getDoc, getDocs, collection, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { supabase } from './supabase.js';
 import { setupRealtimeSubjects, stopTaskListeners } from './realtime.js';
@@ -510,6 +510,73 @@ function initializeLogin() {
             setMessage("loginError", err.message);
         }
     });
+
+    // Forgot Password Modal
+    const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+    const forgotPasswordModal = document.getElementById("forgotPasswordModal");
+    const closeForgotModal = document.getElementById("closeForgotModal");
+    const forgotPasswordForm = document.getElementById("forgotPasswordForm");
+
+    if (forgotPasswordBtn && forgotPasswordModal) {
+        forgotPasswordBtn.addEventListener("click", () => {
+            forgotPasswordModal.style.display = "block";
+        });
+    }
+
+    if (closeForgotModal && forgotPasswordModal) {
+        closeForgotModal.addEventListener("click", () => {
+            forgotPasswordModal.style.display = "none";
+        });
+    }
+
+    if (forgotPasswordModal) {
+        window.addEventListener("click", (e) => {
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordModal.style.display = "none";
+            }
+        });
+    }
+
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const resetEmail = document.getElementById("resetEmail").value.trim();
+            const forgotModalMessage = document.getElementById("forgotModalMessage");
+
+            if (!resetEmail) {
+                if (forgotModalMessage) {
+                    forgotModalMessage.textContent = "Please enter your email address";
+                    forgotModalMessage.style.display = "block";
+                    forgotModalMessage.style.color = "#ff4444";
+                }
+                return;
+            }
+
+            try {
+                await sendPasswordResetEmail(auth, resetEmail);
+                if (forgotModalMessage) {
+                    forgotModalMessage.textContent = "Password reset email sent! Check your inbox.";
+                    forgotModalMessage.style.display = "block";
+                    forgotModalMessage.style.color = "#4CAF50";
+                }
+                setTimeout(() => {
+                    if (forgotPasswordModal) {
+                        forgotPasswordModal.style.display = "none";
+                    }
+                    if (forgotModalMessage) {
+                        forgotModalMessage.style.display = "none";
+                    }
+                    forgotPasswordForm.reset();
+                }, 3000);
+            } catch (err) {
+                if (forgotModalMessage) {
+                    forgotModalMessage.textContent = err.message || "Failed to send reset email";
+                    forgotModalMessage.style.display = "block";
+                    forgotModalMessage.style.color = "#ff4444";
+                }
+            }
+        });
+    }
 }
 
 // =========================
@@ -2935,6 +3002,127 @@ function updateProfileUI(data) {
 }
 
 // =========================
+// SETTINGS PAGE FUNCTIONALITY
+// =========================
+function initializeSettings() {
+    // Change Password Button
+    const changePasswordBtns = document.querySelectorAll('.btn-setting-action');
+    
+    if (changePasswordBtns.length > 0) {
+        changePasswordBtns.forEach((btn, index) => {
+            const btnText = btn.textContent.trim();
+            
+            // Change Password
+            if (btnText.includes('Change') && index === 0) {
+                btn.addEventListener('click', async () => {
+                    const newPassword = prompt('Enter your new password (minimum 6 characters):');
+                    
+                    if (!newPassword) {
+                        return;
+                    }
+                    
+                    if (newPassword.length < 6) {
+                        alert('Password must be at least 6 characters long');
+                        return;
+                    }
+                    
+                    try {
+                        const user = auth.currentUser;
+                        if (user) {
+                            await updatePassword(user, newPassword);
+                            alert('Password updated successfully!');
+                        } else {
+                            alert('No user is currently logged in');
+                        }
+                    } catch (error) {
+                        if (error.code === 'auth/requires-recent-login') {
+                            alert('For security reasons, please log out and log back in before changing your password.');
+                        } else {
+                            alert('Error updating password: ' + error.message);
+                        }
+                    }
+                });
+            }
+            
+            // Two-Factor Authentication (Enable)
+            if (btnText.includes('Enable') && index === 1) {
+                btn.addEventListener('click', () => {
+                    alert('Two-Factor Authentication feature is coming soon! This will add an extra layer of security to your account.');
+                });
+            }
+            
+            // Delete Account
+            if (btnText.includes('Delete') && btn.classList.contains('danger')) {
+                btn.addEventListener('click', async () => {
+                    const confirmation = confirm('Are you sure you want to delete your account? This action cannot be undone!');
+                    
+                    if (!confirmation) {
+                        return;
+                    }
+                    
+                    const finalConfirmation = prompt('Type "DELETE" to confirm account deletion:');
+                    
+                    if (finalConfirmation !== 'DELETE') {
+                        alert('Account deletion cancelled');
+                        return;
+                    }
+                    
+                    try {
+                        const user = auth.currentUser;
+                        if (user) {
+                            // Delete user data from Firestore
+                            await deleteDoc(doc(db, 'users', user.uid));
+                            
+                            // Delete the user account
+                            await deleteUser(user);
+                            
+                            alert('Your account has been deleted successfully');
+                            window.location.href = 'Login.html';
+                        } else {
+                            alert('No user is currently logged in');
+                        }
+                    } catch (error) {
+                        if (error.code === 'auth/requires-recent-login') {
+                            alert('For security reasons, please log out and log back in before deleting your account.');
+                        } else {
+                            alert('Error deleting account: ' + error.message);
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    // Notification toggles (just for UI, can be enhanced later)
+    const notificationSwitches = document.querySelectorAll('.settings-card:nth-child(2) .switch input[type="checkbox"]');
+    notificationSwitches.forEach(switchEl => {
+        switchEl.addEventListener('change', () => {
+            const settingName = switchEl.closest('.setting-item').querySelector('h3').textContent;
+            console.log(`${settingName} is now ${switchEl.checked ? 'enabled' : 'disabled'}`);
+            // You can add localStorage or database saving here
+        });
+    });
+    
+    // Privacy settings
+    const privacySwitches = document.querySelectorAll('.settings-card:nth-child(3) .switch input[type="checkbox"]');
+    privacySwitches.forEach(switchEl => {
+        switchEl.addEventListener('change', () => {
+            const settingName = switchEl.closest('.setting-item').querySelector('h3').textContent;
+            console.log(`${settingName} is now ${switchEl.checked ? 'enabled' : 'disabled'}`);
+            // You can add localStorage or database saving here
+        });
+    });
+    
+    const privacySelect = document.querySelector('.setting-select');
+    if (privacySelect) {
+        privacySelect.addEventListener('change', () => {
+            console.log(`Profile visibility changed to: ${privacySelect.value}`);
+            // You can add localStorage or database saving here
+        });
+    }
+}
+
+// =========================
 // GRADES PAGE FUNCTIONALITY
 // =========================
 function initializeGradesTable() {
@@ -3199,6 +3387,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeHelp();
     initializeSubjects();
     initializeProfile();
+    initializeSettings();
     initializeGradesTable();
     initializeGradesFilter();
     initializeMenuFilter();
