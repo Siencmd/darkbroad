@@ -6124,6 +6124,318 @@ body.light-mode .forgot-password:hover {
         gap: 15px;
     }
 }
+/* ===== MISSING CSS CLASSES ===== */
+
+/* Profile Page Missing Styles */
+.profile-role {
+    color: var(--text-secondary);
+    font-size: 1em;
+    margin-bottom: 5px;
+}
+
+.profile-id {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.status-active {
+    background: #4ade80;
+    color: #0b1f2e;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
+/* Login Page Missing Styles */
+.form-message {
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.form-message.error {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.form-message.success {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+/* Dashboard Missing Styles */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.greetingMessage {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+}
+
+/* Announcements Missing Styles */
+.announcement-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.announcement-date {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.announcement-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Help Page Missing Styles */
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.contact-item i {
+    color: var(--accent);
+    font-size: 1.3em;
+}
+
+/* Schedule Page Missing Styles */
+.calendar {
+    background: transparent;
+}
+
+.schedule-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weeklyScheduleGrid {
+    display: grid;
+    gap: 15px;
+}
+
+.event-info h3 {
+    color: var(--text-primary);
+    margin: 0 0 5px 0;
+}
+
+.event-info p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.9em;
+}
+
+/* Access Code Group */
+#accessCodeGroup {
+    display: none;
+}
+
+/* Detail Label and Value */
+.detail-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+}
+
+/* End of Missing CSS Classes */
+
+/* ===== DEFAULT DARK THEME OVERRIDES ===== */
+/* ===== MISSING CSS CLASSES ===== */
+
+/* Profile Page Missing Styles */
+.profile-role {
+    color: var(--text-secondary);
+    font-size: 1em;
+    margin-bottom: 5px;
+}
+
+.profile-id {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.status-active {
+    background: #4ade80;
+    color: #0b1f2e;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
+/* Login Page Missing Styles */
+.form-message {
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.form-message.error {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.form-message.success {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+/* Dashboard Missing Styles */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.greetingMessage {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+}
+
+/* Announcements Missing Styles */
+.announcement-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.announcement-date {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.announcement-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Help Page Missing Styles */
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.contact-item i {
+    color: var(--accent);
+    font-size: 1.3em;
+}
+
+/* Schedule Page Missing Styles */
+.calendar {
+    background: transparent;
+}
+
+.schedule-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weeklyScheduleGrid {
+    display: grid;
+    gap: 15px;
+}
+
+.event-info h3 {
+    color: var(--text-primary);
+    margin: 0 0 5px 0;
+}
+
+.event-info p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.9em;
+}
+
+/* Access Code Group */
+#accessCodeGroup {
+    display: none;
+}
+
+/* Detail Label and Value */
+.detail-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+}
+
+/* End of Missing CSS Classes */
+
+/* ===== DEFAULT DARK THEME ===== */
 /* Default dark theme */
 body {
     background-color: #121212;
