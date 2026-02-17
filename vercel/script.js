@@ -17,6 +17,7 @@ let syncTimer = null;
 let lastSyncedSubjectsHash = null;
 let assignmentSubmissionListeners = {};
 let assignmentCountsSubjectKey = null;
+let logoutInProgress = false;
 const DEBUG_MODE = false;
 
 function debugLog(...args) {
@@ -924,6 +925,8 @@ function initializeHeaderProfileMenu() {
 // =========================
 async function logout(e) {
     if (e) e.preventDefault();
+    if (logoutInProgress) return;
+    logoutInProgress = true;
     try {
         await signOut(auth);
     } catch (error) {
