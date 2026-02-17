@@ -768,6 +768,8 @@ function initializeHeaderProfileMenu() {
     const nav = document.querySelector('.main-nav');
     if (!nav) return;
 
+    // Keep nav items in the main navigation - don't remove them
+    /*
     const navList = nav.querySelector('.nav-list');
     if (navList) {
         const removableLinks = Array.from(navList.querySelectorAll('a.nav-item'));
@@ -784,6 +786,7 @@ function initializeHeaderProfileMenu() {
             }
         });
     }
+    */
 
     const userMenu = nav.querySelector('.user-menu-right');
     if (!userMenu || userMenu.dataset.dropdownInitialized === 'true') return;
