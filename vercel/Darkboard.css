@@ -597,6 +597,14 @@ body.light-mode .theme-toggle-btn:hover {
     display: flex;
 }
 
+/* Keep account actions in profile dropdown only (prevents nav flicker before JS cleanup). */
+.main-nav .nav-list a.nav-item[href$="Profile.html"],
+.main-nav .nav-list a.nav-item[href$="Settings.html"],
+.main-nav .nav-list a.nav-item[href$="Help.html"],
+.main-nav .nav-list a#logoutBtn {
+    display: none;
+}
+
 .nav-item {
     display: flex;
     align-items: center;
