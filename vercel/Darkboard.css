@@ -2070,9 +2070,15 @@ body.light-mode .theme-toggle-btn:hover {
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(20px);
     animation: fadeIn 0.4s ease;
-    overflow-y: auto;
-    padding: clamp(12px, 4vh, 40px) 12px;
     box-sizing: border-box;
+    /* Center modal content - flexbox method for perfect centering (0.5 = 50% vertically) */
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal.show {
+    display: flex;
 }
 
 @keyframes fadeIn {
@@ -2082,13 +2088,13 @@ body.light-mode .theme-toggle-btn:hover {
 
 .modal-content {
     background: var(--glass-bg);
-    margin: 0 auto;
+    margin: auto;
     padding: 40px;
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     width: 90%;
     max-width: 500px;
-    max-height: calc(100dvh - clamp(24px, 8vh, 80px));
+    max-height: calc(100dvh - 40px);
     color: var(--text-primary);
     backdrop-filter: var(--glass-backdrop);
     -webkit-backdrop-filter: var(--glass-backdrop);
@@ -2098,19 +2104,33 @@ body.light-mode .theme-toggle-btn:hover {
     position: relative;
     z-index: 2001;
     overflow-y: auto;
+    /* Vertical centering - the 0.5 value (50%) */
+    margin: auto;
 }
 
-/* Desktop modal position - lower on screen */
+/* Desktop modal - centered with 0.5 (50%) vertical position */
 @media (min-width: 769px) {
     .modal-content {
-        margin: 0 auto;
+        margin: auto;
     }
 }
 
-/* Mobile modal position - lower on screen */
+/* Mobile modal - centered with proper spacing */
 @media (max-width: 768px) {
     .modal-content {
-        margin: 0 auto;
+        margin: auto;
+        width: 95%;
+        padding: 25px;
+        border-radius: 15px;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 20px 15px;
+        width: 92%;
+        max-height: calc(100dvh - 30px);
     }
 }
 
