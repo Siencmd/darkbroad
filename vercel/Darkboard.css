@@ -515,8 +515,9 @@ body.light-mode .theme-toggle-btn:hover {
 }
 
 /* Profile Dropdown Styles */
-#headerProfileDropdown {
-    display: none;
+#headerProfileDropdown,
+.profile-dropdown {
+    display: none !important;
     background: var(--card-bg, #111) !important;
 }
 
