@@ -47,6 +47,8 @@ body {
     height: 100%;
     z-index: 1999;
     pointer-events: none;
+    padding-top: 60px; /* Space for navigation bar */
+    box-sizing: border-box;
 }
 
 .modal-wrapper .modal {
@@ -2071,14 +2073,27 @@ body.light-mode .theme-toggle-btn:hover {
     backdrop-filter: blur(20px);
     animation: fadeIn 0.4s ease;
     box-sizing: border-box;
-    /* Center modal content - flexbox method for perfect centering (0.5 = 50% vertically) */
+    /* Center modal content - flexbox method for perfect centering */
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 80px 20px 40px; /* Top padding for nav space, bottom for safety */
 }
 
 .modal.show {
     display: flex;
+}
+
+/* Reduce top padding on smaller screens */
+@media (max-width: 768px) {
+    .modal {
+        padding: 60px 15px 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal {
+        padding: 50px 10px 20px;
+    }
 }
 
 @keyframes fadeIn {
@@ -2094,7 +2109,7 @@ body.light-mode .theme-toggle-btn:hover {
     border-radius: 20px;
     width: 90%;
     max-width: 500px;
-    max-height: calc(100dvh - 40px);
+    max-height: calc(100vh - 120px);
     color: var(--text-primary);
     backdrop-filter: var(--glass-backdrop);
     -webkit-backdrop-filter: var(--glass-backdrop);
@@ -2104,14 +2119,16 @@ body.light-mode .theme-toggle-btn:hover {
     position: relative;
     z-index: 2001;
     overflow-y: auto;
-    /* Vertical centering - the 0.5 value (50%) */
-    margin: auto;
+    /* Vertical centering - auto margins for flexbox */
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
-/* Desktop modal - centered with 0.5 (50%) vertical position */
+/* Desktop modal - centered with proper spacing */
 @media (min-width: 769px) {
     .modal-content {
-        margin: auto;
+        margin-top: auto;
+        margin-bottom: auto;
     }
 }
 
@@ -2122,6 +2139,7 @@ body.light-mode .theme-toggle-btn:hover {
         width: 95%;
         padding: 25px;
         border-radius: 15px;
+        max-height: calc(100vh - 100px);
     }
 }
 
@@ -2130,7 +2148,7 @@ body.light-mode .theme-toggle-btn:hover {
     .modal-content {
         padding: 20px 15px;
         width: 92%;
-        max-height: calc(100dvh - 30px);
+        max-height: calc(100vh - 80px);
     }
 }
 
