@@ -803,6 +803,7 @@ function initializeHeaderProfileMenu() {
 
     const dropdown = document.createElement('div');
     dropdown.id = 'headerProfileDropdown';
+    dropdown.classList.add('profile-dropdown');
     dropdown.style.position = 'absolute';
     dropdown.style.top = 'calc(100% + 10px)';
     dropdown.style.right = '0';
@@ -895,12 +896,17 @@ function initializeHeaderProfileMenu() {
     });
 
     // Close dropdown when clicking outside (for both click and touch)
+    // FIX: Add check to prevent flickering - only close if dropdown is actually open
     document.addEventListener('click', (event) => {
-        if (!userMenu.contains(event.target)) setOpen(false);
+        if (dropdown.style.display === 'block' && !userMenu.contains(event.target)) {
+            setOpen(false);
+        }
     });
 
     document.addEventListener('touchstart', (event) => {
-        if (!userMenu.contains(event.target)) setOpen(false);
+        if (dropdown.style.display === 'block' && !userMenu.contains(event.target)) {
+            setOpen(false);
+        }
     }, { passive: true });
 
     // REMOVED: The problematic dropdown click handler that was causing navigation issues
