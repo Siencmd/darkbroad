@@ -2071,6 +2071,8 @@ body.light-mode .theme-toggle-btn:hover {
     backdrop-filter: blur(20px);
     animation: fadeIn 0.4s ease;
     overflow-y: auto;
+    padding: clamp(12px, 4vh, 40px) 12px;
+    box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -2080,12 +2082,13 @@ body.light-mode .theme-toggle-btn:hover {
 
 .modal-content {
     background: var(--glass-bg);
-    margin: 5% auto;
+    margin: 0 auto;
     padding: 40px;
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     width: 90%;
     max-width: 500px;
+    max-height: calc(100dvh - clamp(24px, 8vh, 80px));
     color: var(--text-primary);
     backdrop-filter: var(--glass-backdrop);
     -webkit-backdrop-filter: var(--glass-backdrop);
@@ -2094,19 +2097,20 @@ body.light-mode .theme-toggle-btn:hover {
     opacity: 1;
     position: relative;
     z-index: 2001;
+    overflow-y: auto;
 }
 
 /* Desktop modal position - lower on screen */
 @media (min-width: 769px) {
     .modal-content {
-        margin: 15% auto;
+        margin: 0 auto;
     }
 }
 
 /* Mobile modal position - lower on screen */
 @media (max-width: 768px) {
     .modal-content {
-        margin: 15% auto;
+        margin: 0 auto;
     }
 }
 
@@ -2327,7 +2331,7 @@ body.light-mode .theme-toggle-btn:hover {
 
     .modal-content {
         width: 95%;
-        margin: var(--spacing-lg) auto;
+        margin: 0 auto;
         padding: var(--spacing-xl);
         border-radius: var(--radius-lg);
     }
@@ -7830,7 +7834,7 @@ body.light-mode .profile-section {
     max-width: 520px;
     height: auto;
     max-height: 90vh;
-    margin: 15% auto;
+    margin: 0 auto;
     border-radius: 20px;
     overflow-y: auto;
     animation: slideIn 0.3s ease;
@@ -7842,8 +7846,8 @@ body.light-mode .profile-section {
         width: 95%;
         max-width: 95%;
         height: auto;
-        max-height: 90vh;
-        margin: 15% auto;
+        max-height: calc(100dvh - 24px);
+        margin: 0 auto;
         border-radius: 18px;
     }
 }/* =========================
@@ -8056,7 +8060,7 @@ body.light-mode .profile-section {
 @media (max-width: 768px) {
     .large-modal .modal-content {
         max-width: 95%;
-        margin: 10px;
+        margin: 0 auto;
     }
     
     .submission-header {
