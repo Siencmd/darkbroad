@@ -844,6 +844,8 @@ function initializeHeaderProfileMenu() {
         link.style.textDecoration = 'none';
         link.style.fontSize = '0.9rem';
         link.style.fontWeight = '500';
+        
+        // Add hover effects
         link.addEventListener('mouseenter', () => {
             link.style.background = 'rgba(255, 255, 255, 0.1)';
             link.style.color = 'var(--accent)';
@@ -851,6 +853,26 @@ function initializeHeaderProfileMenu() {
         link.addEventListener('mouseleave', () => {
             link.style.background = 'transparent';
             link.style.color = 'var(--text-primary)';
+        });
+        
+        // Add click handler for navigation - FIX: Direct event handling
+        link.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const action = link.dataset.action;
+            const href = link.getAttribute('href');
+            
+            if (action === 'logout') {
+                setOpen(false);
+                await logout();
+            } else if (href && href !== '#') {
+                setOpen(false);
+                // Small delay to allow dropdown to close before navigation
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 50);
+            }
         });
     });
 
@@ -864,10 +886,12 @@ function initializeHeaderProfileMenu() {
         setOpen(!isOpen);
     };
 
-    // Click event for desktop and mobile
+    // Click event for user menu toggle - simplified FIX
     userMenu.addEventListener('click', (event) => {
-        if (event.target.closest('.profile-dropdown-item')) return;
-        toggleMenu();
+        // Only toggle if clicking on the userMenu itself, not on dropdown items
+        if (event.target === userMenu || event.target.classList.contains('user-avatar')) {
+            toggleMenu();
+        }
     });
 
     // Close dropdown when clicking outside (for both click and touch)
@@ -879,30 +903,8 @@ function initializeHeaderProfileMenu() {
         if (!userMenu.contains(event.target)) setOpen(false);
     }, { passive: true });
 
-    dropdown.addEventListener('click', async (event) => {
-        console.log('[ProfileMenu] Dropdown item clicked');
-        const actionLink = event.target.closest('.profile-dropdown-item');
-        if (!actionLink) {
-            console.log('[ProfileMenu] No action link found, target:', event.target);
-            return;
-        }
-
-        const { action } = actionLink.dataset;
-        console.log('[ProfileMenu] Action:', action);
-        if (action === 'logout') {
-            event.preventDefault();
-            await logout();
-        } else {
-            event.preventDefault();
-            setOpen(false);
-            // Navigate to the href
-            const href = actionLink.getAttribute('href');
-            console.log('[ProfileMenu] Navigating to:', href);
-            if (href && href !== '#') {
-                window.location.href = href;
-            }
-        }
-    });
+    // REMOVED: The problematic dropdown click handler that was causing navigation issues
+    // The navigation is now handled directly in each dropdown item's click handler above
 
     // Touch support for dropdown items on mobile - disabled to prevent interference with click
     // dropdown.addEventListener('touchend', async (event) => {
