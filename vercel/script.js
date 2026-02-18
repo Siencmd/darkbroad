@@ -2175,7 +2175,7 @@ function initializeSubjects() {
                                 <label>Instructions</label>
                                 <textarea id="newQuizInstructions" rows="4" placeholder="Quiz instructions..."></textarea>
                             </div>
-                            <button type="submit" class="btn-add-subject">Add Quiz</button>
+                            <button type="button" class="btn-add-subject" id="addQuizBtn">Add Quiz</button>
                         </form>
                     </div>
                 </div>
@@ -2185,8 +2185,7 @@ function initializeSubjects() {
 
             modal.querySelector('.close').addEventListener('click', () => modal.remove());
 
-            modal.querySelector('#addQuizForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
+            modal.querySelector('#addQuizBtn').addEventListener('click', async function() {
                 const sub = subjects[subjectIndex];
                 const quiz = {
                     id: Date.now().toString(),
@@ -2264,7 +2263,7 @@ function initializeSubjects() {
                                 <textarea id="editQuizInstructions" rows="4">${item.instructions || ''}</textarea>
                             </div>
                             <div class="form-actions">
-                                <button type="submit" class="btn-save">Save Changes</button>
+                                <button type="button" class="btn-save" id="saveQuizBtn">Save Changes</button>
                                 <button type="button" class="btn-delete" id="deleteQuizBtn">Delete</button>
                             </div>
                         </form>
@@ -2276,8 +2275,8 @@ function initializeSubjects() {
 
             modal.querySelector('.close').addEventListener('click', () => modal.remove());
 
-            modal.querySelector('#editQuizForm').addEventListener('submit', (e) => {
-                e.preventDefault();
+            const editQuizForm = modal.querySelector('#editQuizForm');
+            modal.querySelector('#saveQuizBtn').addEventListener('click', function() {
                 const existingQuiz = sub.quizzes[itemIndex];
                 sub.quizzes[itemIndex] = {
                     id: existingQuiz?.id || Date.now().toString(),
