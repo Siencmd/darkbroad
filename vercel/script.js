@@ -2175,7 +2175,7 @@ function initializeSubjects() {
                                 <label>Instructions</label>
                                 <textarea id="newQuizInstructions" rows="4" placeholder="Quiz instructions..."></textarea>
                             </div>
-                            <button type="button" class="btn-add-subject" id="addQuizBtn">Add Quiz</button>
+                            <button type="submit" class="btn-add-subject">Add Quiz</button>
                         </form>
                     </div>
                 </div>
@@ -2185,7 +2185,8 @@ function initializeSubjects() {
 
             modal.querySelector('.close').addEventListener('click', () => modal.remove());
 
-            modal.querySelector('#addQuizBtn').addEventListener('click', async function() {
+            modal.querySelector('#addQuizForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
                 const sub = subjects[subjectIndex];
                 const quiz = {
                     id: Date.now().toString(),
@@ -2263,7 +2264,7 @@ function initializeSubjects() {
                                 <textarea id="editQuizInstructions" rows="4">${item.instructions || ''}</textarea>
                             </div>
                             <div class="form-actions">
-                                <button type="button" class="btn-save" id="saveQuizBtn">Save Changes</button>
+                                <button type="submit" class="btn-save">Save Changes</button>
                                 <button type="button" class="btn-delete" id="deleteQuizBtn">Delete</button>
                             </div>
                         </form>
@@ -2275,8 +2276,8 @@ function initializeSubjects() {
 
             modal.querySelector('.close').addEventListener('click', () => modal.remove());
 
-            const editQuizForm = modal.querySelector('#editQuizForm');
-            modal.querySelector('#saveQuizBtn').addEventListener('click', function() {
+            modal.querySelector('#editQuizForm').addEventListener('submit', function(e) {
+                e.preventDefault();
                 const existingQuiz = sub.quizzes[itemIndex];
                 sub.quizzes[itemIndex] = {
                     id: existingQuiz?.id || Date.now().toString(),
@@ -2288,7 +2289,7 @@ function initializeSubjects() {
                     quizLink: document.getElementById('editQuizLink').value.trim(),
                     submissions: existingQuiz?.submissions || []
                 };
-                saveSubjects(false); // false to prevent immediate Firestore sync that causes flicker
+                saveSubjects(); // Save to localStorage and sync to Firestore
                 renderSubjectDetails(subjectIndex);
                 switchTab('quizzes');
                 modal.remove();
