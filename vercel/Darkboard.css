@@ -6993,6 +6993,110 @@ body.light-mode .btn-submit {
     }
 }
 
+@media (max-width: 767px) {
+    .subjects-content-wrapper {
+        grid-template-columns: 1fr;
+        height: auto;
+        padding: 1rem;
+    }
+
+    .subjects-sidebar {
+        height: auto;
+        min-height: 200px;
+    }
+
+    .subject-details {
+        min-height: auto;
+        padding: 1rem;
+    }
+
+    .modal .modal-content {
+        margin: 1rem;
+        max-width: 100%;
+    }
+
+    .form-group {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-add-mini {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+    }
+
+    .subject-list-item {
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
+    .subject-list-item h4 {
+        font-size: 1em;
+    }
+
+    .subject-list-item p {
+        font-size: 0.8em;
+    }
+
+    .detail-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+    }
+
+    .detail-header h2 {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+    }
+
+    .detail-meta {
+        gap: 15px;
+        font-size: 0.9em;
+    }
+
+    .detail-meta span {
+        padding: 8px 12px;
+        border-radius: 16px;
+    }
+
+    .detail-description {
+        font-size: 1em;
+        line-height: 1.6;
+    }
+
+    .items-header {
+        padding: 15px 20px;
+    }
+
+    .items-header h3 {
+        font-size: 1.1em;
+    }
+
+    .items-list {
+        padding: 15px;
+    }
+
+    .item-card {
+        padding: 15px;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .item-actions {
+        margin-left: 0;
+        justify-content: center;
+    }
+
+    .btn-edit-item,
+    .btn-delete-item {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+}
+
 .btn-add-subject {
     background-color: #00d4ff;
     color: #0b1f2e;
