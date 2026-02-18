@@ -84,83 +84,78 @@
       <section class="card" aria-labelledby="students-heading">
         <div class="card-header">
           <h2 id="students-heading"><i class="fas fa-user-graduate"></i> Student List</h2>
-          <span class="student-count" id="studentCount">0 students</span>
+          <span class="student-count" id="studentCount">Loading...</span>
         </div>
         <div class="students-grid" id="studentsList">
-          <!-- Students will be loaded dynamically -->
           <div class="loading-indicator">
             <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading students...</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Announcements Section -->
-      <section class="card" aria-labelledby="announcements-heading">
-        <div class="card-header">
-          <h2 id="announcements-heading"><i class="fas fa-bullhorn"></i> Announcements</h2>
-          <button class="btn btn-primary" id="postAnnouncementBtn" style="display: none;">
-            <i class="fas fa-plus"></i> Post Announcement
-          </button>
-        </div>
-        <div class="announcements-list" id="announcementsList">
-          <div class="announcement-card">
-            <div class="announcement-header">
-              <div class="announcement-icon">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <div class="announcement-meta">
-                <span class="announcement-date">Welcome</span>
-                <span class="announcement-category">General</span>
-              </div>
-            </div>
-            <h3>Welcome to Students Page</h3>
-            <p>Here you can view all students enrolled in your courses. Use the filters above to search by subject or name.</p>
+            <p>Loading students from database...</p>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Post Announcement Modal -->
-    <div id="announcementModal" class="modal">
+    <!-- View Student Profile Modal -->
+    <div id="viewProfileModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2><i class="fas fa-bullhorn"></i> Post Announcement</h2>
-          <span class="close-modal" id="closeAnnouncementModal">&times;</span>
+          <h2><i class="fas fa-user"></i> Student Profile</h2>
+          <span class="close-modal" onclick="closeModal('viewProfileModal')">&times;</span>
+        </div>
+        <div class="modal-body" id="viewProfileContent">
+          <!-- Content loaded dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Student Modal -->
+    <div id="messageModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2><i class="fas fa-envelope"></i> Send Message</h2>
+          <span class="close-modal" onclick="closeModal('messageModal')">&times;</span>
         </div>
         <div class="modal-body">
-          <form id="announcementForm">
+          <form id="messageForm">
+            <input type="hidden" id="messageStudentId">
             <div class="form-group">
-              <label for="announcementTitle">Title *</label>
-              <input type="text" id="announcementTitle" required placeholder="Enter announcement title">
+              <label>To:</label>
+              <p id="messageToName" class="form-value"></p>
             </div>
             <div class="form-group">
-              <label for="announcementCategory">Category *</label>
-              <select id="announcementCategory" required>
-                <option value="">Select Category</option>
-                <option value="Academic">Academic</option>
-                <option value="Events">Events</option>
-                <option value="General">General</option>
-                <option value="Urgent">Urgent</option>
-              </select>
+              <label for="messageSubject">Subject *</label>
+              <input type="text" id="messageSubject" required placeholder="Enter message subject">
             </div>
             <div class="form-group">
-              <label for="announcementSubject">Subject</label>
-              <select id="announcementSubject">
-                <option value="">All Subjects</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="announcementContent">Message *</label>
-              <textarea id="announcementContent" rows="5" required placeholder="Enter your announcement message"></textarea>
+              <label for="messageContent">Message *</label>
+              <textarea id="messageContent" rows="5" required placeholder="Enter your message"></textarea>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" id="cancelAnnouncementBtn">Cancel</button>
+              <button type="button" class="btn btn-secondary" onclick="closeModal('messageModal')">Cancel</button>
               <button type="submit" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> Post Announcement
+                <i class="fas fa-paper-plane"></i> Send
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+      <div class="modal-content modal-sm">
+        <div class="modal-header">
+          <h2><i class="fas fa-exclamation-triangle"></i> Delete Student</h2>
+          <span class="close-modal" onclick="closeModal('deleteModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p id="deleteMessage">Are you sure you want to delete this student account?</p>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -172,7 +167,7 @@
       import { logout } from "./script.js";
       import { auth, db } from "./firebase.js";
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, getDoc, getDocs, collection, onSnapshot, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { doc, getDoc, getDocs, collection, onSnapshot, addDoc, serverTimestamp, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       
       // Role check
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -200,16 +195,9 @@
         pageDescription.textContent = 'View your classmates and course peers.';
       }
 
-      // Show/hide post announcement button for instructors
-      const postAnnouncementBtn = document.getElementById('postAnnouncementBtn');
-      if (postAnnouncementBtn) {
-        postAnnouncementBtn.style.display = isInstructor ? 'inline-flex' : 'none';
-      }
-
       // Load subjects for filter
       const subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
       const subjectFilter = document.getElementById('subjectFilter');
-      const announcementSubject = document.getElementById('announcementSubject');
       
       if (subjectFilter) {
         subjects.forEach(subject => {
@@ -219,33 +207,93 @@
           subjectFilter.appendChild(option);
         });
       }
-      
-      if (announcementSubject) {
-        subjects.forEach(subject => {
-          const option = document.createElement('option');
-          option.value = subject.name;
-          option.textContent = subject.name;
-          announcementSubject.appendChild(option);
-        });
-      }
 
-      // Load students
-      function loadStudents() {
+      // Load real students from Firestore
+      let allStudents = [];
+
+      async function loadStudentsFromFirestore() {
         const studentsList = document.getElementById('studentsList');
         const studentCount = document.getElementById('studentCount');
         
         if (!studentsList) return;
         
-        // Get all students from localStorage or generate demo data
-        let students = JSON.parse(localStorage.getItem('students') || '[]');
-        
-        // If no students, generate demo data
-        if (students.length === 0) {
-          students = generateDemoStudents();
-          localStorage.setItem('students', JSON.stringify(students));
+        try {
+          // Get current user to exclude them
+          const currentUid = auth.currentUser?.uid || userData.id;
+          
+          // Query students collection - get only students (not instructors)
+          const studentsRef = collection(db, 'students');
+          const q = query(studentsRef, where('role', '==', 'student'));
+          
+          const snapshot = await getDocs(q);
+          allStudents = [];
+          
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            // Exclude instructors and current user
+            const role = (data.role || '').toLowerCase();
+            if (role !== 'instructor' && role !== 'teacher' && role !== 'admin' && doc.id !== currentUid) {
+              allStudents.push({
+                id: doc.id,
+                name: data.fullName || data.name || 'Unknown',
+                email: data.email || '',
+                course: data.course || 'Not assigned',
+                subjects: data.subjects || [],
+                profileVisibility: data.profileVisibility || 'Everyone',
+                showOnlineStatus: data.showOnlineStatus !== false,
+                isOnline: Math.random() > 0.7 // Simulated - would need realtime tracking
+              });
+            }
+          });
+          
+          // If no students in Firestore, try users collection
+          if (allStudents.length === 0) {
+            const usersRef = collection(db, 'users');
+            const usersSnapshot = await getDocs(usersRef);
+            
+            usersSnapshot.forEach(doc => {
+              const data = doc.data();
+              const role = (data.role || '').toLowerCase();
+              // Only include students, exclude instructors and current user
+              if (role === 'student' && doc.id !== currentUid) {
+                allStudents.push({
+                  id: doc.id,
+                  name: data.fullName || data.name || 'Unknown',
+                  email: data.email || '',
+                  course: data.course || 'Not assigned',
+                  subjects: data.subjects || [],
+                  profileVisibility: data.profileVisibility || 'Everyone',
+                  showOnlineStatus: data.showOnlineStatus !== false,
+                  isOnline: Math.random() > 0.7
+                });
+              }
+            });
+          }
+          
+          renderStudents(allStudents);
+          
+        } catch (error) {
+          console.log('Error loading students:', error.message);
+          // Fallback: show empty state
+          studentsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-user-slash"></i>
+              <p>No students found in database</p>
+              <p class="empty-subtitle">Students will appear here once they register</p>
+            </div>
+          `;
+          if (studentCount) studentCount.textContent = '0 students';
         }
+      }
+
+      // Render students
+      function renderStudents(students) {
+        const studentsList = document.getElementById('studentsList');
+        const studentCount = document.getElementById('studentCount');
         
-        // Filter by subject if selected
+        if (!studentsList) return;
+        
+        // Filter by subject and search
         const subjectValue = subjectFilter?.value || '';
         const searchValue = document.getElementById('searchStudent')?.value?.toLowerCase() || '';
         
@@ -288,271 +336,186 @@
           if (student.profileVisibility === 'Private') {
             canViewProfile = false;
           } else if (student.profileVisibility === 'Classmates Only' && !isInstructor) {
-            // In a real app, check if they're classmates
             canViewProfile = true;
           }
           
-          if (student.isOnline && student.profileVisibility !== 'Private') {
+          if (student.isOnline && student.showOnlineStatus && student.profileVisibility !== 'Private') {
             showOnlineStatus = true;
           }
           
           const visibilityIcon = student.profileVisibility === 'Private' ? 'fa-lock' : 
-                                 student.profileVisibility === 'Classmates Only' ? 'fa-user-friends' : 'fa-globe';
+                                student.profileVisibility === 'Classmates Only' ? 'fa-user-friends' : 'fa-globe';
           const visibilityClass = student.profileVisibility === 'Private' ? 'visibility-private' : 
-                                  student.profileVisibility === 'Classmates Only' ? 'visibility-classmates' : 'visibility-everyone';
+                                 student.profileVisibility === 'Classmates Only' ? 'visibility-classmates' : 'visibility-everyone';
           
           return `
-          <div class="student-card">
-            <div class="student-avatar">
-              <img src="${student.avatar || 'Gemini_Generated_Image_g3iakg3iakg3iakg.png'}" alt="${student.name}">
-              ${showOnlineStatus ? '<span class="online-indicator"></span>' : ''}
-            </div>
-            <div class="student-info">
-              <h3>${student.name}</h3>
-              ${canViewProfile ? `
-              <p class="student-email"><i class="fas fa-envelope"></i> ${student.email}</p>
-              <p class="student-subjects"><i class="fas fa-book"></i> ${student.subjects ? student.subjects.join(', ') : 'No subjects'}</p>
-              <p class="student-course"><i class="fas fa-graduation-cap"></i> ${student.course || 'Not assigned'}</p>
-              ` : `
-              <p class="student-email"><i class="fas fa-lock"></i> Profile Hidden</p>
-              `}
-              <p class="student-visibility ${visibilityClass}"><i class="fas ${visibilityIcon}"></i> ${student.profileVisibility}</p>
-            </div>
-            <div class="student-actions">
-              <button class="btn-icon" title="View Profile" onclick="viewStudentProfile('${student.id}')">
-                <i class="fas fa-eye"></i>
-              </button>
-              ${isInstructor ? `
-              <button class="btn-icon" title="Send Message" onclick="messageStudent('${student.id}')">
-                <i class="fas fa-envelope"></i>
-              </button>
-              <button class="btn-icon btn-danger" title="Delete Student" onclick="deleteStudent('${student.id}', '${student.name}')">
-                <i class="fas fa-trash"></i>
-              </button>
-              ` : ''}
-            </div>
-          </div>
-        `}).join('');
-      }
-
-      // Generate demo students
-      function generateDemoStudents() {
-        const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
-        const demoStudents = [
-          { id: '1', name: 'John Smith', email: 'john.smith@student.edu', course: 'BS Computer Science', subjects: ['Web Development', 'Data Structures'], profileVisibility: 'Everyone', isOnline: true },
-          { id: '2', name: 'Sarah Johnson', email: 'sarah.j@student.edu', course: 'BS Information Technology', subjects: ['Database Management', 'Networking'], profileVisibility: 'Everyone', isOnline: false },
-          { id: '3', name: 'Michael Brown', email: 'michael.b@student.edu', course: 'BS Computer Science', subjects: ['Web Development', 'Algorithms'], profileVisibility: 'Classmates Only', isOnline: true },
-          { id: '4', name: 'Emily Davis', email: 'emily.d@student.edu', course: 'BS Computer Engineering', subjects: ['Data Structures', 'Microprocessors'], profileVisibility: 'Everyone', isOnline: false },
-          { id: '5', name: 'David Wilson', email: 'david.w@student.edu', course: 'BS Information Systems', subjects: ['Web Development', 'Business Analytics'], profileVisibility: 'Private', isOnline: false },
-          { id: '6', name: 'Jessica Martinez', email: 'jessica.m@student.edu', course: 'BS Computer Science', subjects: ['Algorithms', 'Artificial Intelligence'], profileVisibility: 'Everyone', isOnline: true },
-          { id: '7', name: 'Robert Taylor', email: 'robert.t@student.edu', course: 'BS Information Technology', subjects: ['Cybersecurity', 'Networking'], profileVisibility: 'Classmates Only', isOnline: false },
-          { id: '8', name: 'Amanda Lee', email: 'amanda.l@student.edu', course: 'BS Computer Science', subjects: ['Web Development', 'Mobile Development'], profileVisibility: currentUser.profileVisibility || 'Everyone', isOnline: currentUser.showOnlineStatus !== false },
-        ];
-        // Set current user's own profile settings
-        demoStudents[7] = { 
-          ...demoStudents[7], 
-          profileVisibility: currentUser.profileVisibility || 'Everyone', 
-          isOnline: currentUser.showOnlineStatus !== false,
-          name: currentUser.name || 'You',
-          email: currentUser.email || 'your.email@student.edu'
-        };
-        return demoStudents;
-      }
-
-      // Load announcements
-      function loadAnnouncements() {
-        const announcementsList = document.getElementById('announcementsList');
-        if (!announcementsList) return;
-        
-        // Get announcements from localStorage
-        let announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
-        
-        // If no announcements, add default ones
-        if (announcements.length === 0) {
-          announcements = [
-            {
-              id: '1',
-              title: 'Welcome to Students Page',
-              category: 'General',
-              content: 'Here you can view all students enrolled in your courses. Use the filters above to search by subject or name.',
-              date: new Date().toISOString(),
-              author: 'System'
-            }
-          ];
-        }
-        
-        // Sort by date (newest first)
-        announcements.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        announcementsList.innerHTML = announcements.map(announcement => `
-          <div class="announcement-card">
-            <div class="announcement-header">
-              <div class="announcement-icon">
-                <i class="fas fa-${getCategoryIcon(announcement.category)}"></i>
+            <div class="student-card">
+              <div class="student-avatar">
+                <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="${student.name}">
+                ${showOnlineStatus ? '<span class="online-indicator"></span>' : ''}
               </div>
-              <div class="announcement-meta">
-                <span class="announcement-date">${formatDate(announcement.date)}</span>
-                <span class="announcement-category">${announcement.category}</span>
+              <div class="student-info">
+                <h3>${student.name}</h3>
+                ${canViewProfile ? `
+                <p class="student-email"><i class="fas fa-envelope"></i> ${student.email}</p>
+                <p class="student-subjects"><i class="fas fa-book"></i> ${student.subjects?.length ? student.subjects.join(', ') : 'No subjects'}</p>
+                <p class="student-course"><i class="fas fa-graduation-cap"></i> ${student.course}</p>
+                ` : `
+                <p class="student-email"><i class="fas fa-lock"></i> Profile Hidden</p>
+                `}
+                <p class="student-visibility ${visibilityClass}"><i class="fas ${visibilityIcon}"></i> ${student.profileVisibility}</p>
+              </div>
+              <div class="student-actions">
+                <button class="btn-icon" title="View Profile" onclick="viewStudentProfile('${student.id}')">
+                  <i class="fas fa-eye"></i>
+                </button>
+                ${isInstructor ? `
+                <button class="btn-icon" title="Send Message" onclick="openMessageModal('${student.id}', '${student.name}')">
+                  <i class="fas fa-envelope"></i>
+                </button>
+                <button class="btn-icon btn-danger" title="Delete Student" onclick="confirmDeleteStudent('${student.id}', '${student.name}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+                ` : ''}
               </div>
             </div>
-            <h3>${announcement.title}</h3>
-            <p>${announcement.content}</p>
-            <div class="announcement-footer">
-              <span class="announcement-author">Posted by: ${announcement.author}</span>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      function getCategoryIcon(category) {
-        const icons = {
-          'Academic': 'graduation-cap',
-          'Events': 'calendar-check',
-          'General': 'info-circle',
-          'Urgent': 'exclamation-triangle'
-        };
-        return icons[category] || 'bullhorn';
-      }
-
-      function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      }
-
-      // Announcements modal
-      const announcementModal = document.getElementById('announcementModal');
-      const closeAnnouncementModal = document.getElementById('closeAnnouncementModal');
-      const cancelAnnouncementBtn = document.getElementById('cancelAnnouncementBtn');
-      
-      if (postAnnouncementBtn && announcementModal) {
-        postAnnouncementBtn.addEventListener('click', () => {
-          announcementModal.style.display = 'block';
-        });
-      }
-      
-      if (closeAnnouncementModal) {
-        closeAnnouncementModal.addEventListener('click', () => {
-          announcementModal.style.display = 'none';
-        });
-      }
-      
-      if (cancelAnnouncementBtn) {
-        cancelAnnouncementBtn.addEventListener('click', () => {
-          announcementModal.style.display = 'none';
-        });
-      }
-
-      // Handle announcement form submission
-      const announcementForm = document.getElementById('announcementForm');
-      if (announcementForm) {
-        announcementForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          
-          const title = document.getElementById('announcementTitle').value;
-          const category = document.getElementById('announcementCategory').value;
-          const subject = document.getElementById('announcementSubject').value;
-          const content = document.getElementById('announcementContent').value;
-          
-          const newAnnouncement = {
-            id: Date.now().toString(),
-            title,
-            category,
-            subject,
-            content,
-            date: new Date().toISOString(),
-            author: userData.name || 'Instructor'
-          };
-          
-          // Save to localStorage
-          const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
-          announcements.unshift(newAnnouncement);
-          localStorage.setItem('announcements', JSON.stringify(announcements));
-          
-          // Also save to Firestore if instructor
-          if (isInstructor && auth.currentUser) {
-            try {
-              await addDoc(collection(db, 'announcements'), {
-                ...newAnnouncement,
-                createdAt: serverTimestamp(),
-                authorId: auth.currentUser.uid
-              });
-            } catch (error) {
-              console.log('Announcement saved locally only:', error.message);
-            }
-          }
-          
-          // Reset form and close modal
-          announcementForm.reset();
-          announcementModal.style.display = 'none';
-          
-          // Reload announcements
-          loadAnnouncements();
-          
-          alert('Announcement posted successfully!');
-        });
+          `;
+        }).join('');
       }
 
       // Filter handlers
       const applyFilterBtn = document.getElementById('applyFilterBtn');
       if (applyFilterBtn) {
-        applyFilterBtn.addEventListener('click', loadStudents);
+        applyFilterBtn.addEventListener('click', () => renderStudents(allStudents));
       }
       
       const searchStudent = document.getElementById('searchStudent');
       if (searchStudent) {
         searchStudent.addEventListener('keyup', (e) => {
           if (e.key === 'Enter') {
-            loadStudents();
+            renderStudents(allStudents);
           }
         });
       }
 
-      // View student profile (placeholder)
+      // Modal functions
+      window.closeModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
+      };
+
+      // View student profile
       window.viewStudentProfile = function(studentId) {
-        alert('Student profile viewer coming soon!');
+        const student = allStudents.find(s => s.id === studentId);
+        if (!student) return;
+        
+        const content = document.getElementById('viewProfileContent');
+        if (content) {
+          content.innerHTML = `
+            <div class="profile-view">
+              <div class="profile-avatar-large">
+                <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="${student.name}">
+              </div>
+              <h3>${student.name}</h3>
+              <p class="profile-email">${student.email}</p>
+              <div class="profile-details">
+                <p><i class="fas fa-graduation-cap"></i> <strong>Course:</strong> ${student.course}</p>
+                <p><i class="fas fa-eye"></i> <strong>Visibility:</strong> ${student.profileVisibility}</p>
+                <p><i class="fas fa-circle"></i> <strong>Status:</strong> ${student.isOnline ? 'Online' : 'Offline'}</p>
+              </div>
+            </div>
+          `;
+        }
+        document.getElementById('viewProfileModal').style.display = 'block';
       };
 
-      // Message student (placeholder)
-      window.messageStudent = function(studentId) {
-        alert('Messaging system coming soon!');
+      // Message student modal
+      window.openMessageModal = function(studentId, studentName) {
+        document.getElementById('messageStudentId').value = studentId;
+        document.getElementById('messageToName').textContent = studentName;
+        document.getElementById('messageModal').style.display = 'block';
       };
 
-      // Delete student account
-      window.deleteStudent = async function(studentId, studentName) {
-        const confirmed = confirm(`Are you sure you want to delete the account for ${studentName}? This action cannot be undone.`);
-        
-        if (!confirmed) return;
-        
-        const confirmAgain = confirm(`This will permanently delete ${studentName}'s account and all their data. Continue?`);
-        if (!confirmAgain) return;
-        
-        try {
-          // Remove from localStorage
-          let students = JSON.parse(localStorage.getItem('students') || '[]');
-          students = students.filter(s => s.id !== studentId);
-          localStorage.setItem('students', JSON.stringify(students));
+      // Handle message form
+      const messageForm = document.getElementById('messageForm');
+      if (messageForm) {
+        messageForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const studentId = document.getElementById('messageStudentId').value;
+          const subject = document.getElementById('messageSubject').value;
+          const content = document.getElementById('messageContent').value;
           
-          // Try to delete from Firestore
-          if (auth.currentUser) {
+          // Save message to Firestore
+          try {
+            await addDoc(collection(db, 'messages'), {
+              fromId: auth.currentUser?.uid || userData.id,
+              fromName: userData.name || 'Instructor',
+              toId: studentId,
+              subject: subject,
+              content: content,
+              createdAt: serverTimestamp(),
+              read: false
+            });
+            
+            alert('Message sent successfully!');
+            closeModal('messageModal');
+            messageForm.reset();
+          } catch (error) {
+            alert('Failed to send message: ' + error.message);
+          }
+        });
+      }
+
+      // Delete student
+      let studentToDelete = null;
+      
+      window.confirmDeleteStudent = function(studentId, studentName) {
+        studentToDelete = { id: studentId, name: studentName };
+        document.getElementById('deleteMessage').textContent = 
+          `Are you sure you want to delete the account for ${studentName}? This action cannot be undone.`;
+        document.getElementById('deleteModal').style.display = 'block';
+      };
+
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async () => {
+          if (!studentToDelete) return;
+          
+          try {
+            // Delete from Firestore
             try {
-              await deleteDoc(doc(db, 'students', studentId));
-              await deleteDoc(doc(db, 'users', studentId));
-            } catch (e) {
-              console.log('Firestore delete skipped:', e.message);
-            }
+              await deleteDoc(doc(db, 'students', studentToDelete.id));
+            } catch (e) {}
+            
+            try {
+              await deleteDoc(doc(db, 'users', studentToDelete.id));
+            } catch (e) {}
+            
+            // Remove from local array
+            allStudents = allStudents.filter(s => s.id !== studentToDelete.id);
+            
+            alert(`${studentToDelete.name}'s account has been deleted.`);
+            closeModal('deleteModal');
+            renderStudents(allStudents);
+            
+          } catch (error) {
+            alert('Failed to delete student: ' + error.message);
           }
           
-          alert(`${studentName}'s account has been deleted.`);
-          loadStudents();
-        } catch (error) {
-          alert('Failed to delete student account: ' + error.message);
+          studentToDelete = null;
+        });
+      }
+
+      // Close modals on outside click
+      window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
         }
       };
 
       // Initialize
       window.addEventListener('DOMContentLoaded', () => {
-        loadStudents();
-        loadAnnouncements();
+        loadStudentsFromFirestore();
         
         // Update header username
         const headerUserName = document.getElementById('headerUserName');
@@ -565,12 +528,6 @@
       ScrollReveal().reveal(".student-card", {
         delay: 200,
         interval: 100,
-        distance: '20px'
-      });
-
-      ScrollReveal().reveal(".announcement-card", {
-        delay: 300,
-        interval: 150,
         distance: '20px'
       });
     </script>
