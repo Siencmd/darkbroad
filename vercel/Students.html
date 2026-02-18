@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0a1929" />
+    <title>Students - Darkboard</title>
+    <meta name="description" content="View and manage students in your courses" />
+    <meta name="author" content="Darkboard Team" />
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Main Navigation -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-header">
+        <a href="#" class="brand" id="dashboardLink">DARKBOARD</a>
+      </div>
+      <ul class="nav-list">
+        <li><a href="#" class="nav-item" id="navDashboard"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+        <li><a href="Subjects.html" class="nav-item"><i class="fas fa-book"></i><span>Subjects</span></a></li>
+        <li><a href="Grades.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Grades</span></a></li>
+        <li><a href="Schedule.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
+        <li><a href="Announcements.html" class="nav-item"><i class="fas fa-bell"></i><span>Announcements</span></a></li>
+        <li><a href="Submissions.html" class="nav-item"><i class="fas fa-file-upload"></i><span>Submissions</span></a></li>
+        <li><a href="Students.html" class="nav-item active"><i class="fas fa-users"></i><span>Students</span></a></li>
+        <li><a href="Profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a></li>
+        <li><a href="Settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li><a href="Help.html" class="nav-item"><i class="fas fa-question-circle"></i><span>Help</span></a></li>
+        <li><a href="#" id="logoutBtn" class="nav-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="user-menu-right">
+          <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
+          <span id="headerUserName">Loading...</span>
+        </div>
+      </div>
+      <div class="top-user-name" id="topUserName"></div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="welcome-section">
+        <div class="welcome-text">
+          <h1><i class="fas fa-users"></i> Students</h1>
+          <p id="pageDescription">View and manage students in your courses.</p>
+        </div>
+      </div>
+
+      <!-- Filter Section -->
+      <section class="card" aria-labelledby="filter-heading">
+        <div class="card-header">
+          <h2 id="filter-heading"><i class="fas fa-filter"></i> Filter Students</h2>
+        </div>
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="subjectFilter">Subject:</label>
+            <select id="subjectFilter" class="filter-select">
+              <option value="">All Subjects</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="searchStudent">Search:</label>
+            <input type="text" id="searchStudent" class="filter-input" placeholder="Search by name or email...">
+          </div>
+          <button class="btn btn-primary" id="applyFilterBtn">
+            <i class="fas fa-search"></i> Apply
+          </button>
+        </div>
+      </section>
+
+      <!-- Students List -->
+      <section class="card" aria-labelledby="students-heading">
+        <div class="card-header">
+          <h2 id="students-heading"><i class="fas fa-user-graduate"></i> Student List</h2>
+          <span class="student-count" id="studentCount">0 students</span>
+        </div>
+        <div class="students-grid" id="studentsList">
+          <!-- Students will be loaded dynamically -->
+          <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading students...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Announcements Section -->
+      <section class="card" aria-labelledby="announcements-heading">
+        <div class="card-header">
+          <h2 id="announcements-heading"><i class="fas fa-bullhorn"></i> Announcements</h2>
+          <button class="btn btn-primary" id="postAnnouncementBtn" style="display: none;">
+            <i class="fas fa-plus"></i> Post Announcement
+          </button>
+        </div>
+        <div class="announcements-list" id="announcementsList">
+          <div class="announcement-card">
+            <div class="announcement-header">
+              <div class="announcement-icon">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="announcement-meta">
+                <span class="announcement-date">Welcome</span>
+                <span class="announcement-category">General</span>
+              </div>
+            </div>
+            <h3>Welcome to Students Page</h3>
+            <p>Here you can view all students enrolled in your courses. Use the filters above to search by subject or name.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Post Announcement Modal -->
+    <div id="announcementModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2><i class="fas fa-bullhorn"></i> Post Announcement</h2>
+          <span class="close-modal" id="closeAnnouncementModal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="announcementForm">
+            <div class="form-group">
+              <label for="announcementTitle">Title *</label>
+              <input type="text" id="announcementTitle" required placeholder="Enter announcement title">
+            </div>
+            <div class="form-group">
+              <label for="announcementCategory">Category *</label>
+              <select id="announcementCategory" required>
+                <option value="">Select Category</option>
+                <option value="Academic">Academic</option>
+                <option value="Events">Events</option>
+                <option value="General">General</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="announcementSubject">Subject</label>
+              <select id="announcementSubject">
+                <option value="">All Subjects</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="announcementContent">Message *</label>
+              <textarea id="announcementContent" rows="5" required placeholder="Enter your announcement message"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="cancelAnnouncementBtn">Cancel</button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Post Announcement
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <script type="module">
+      import { logout } from "./script.js";
+      import { auth, db } from "./firebase.js";
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { doc, getDoc, getDocs, collection, onSnapshot, addDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      
+      // Role check
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const normalizedRole = (userData.role || '').toLowerCase();
+      const isInstructor = normalizedRole === 'instructor' || normalizedRole === 'teacher' || normalizedRole === 'admin';
+      
+      // Set up dashboard link based on role
+      const dashboardLink = document.getElementById('dashboardLink');
+      const navDashboard = document.getElementById('navDashboard');
+      if (isInstructor) {
+        dashboardLink.href = 'InstructorDashboard.html';
+        navDashboard.href = 'InstructorDashboard.html';
+      } else {
+        dashboardLink.href = 'index.html';
+        navDashboard.href = 'index.html';
+      }
+
+      // Logout button
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Update page description based on role
+      const pageDescription = document.getElementById('pageDescription');
+      if (!isInstructor && pageDescription) {
+        pageDescription.textContent = 'View your classmates and course peers.';
+      }
+
+      // Show/hide post announcement button for instructors
+      const postAnnouncementBtn = document.getElementById('postAnnouncementBtn');
+      if (postAnnouncementBtn) {
+        postAnnouncementBtn.style.display = isInstructor ? 'inline-flex' : 'none';
+      }
+
+      // Load subjects for filter
+      const subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
+      const subjectFilter = document.getElementById('subjectFilter');
+      const announcementSubject = document.getElementById('announcementSubject');
+      
+      if (subjectFilter) {
+        subjects.forEach(subject => {
+          const option = document.createElement('option');
+          option.value = subject.name;
+          option.textContent = subject.name;
+          subjectFilter.appendChild(option);
+        });
+      }
+      
+      if (announcementSubject) {
+        subjects.forEach(subject => {
+          const option = document.createElement('option');
+          option.value = subject.name;
+          option.textContent = subject.name;
+          announcementSubject.appendChild(option);
+        });
+      }
+
+      // Load students
+      function loadStudents() {
+        const studentsList = document.getElementById('studentsList');
+        const studentCount = document.getElementById('studentCount');
+        
+        if (!studentsList) return;
+        
+        // Get all students from localStorage or generate demo data
+        let students = JSON.parse(localStorage.getItem('students') || '[]');
+        
+        // If no students, generate demo data
+        if (students.length === 0) {
+          students = generateDemoStudents();
+          localStorage.setItem('students', JSON.stringify(students));
+        }
+        
+        // Filter by subject if selected
+        const subjectValue = subjectFilter?.value || '';
+        const searchValue = document.getElementById('searchStudent')?.value?.toLowerCase() || '';
+        
+        let filteredStudents = students;
+        
+        if (subjectValue) {
+          filteredStudents = filteredStudents.filter(s => 
+            s.subjects && s.subjects.some(sub => sub.toLowerCase().includes(subjectValue.toLowerCase()))
+          );
+        }
+        
+        if (searchValue) {
+          filteredStudents = filteredStudents.filter(s => 
+            s.name.toLowerCase().includes(searchValue) || 
+            s.email.toLowerCase().includes(searchValue)
+          );
+        }
+        
+        // Update count
+        if (studentCount) {
+          studentCount.textContent = `${filteredStudents.length} student${filteredStudents.length !== 1 ? 's' : ''}`;
+        }
+        
+        // Render students
+        if (filteredStudents.length === 0) {
+          studentsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-user-slash"></i>
+              <p>No students found</p>
+            </div>
+          `;
+          return;
+        }
+        
+        studentsList.innerHTML = filteredStudents.map(student => {
+          // Check visibility permissions
+          let canViewProfile = true;
+          let showOnlineStatus = false;
+          
+          if (student.profileVisibility === 'Private') {
+            canViewProfile = false;
+          } else if (student.profileVisibility === 'Classmates Only' && !isInstructor) {
+            // In a real app, check if they're classmates
+            canViewProfile = true;
+          }
+          
+          if (student.isOnline && student.profileVisibility !== 'Private') {
+            showOnlineStatus = true;
+          }
+          
+          const visibilityIcon = student.profileVisibility === 'Private' ? 'fa-lock' : 
+                                 student.profileVisibility === 'Classmates Only' ? 'fa-user-friends' : 'fa-globe';
+          const visibilityClass = student.profileVisibility === 'Private' ? 'visibility-private' : 
+                                  student.profileVisibility === 'Classmates Only' ? 'visibility-classmates' : 'visibility-everyone';
+          
+          return `
+          <div class="student-card">
+            <div class="student-avatar">
+              <img src="${student.avatar || 'Gemini_Generated_Image_g3iakg3iakg3iakg.png'}" alt="${student.name}">
+              ${showOnlineStatus ? '<span class="online-indicator"></span>' : ''}
+            </div>
+            <div class="student-info">
+              <h3>${student.name}</h3>
+              ${canViewProfile ? `
+              <p class="student-email"><i class="fas fa-envelope"></i> ${student.email}</p>
+              <p class="student-subjects"><i class="fas fa-book"></i> ${student.subjects ? student.subjects.join(', ') : 'No subjects'}</p>
+              <p class="student-course"><i class="fas fa-graduation-cap"></i> ${student.course || 'Not assigned'}</p>
+              ` : `
+              <p class="student-email"><i class="fas fa-lock"></i> Profile Hidden</p>
+              `}
+              <p class="student-visibility ${visibilityClass}"><i class="fas ${visibilityIcon}"></i> ${student.profileVisibility}</p>
+            </div>
+            <div class="student-actions">
+              <button class="btn-icon" title="View Profile" onclick="viewStudentProfile('${student.id}')">
+                <i class="fas fa-eye"></i>
+              </button>
+              ${isInstructor ? `
+              <button class="btn-icon" title="Send Message" onclick="messageStudent('${student.id}')">
+                <i class="fas fa-envelope"></i>
+              </button>
+              <button class="btn-icon btn-danger" title="Delete Student" onclick="deleteStudent('${student.id}', '${student.name}')">
+                <i class="fas fa-trash"></i>
+              </button>
+              ` : ''}
+            </div>
+          </div>
+        `}).join('');
+      }
+
+      // Generate demo students
+      function generateDemoStudents() {
+        const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        const demoStudents = [
+          { id: '1', name: 'John Smith', email: 'john.smith@student.edu', course: 'BS Computer Science', subjects: ['Web Development', 'Data Structures'], profileVisibility: 'Everyone', isOnline: true },
+          { id: '2', name: 'Sarah Johnson', email: 'sarah.j@student.edu', course: 'BS Information Technology', subjects: ['Database Management', 'Networking'], profileVisibility: 'Everyone', isOnline: false },
+          { id: '3', name: 'Michael Brown', email: 'michael.b@student.edu', course: 'BS Computer Science', subjects: ['Web Development', 'Algorithms'], profileVisibility: 'Classmates Only', isOnline: true },
+          { id: '4', name: 'Emily Davis', email: 'emily.d@student.edu', course: 'BS Computer Engineering', subjects: ['Data Structures', 'Microprocessors'], profileVisibility: 'Everyone', isOnline: false },
+          { id: '5', name: 'David Wilson', email: 'david.w@student.edu', course: 'BS Information Systems', subjects: ['Web Development', 'Business Analytics'], profileVisibility: 'Private', isOnline: false },
+          { id: '6', name: 'Jessica Martinez', email: 'jessica.m@student.edu', course: 'BS Computer Science', subjects: ['Algorithms', 'Artificial Intelligence'], profileVisibility: 'Everyone', isOnline: true },
+          { id: '7', name: 'Robert Taylor', email: 'robert.t@student.edu', course: 'BS Information Technology', subjects: ['Cybersecurity', 'Networking'], profileVisibility: 'Classmates Only', isOnline: false },
+          { id: '8', name: 'Amanda Lee', email: 'amanda.l@student.edu', course: 'BS Computer Science', subjects: ['Web Development', 'Mobile Development'], profileVisibility: currentUser.profileVisibility || 'Everyone', isOnline: currentUser.showOnlineStatus !== false },
+        ];
+        // Set current user's own profile settings
+        demoStudents[7] = { 
+          ...demoStudents[7], 
+          profileVisibility: currentUser.profileVisibility || 'Everyone', 
+          isOnline: currentUser.showOnlineStatus !== false,
+          name: currentUser.name || 'You',
+          email: currentUser.email || 'your.email@student.edu'
+        };
+        return demoStudents;
+      }
+
+      // Load announcements
+      function loadAnnouncements() {
+        const announcementsList = document.getElementById('announcementsList');
+        if (!announcementsList) return;
+        
+        // Get announcements from localStorage
+        let announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+        
+        // If no announcements, add default ones
+        if (announcements.length === 0) {
+          announcements = [
+            {
+              id: '1',
+              title: 'Welcome to Students Page',
+              category: 'General',
+              content: 'Here you can view all students enrolled in your courses. Use the filters above to search by subject or name.',
+              date: new Date().toISOString(),
+              author: 'System'
+            }
+          ];
+        }
+        
+        // Sort by date (newest first)
+        announcements.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        announcementsList.innerHTML = announcements.map(announcement => `
+          <div class="announcement-card">
+            <div class="announcement-header">
+              <div class="announcement-icon">
+                <i class="fas fa-${getCategoryIcon(announcement.category)}"></i>
+              </div>
+              <div class="announcement-meta">
+                <span class="announcement-date">${formatDate(announcement.date)}</span>
+                <span class="announcement-category">${announcement.category}</span>
+              </div>
+            </div>
+            <h3>${announcement.title}</h3>
+            <p>${announcement.content}</p>
+            <div class="announcement-footer">
+              <span class="announcement-author">Posted by: ${announcement.author}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function getCategoryIcon(category) {
+        const icons = {
+          'Academic': 'graduation-cap',
+          'Events': 'calendar-check',
+          'General': 'info-circle',
+          'Urgent': 'exclamation-triangle'
+        };
+        return icons[category] || 'bullhorn';
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      // Announcements modal
+      const announcementModal = document.getElementById('announcementModal');
+      const closeAnnouncementModal = document.getElementById('closeAnnouncementModal');
+      const cancelAnnouncementBtn = document.getElementById('cancelAnnouncementBtn');
+      
+      if (postAnnouncementBtn && announcementModal) {
+        postAnnouncementBtn.addEventListener('click', () => {
+          announcementModal.style.display = 'block';
+        });
+      }
+      
+      if (closeAnnouncementModal) {
+        closeAnnouncementModal.addEventListener('click', () => {
+          announcementModal.style.display = 'none';
+        });
+      }
+      
+      if (cancelAnnouncementBtn) {
+        cancelAnnouncementBtn.addEventListener('click', () => {
+          announcementModal.style.display = 'none';
+        });
+      }
+
+      // Handle announcement form submission
+      const announcementForm = document.getElementById('announcementForm');
+      if (announcementForm) {
+        announcementForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const title = document.getElementById('announcementTitle').value;
+          const category = document.getElementById('announcementCategory').value;
+          const subject = document.getElementById('announcementSubject').value;
+          const content = document.getElementById('announcementContent').value;
+          
+          const newAnnouncement = {
+            id: Date.now().toString(),
+            title,
+            category,
+            subject,
+            content,
+            date: new Date().toISOString(),
+            author: userData.name || 'Instructor'
+          };
+          
+          // Save to localStorage
+          const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+          announcements.unshift(newAnnouncement);
+          localStorage.setItem('announcements', JSON.stringify(announcements));
+          
+          // Also save to Firestore if instructor
+          if (isInstructor && auth.currentUser) {
+            try {
+              await addDoc(collection(db, 'announcements'), {
+                ...newAnnouncement,
+                createdAt: serverTimestamp(),
+                authorId: auth.currentUser.uid
+              });
+            } catch (error) {
+              console.log('Announcement saved locally only:', error.message);
+            }
+          }
+          
+          // Reset form and close modal
+          announcementForm.reset();
+          announcementModal.style.display = 'none';
+          
+          // Reload announcements
+          loadAnnouncements();
+          
+          alert('Announcement posted successfully!');
+        });
+      }
+
+      // Filter handlers
+      const applyFilterBtn = document.getElementById('applyFilterBtn');
+      if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', loadStudents);
+      }
+      
+      const searchStudent = document.getElementById('searchStudent');
+      if (searchStudent) {
+        searchStudent.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') {
+            loadStudents();
+          }
+        });
+      }
+
+      // View student profile (placeholder)
+      window.viewStudentProfile = function(studentId) {
+        alert('Student profile viewer coming soon!');
+      };
+
+      // Message student (placeholder)
+      window.messageStudent = function(studentId) {
+        alert('Messaging system coming soon!');
+      };
+
+      // Delete student account
+      window.deleteStudent = async function(studentId, studentName) {
+        const confirmed = confirm(`Are you sure you want to delete the account for ${studentName}? This action cannot be undone.`);
+        
+        if (!confirmed) return;
+        
+        const confirmAgain = confirm(`This will permanently delete ${studentName}'s account and all their data. Continue?`);
+        if (!confirmAgain) return;
+        
+        try {
+          // Remove from localStorage
+          let students = JSON.parse(localStorage.getItem('students') || '[]');
+          students = students.filter(s => s.id !== studentId);
+          localStorage.setItem('students', JSON.stringify(students));
+          
+          // Try to delete from Firestore
+          if (auth.currentUser) {
+            try {
+              await deleteDoc(doc(db, 'students', studentId));
+              await deleteDoc(doc(db, 'users', studentId));
+            } catch (e) {
+              console.log('Firestore delete skipped:', e.message);
+            }
+          }
+          
+          alert(`${studentName}'s account has been deleted.`);
+          loadStudents();
+        } catch (error) {
+          alert('Failed to delete student account: ' + error.message);
+        }
+      };
+
+      // Initialize
+      window.addEventListener('DOMContentLoaded', () => {
+        loadStudents();
+        loadAnnouncements();
+        
+        // Update header username
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName && userData) {
+          headerUserName.textContent = userData.name || 'User';
+        }
+      });
+
+      // ScrollReveal animations
+      ScrollReveal().reveal(".student-card", {
+        delay: 200,
+        interval: 100,
+        distance: '20px'
+      });
+
+      ScrollReveal().reveal(".announcement-card", {
+        delay: 300,
+        interval: 150,
+        distance: '20px'
+      });
+    </script>
+  </body>
+</html>
