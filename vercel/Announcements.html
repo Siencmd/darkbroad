@@ -20,18 +20,19 @@
     />
   </head>
   <body>
-    <!-- Main Navigation - Horizontal for All -->
+    <!-- Main Navigation -->
     <nav class="main-nav" role="navigation" aria-label="Main navigation">
       <div class="nav-header">
-        <a href="index.html" class="brand">DARKBOARD</a>
+        <a href="#" class="brand" id="dashboardLink">DARKBOARD</a>
       </div>
       <ul class="nav-list">
-        <li><a href="index.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+        <li><a href="#" class="nav-item" id="navDashboard"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
         <li><a href="Subjects.html" class="nav-item"><i class="fas fa-book"></i><span>Subjects</span></a></li>
         <li><a href="Grades.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Grades</span></a></li>
         <li><a href="Schedule.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
         <li><a href="Announcements.html" class="nav-item active"><i class="fas fa-bell"></i><span>Announcements</span></a></li>
         <li><a href="Submissions.html" class="nav-item"><i class="fas fa-file-upload"></i><span>Submissions</span></a></li>
+        <li><a href="Students.html" class="nav-item"><i class="fas fa-users"></i><span>Students</span></a></li>
         <li><a href="Profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a></li>
         <li><a href="Settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a></li>
         <li><a href="Help.html" class="nav-item"><i class="fas fa-question-circle"></i><span>Help</span></a></li>
@@ -50,223 +51,430 @@
     <main class="content">
       <div class="welcome-section">
         <div class="welcome-text">
-          <h1>Announcements</h1>
+          <h1><i class="fas fa-bullhorn"></i> Announcements</h1>
           <p>Stay updated with the latest news and announcements.</p>
         </div>
       </div>
 
+      <!-- Post Announcement Button (Instructors Only) -->
+      <section class="card" id="postSection" style="display: none;">
+        <button class="btn btn-primary" id="postAnnouncementBtn">
+          <i class="fas fa-plus"></i> Post New Announcement
+        </button>
+      </section>
+
+      <!-- Filter Section -->
+      <section class="card" aria-labelledby="filter-heading">
+        <div class="card-header">
+          <h2 id="filter-heading"><i class="fas fa-filter"></i> Filter Announcements</h2>
+        </div>
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter" class="filter-select">
+              <option value="">All Categories</option>
+              <option value="Academic">Academic</option>
+              <option value="Events">Events</option>
+              <option value="General">General</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="applyFilterBtn">
+            <i class="fas fa-search"></i> Apply
+          </button>
+        </div>
+      </section>
+
       <!-- Announcements List -->
-      <div class="announcements-list">
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-graduation-cap"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 10, 2026</span>
-              <span class="announcement-category">Academic</span>
-            </div>
-          </div>
-          <h3>Midterm Examinations Schedule</h3>
-          <p>The midterm examination schedule has been released. Please check your email for detailed information regarding your exam dates and times.</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Registrar's Office</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
-        </div>
-
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-calendar-check"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 8, 2026</span>
-              <span class="announcement-category">Events</span>
-            </div>
-          </div>
-          <h3>Tech Innovation Week 2026</h3>
-          <p>Join us for Tech Innovation Week featuring workshops, hackathons, and guest speakers from leading tech companies. Register now!</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Student Council</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
-        </div>
-
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-book"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 5, 2026</span>
-              <span class="announcement-category">Resources</span>
-            </div>
-          </div>
-          <h3>Library Extended Hours</h3>
-          <p>The library will be open 24/7 during midterm week. Quiet study areas are now available on the 3rd floor.</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Library Services</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
-        </div>
-
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-users"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 3, 2026</span>
-              <span class="announcement-category">Club</span>
-            </div>
-          </div>
-          <h3>New Student Organizations</h3>
-          <p>Three new student organizations have been approved: AI Club, Game Development Society, and Cybersecurity Group. Join today!</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Student Affairs</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
+      <div class="announcements-list" id="announcementsList">
+        <div class="loading-indicator">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading announcements...</p>
         </div>
       </div>
     </main>
 
+    <!-- Create/Edit Announcement Modal -->
+    <div id="announcementModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle"><i class="fas fa-bullhorn"></i> Post Announcement</h2>
+          <span class="close-modal" onclick="closeModal('announcementModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="announcementForm">
+            <input type="hidden" id="announcementId">
+            <div class="form-group">
+              <label for="announcementTitle">Title *</label>
+              <input type="text" id="announcementTitle" required placeholder="Enter announcement title">
+            </div>
+            <div class="form-group">
+              <label for="announcementCategory">Category *</label>
+              <select id="announcementCategory" required>
+                <option value="">Select Category</option>
+                <option value="Academic">Academic</option>
+                <option value="Events">Events</option>
+                <option value="General">General</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="announcementContent">Message *</label>
+              <textarea id="announcementContent" rows="5" required placeholder="Enter your announcement message"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Post Announcement
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+      <div class="modal-content modal-sm">
+        <div class="modal-header">
+          <h2><i class="fas fa-exclamation-triangle"></i> Delete Announcement</h2>
+          <span class="close-modal" onclick="closeModal('deleteModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete this announcement?</p>
+          <p id="deleteAnnouncementTitle" class="delete-title"></p>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Announcement Modal -->
+    <div id="viewModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="viewTitle"></h2>
+          <span class="close-modal" onclick="closeModal('viewModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="view-meta" id="viewMeta"></div>
+          <div class="view-content" id="viewContent"></div>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="firebase.js"></script>
     <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
     <script type="module">
       import { logout } from "./script.js";
       import { auth, db } from "./firebase.js";
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { doc, getDoc, getDocs, collection, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       
+      // Role check
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const normalizedRole = (userData.role || '').toLowerCase();
+      const isInstructor = normalizedRole === 'instructor' || normalizedRole === 'teacher' || normalizedRole === 'admin';
+      
+      // Set up dashboard link based on role
+      const dashboardLink = document.getElementById('dashboardLink');
+      const navDashboard = document.getElementById('navDashboard');
+      if (isInstructor) {
+        dashboardLink.href = 'InstructorDashboard.html';
+        navDashboard.href = 'InstructorDashboard.html';
+      } else {
+        dashboardLink.href = 'index.html';
+        navDashboard.href = 'index.html';
+      }
+
+      // Logout button
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
-      
-      let profileRealtimeUnsubscribe = null;
 
+      // Show post button for instructors
+      const postSection = document.getElementById('postSection');
+      const postAnnouncementBtn = document.getElementById('postAnnouncementBtn');
+      if (isInstructor && postSection && postAnnouncementBtn) {
+        postSection.style.display = 'block';
+      }
+
+      // All announcements
+      let allAnnouncements = [];
+
+      // Load announcements from Firestore
+      async function loadAnnouncements() {
+        const announcementsList = document.getElementById('announcementsList');
+        if (!announcementsList) return;
+        
+        try {
+          const announcementsRef = collection(db, 'announcements');
+          const q = query(announcementsRef, orderBy('createdAt', 'desc'));
+          
+          const snapshot = await getDocs(q);
+          allAnnouncements = [];
+          
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            allAnnouncements.push({
+              id: doc.id,
+              title: data.title || 'Untitled',
+              category: data.category || 'General',
+              content: data.content || '',
+              author: data.author || 'Unknown',
+              authorId: data.authorId || '',
+              createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+              targetAudience: data.targetAudience || 'all'
+            });
+          });
+          
+          renderAnnouncements(allAnnouncements);
+          
+        } catch (error) {
+          console.log('Error loading announcements:', error.message);
+          announcementsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-bullhorn"></i>
+              <p>No announcements yet</p>
+            </div>
+          `;
+        }
+      }
+
+      // Render announcements
+      function renderAnnouncements(announcements) {
+        const announcementsList = document.getElementById('announcementsList');
+        if (!announcementsList) return;
+        
+        // Filter by category
+        const categoryValue = document.getElementById('categoryFilter')?.value || '';
+        let filtered = announcements;
+        
+        if (categoryValue) {
+          filtered = filtered.filter(a => a.category === categoryValue);
+        }
+        
+        if (filtered.length === 0) {
+          announcementsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-bullhorn"></i>
+              <p>No announcements found</p>
+            </div>
+          `;
+          return;
+        }
+        
+        announcementsList.innerHTML = filtered.map(announcement => {
+          const date = announcement.createdAt ? announcement.createdAt.toLocaleDateString('en-US', { 
+            year: 'numeric', month: 'long', day: 'numeric' 
+          }) : 'Unknown date';
+          
+          const icon = getCategoryIcon(announcement.category);
+          const canEdit = isInstructor && (announcement.authorId === auth.currentUser?.uid || announcement.authorId === userData.id);
+          
+          return `
+            <div class="card announcement-card">
+              <div class="announcement-header">
+                <div class="announcement-icon">
+                  <i class="fas fa-${icon}"></i>
+                </div>
+                <div class="announcement-meta">
+                  <span class="announcement-date">${date}</span>
+                  <span class="announcement-category">${announcement.category}</span>
+                </div>
+              </div>
+              <h3>${announcement.title}</h3>
+              <p>${truncateText(announcement.content, 150)}</p>
+              <div class="announcement-footer">
+                <span class="announcement-author">Posted by: ${announcement.author}</span>
+                <div class="announcement-actions">
+                  <button class="btn-read-more" onclick="viewAnnouncement('${announcement.id}')">Read More</button>
+                  ${canEdit ? `
+                  <button class="btn-icon" onclick="editAnnouncement('${announcement.id}')" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="confirmDeleteAnnouncement('${announcement.id}', '${announcement.title}')" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function getCategoryIcon(category) {
+        const icons = {
+          'Academic': 'graduation-cap',
+          'Events': 'calendar-check',
+          'General': 'info-circle',
+          'Urgent': 'exclamation-triangle'
+        };
+        return icons[category] || 'bullhorn';
+      }
+
+      function truncateText(text, maxLength) {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+      }
+
+      // Modal functions
+      window.closeModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
+      };
+
+      // Post new announcement
+      if (postAnnouncementBtn) {
+        postAnnouncementBtn.addEventListener('click', () => {
+          document.getElementById('modalTitle').innerHTML = '<i class="fas fa-bullhorn"></i> Post Announcement';
+          document.getElementById('announcementId').value = '';
+          document.getElementById('announcementForm').reset();
+          document.getElementById('announcementModal').style.display = 'block';
+        });
+      }
+
+      // Handle form submission
+      const announcementForm = document.getElementById('announcementForm');
+      if (announcementForm) {
+        announcementForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const id = document.getElementById('announcementId').value;
+          const title = document.getElementById('announcementTitle').value;
+          const category = document.getElementById('announcementCategory').value;
+          const content = document.getElementById('announcementContent').value;
+          
+          try {
+            if (id) {
+              // Update existing
+              await updateDoc(doc(db, 'announcements', id), {
+                title,
+                category,
+                content,
+                updatedAt: serverTimestamp()
+              });
+              alert('Announcement updated successfully!');
+            } else {
+              // Create new
+              await addDoc(collection(db, 'announcements'), {
+                title,
+                category,
+                content,
+                author: userData.name || 'Instructor',
+                authorId: auth.currentUser?.uid || userData.id,
+                targetAudience: 'all',
+                createdAt: serverTimestamp()
+              });
+              alert('Announcement posted successfully!');
+            }
+            
+            closeModal('announcementModal');
+            announcementForm.reset();
+            loadAnnouncements();
+            
+          } catch (error) {
+            alert('Error: ' + error.message);
+          }
+        });
+      }
+
+      // Edit announcement
+      window.editAnnouncement = function(id) {
+        const announcement = allAnnouncements.find(a => a.id === id);
+        if (!announcement) return;
+        
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Announcement';
+        document.getElementById('announcementId').value = id;
+        document.getElementById('announcementTitle').value = announcement.title;
+        document.getElementById('announcementCategory').value = announcement.category;
+        document.getElementById('announcementContent').value = announcement.content;
+        document.getElementById('announcementModal').style.display = 'block';
+      };
+
+      // View announcement
+      window.viewAnnouncement = function(id) {
+        const announcement = allAnnouncements.find(a => a.id === id);
+        if (!announcement) return;
+        
+        const date = announcement.createdAt ? announcement.createdAt.toLocaleDateString('en-US', { 
+          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : 'Unknown date';
+        
+        document.getElementById('viewTitle').textContent = announcement.title;
+        document.getElementById('viewMeta').innerHTML = `
+          <span class="announcement-date">${date}</span>
+          <span class="announcement-category">${announcement.category}</span>
+          <span class="announcement-author">Posted by: ${announcement.author}</span>
+        `;
+        document.getElementById('viewContent').innerHTML = `<p>${announcement.content}</p>`;
+        document.getElementById('viewModal').style.display = 'block';
+      };
+
+      // Delete announcement
+      let announcementToDelete = null;
+      
+      window.confirmDeleteAnnouncement = function(id, title) {
+        announcementToDelete = { id, title };
+        document.getElementById('deleteAnnouncementTitle').textContent = title;
+        document.getElementById('deleteModal').style.display = 'block';
+      };
+
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async () => {
+          if (!announcementToDelete) return;
+          
+          try {
+            await deleteDoc(doc(db, 'announcements', announcementToDelete.id));
+            alert('Announcement deleted successfully!');
+            closeModal('deleteModal');
+            loadAnnouncements();
+          } catch (error) {
+            alert('Error deleting: ' + error.message);
+          }
+          
+          announcementToDelete = null;
+        });
+      }
+
+      // Filter
+      const applyFilterBtn = document.getElementById('applyFilterBtn');
+      if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', () => renderAnnouncements(allAnnouncements));
+      }
+
+      // Close modals on outside click
+      window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
+        }
+      };
+
+      // Update header
       function updateHeaderName() {
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const headerUserName = document.getElementById('headerUserName');
-        if (headerUserName) {
+        if (headerUserName && userData) {
           headerUserName.textContent = userData.name || 'User';
         }
       }
 
-      function setupProfileRealtime() {
-        onAuthStateChanged(auth, (user) => {
-          if (!user) return;
-
-          if (typeof profileRealtimeUnsubscribe === 'function') {
-            profileRealtimeUnsubscribe();
-            profileRealtimeUnsubscribe = null;
-          }
-
-          profileRealtimeUnsubscribe = onSnapshot(doc(db, 'users', user.uid), (userSnap) => {
-            if (!userSnap.exists()) return;
-            const profile = userSnap.data() || {};
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
-            const merged = {
-              ...localUser,
-              id: user.uid,
-              name: profile.fullName || localUser.name || user.displayName || 'User',
-              role: profile.role || localUser.role,
-              course: profile.course || localUser.course
-            };
-            localStorage.setItem('userData', JSON.stringify(merged));
-            updateHeaderName();
-          }, (error) => {
-            console.warn('Announcements profile realtime failed:', error?.message || error);
-          });
-        });
-      }
-
-      // Load user data for header
+      // Initialize
       window.addEventListener('DOMContentLoaded', () => {
-        updateHeaderName();
         loadAnnouncements();
-        setupProfileRealtime();
+        updateHeaderName();
       });
 
-      // Keep announcements in sync across tabs/windows.
-      window.addEventListener('storage', (event) => {
-        if (event.key === 'announcements') {
-          loadAnnouncements();
-        }
-      });
-
-      window.addEventListener('beforeunload', () => {
-        if (typeof profileRealtimeUnsubscribe === 'function') {
-          profileRealtimeUnsubscribe();
-          profileRealtimeUnsubscribe = null;
-        }
-      });
-      
-      function loadAnnouncements() {
-        const announcementsList = document.querySelector('.announcements-list');
-        
-        // Get announcements from localStorage
-        let announcements = [];
-        try {
-          announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
-          if (!Array.isArray(announcements)) announcements = [];
-        } catch (error) {
-          announcements = [];
-        }
-        
-        if (announcements.length === 0) {
-          // Show empty state message but keep sample announcements
-          console.log('No announcements in localStorage, showing defaults');
-          return;
-        }
-        
-        // Clear current announcements
-        announcementsList.innerHTML = '';
-        
-        // Render announcements
-        announcements.forEach(announcement => {
-          const card = document.createElement('div');
-          card.className = 'card announcement-card';
-          card.innerHTML = `
-            <div class="announcement-header">
-              <div class="announcement-icon">
-                <i class="fas fa-${announcement.icon || 'bell'}"></i>
-              </div>
-              <div class="announcement-meta">
-                <span class="announcement-date">${announcement.date || new Date().toLocaleDateString()}</span>
-                <span class="announcement-category">${announcement.category || 'General'}</span>
-              </div>
-            </div>
-            <h3>${announcement.title || 'Untitled'}</h3>
-            <p>${announcement.message || announcement.content || ''}</p>
-            <div class="announcement-footer">
-              <span class="announcement-author">Posted by: ${announcement.author || 'Admin'}</span>
-              <button class="btn-read-more">Read More</button>
-            </div>
-          `;
-          announcementsList.appendChild(card);
-        });
-      }
-
-      document.addEventListener('click', (event) => {
-        const button = event.target.closest('.btn-read-more');
-        if (!button) return;
-
-        const card = button.closest('.announcement-card');
-        const text = card?.querySelector('p');
-        if (!text) return;
-
-        const expanded = button.dataset.expanded === 'true';
-        if (expanded) {
-          text.style.maxHeight = '';
-          text.style.overflow = '';
-          button.textContent = 'Read More';
-          button.dataset.expanded = 'false';
-        } else {
-          text.style.maxHeight = 'none';
-          text.style.overflow = 'visible';
-          button.textContent = 'Show Less';
-          button.dataset.expanded = 'true';
-        }
+      // ScrollReveal
+      ScrollReveal().reveal(".announcement-card", {
+        delay: 200,
+        interval: 150,
+        distance: '20px'
       });
     </script>
   </body>
