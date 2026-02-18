@@ -135,7 +135,7 @@
                 <p>Who can see your profile</p>
               </div>
               <div class="setting-control">
-                <select class="setting-select">
+                <select class="setting-select" id="profileVisibility">
                   <option>Everyone</option>
                   <option>Classmates Only</option>
                   <option>Private</option>
@@ -149,7 +149,7 @@
               </div>
               <div class="setting-control">
                 <label class="switch">
-                  <input type="checkbox" checked>
+                  <input type="checkbox" id="showOnlineStatus" checked>
                   <span class="slider"></span>
                 </label>
               </div>
@@ -252,7 +252,7 @@
       import { logout, applyTheme } from "./script.js";
       import { auth, db } from "./firebase.js";
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
@@ -298,6 +298,44 @@
       window.addEventListener('DOMContentLoaded', () => {
         updateHeaderName();
         setupSettingsRealtimeProfile();
+        
+        // Load profile visibility and online status settings
+        const profileVisibilitySelect = document.getElementById('profileVisibility');
+        const showOnlineStatusCheckbox = document.getElementById('showOnlineStatus');
+        
+        // Load saved settings from localStorage
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        if (profileVisibilitySelect && userData.profileVisibility) {
+          profileVisibilitySelect.value = userData.profileVisibility;
+        }
+        if (showOnlineStatusCheckbox && userData.showOnlineStatus !== undefined) {
+          showOnlineStatusCheckbox.checked = userData.showOnlineStatus;
+        }
+        
+        // Save settings when changed
+        if (profileVisibilitySelect) {
+          profileVisibilitySelect.addEventListener('change', () => {
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            userData.profileVisibility = profileVisibilitySelect.value;
+            localStorage.setItem('userData', JSON.stringify(userData));
+            // Also save to Firestore if logged in
+            if (auth.currentUser) {
+              setDoc(doc(db, 'users', auth.currentUser.uid), { profileVisibility: profileVisibilitySelect.value }, { merge: true });
+            }
+          });
+        }
+        
+        if (showOnlineStatusCheckbox) {
+          showOnlineStatusCheckbox.addEventListener('change', () => {
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            userData.showOnlineStatus = showOnlineStatusCheckbox.checked;
+            localStorage.setItem('userData', JSON.stringify(userData));
+            // Also save to Firestore if logged in
+            if (auth.currentUser) {
+              setDoc(doc(db, 'users', auth.currentUser.uid), { showOnlineStatus: showOnlineStatusCheckbox.checked }, { merge: true });
+            }
+          });
+        }
       });
 
       window.addEventListener('beforeunload', () => {
