@@ -1613,7 +1613,7 @@ function initializeSubjects() {
                                     ${quiz?.quizLink ? `<a href="${quiz.quizLink}" target="_blank" class="btn-take-quiz" title="Take Quiz">
                                         <i class="fas fa-play"></i> Take Quiz
                                     </a>` : `<span style="color: var(--text-secondary); font-size: 0.85em;">No quiz available</span>`}
-                                    <button class="btn-submit-assignment" onclick="window.subjectsOpenSubmitQuizModal(${index}, ${i})" title="Submit Quiz">
+                                    <button class="btn-submit-assignment" data-quiz-index="${i}" data-subject-index="${index}" title="Submit Quiz">
                                         <i class="fas fa-check"></i> Mark as Done
                                     </button>
                                 </div>
@@ -1908,10 +1908,18 @@ function initializeSubjects() {
 
         const submitAssignmentBtn = e.target.closest('.btn-submit-assignment');
         if (submitAssignmentBtn) {
-            openSubmitAssignmentModal(
-                parseInt(submitAssignmentBtn.dataset.subjectIndex),
-                parseInt(submitAssignmentBtn.dataset.assignmentIndex)
-            );
+            // Check if this is a quiz submit button
+            if (submitAssignmentBtn.dataset.quizIndex !== undefined) {
+                openSubmitQuizModal(
+                    parseInt(submitAssignmentBtn.dataset.subjectIndex),
+                    parseInt(submitAssignmentBtn.dataset.quizIndex)
+                );
+            } else {
+                openSubmitAssignmentModal(
+                    parseInt(submitAssignmentBtn.dataset.subjectIndex),
+                    parseInt(submitAssignmentBtn.dataset.assignmentIndex)
+                );
+            }
             return;
         }
 
@@ -2184,7 +2192,7 @@ function initializeSubjects() {
                     id: Date.now().toString(),
                     title: document.getElementById('newQuizTitle').value.trim(),
                     dueDate: document.getElementById('newQuizDueDate').value,
-                    points: parseInt(document.getElementById('newQuizPoints').value),
+                    points: parseInt(document.getElementById('newQuizPoints').value) || 0,
                     status: 'available',
                     instructions: document.getElementById('newQuizInstructions').value.trim(),
                     quizLink: document.getElementById('newQuizLink').value.trim(),
@@ -2275,7 +2283,7 @@ function initializeSubjects() {
                     id: existingQuiz?.id || Date.now().toString(),
                     title: document.getElementById('editQuizTitle').value.trim(),
                     dueDate: document.getElementById('editQuizDueDate').value,
-                    points: parseInt(document.getElementById('editQuizPoints').value),
+                    points: parseInt(document.getElementById('editQuizPoints').value) || 0,
                     status: existingQuiz?.status || 'available',
                     instructions: document.getElementById('editQuizInstructions').value.trim(),
                     quizLink: document.getElementById('editQuizLink').value.trim(),
