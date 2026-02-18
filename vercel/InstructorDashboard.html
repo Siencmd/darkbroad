@@ -250,19 +250,60 @@
           subjectsBar.style.width = progress + '%';
         }
         
-        // Calculate total students and pending submissions
-        let totalStudents = 0;
+        // Load actual student count from Firestore
+        loadStudentCountFromFirestore();
+        
+        // Calculate pending submissions
+        loadPendingSubmissions(subjects);
+      }
+
+      async function loadStudentCountFromFirestore() {
+        const studentsCount = document.getElementById('studentsCount');
+        const studentsBar = document.getElementById('studentsBar');
+        
+        try {
+          const { db } = await import('./firebase.js');
+          const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+          
+          // Get students collection count
+          const studentsRef = collection(db, 'students');
+          const q = query(studentsRef, where('role', '==', 'student'));
+          const snapshot = await getDocs(q);
+          let count = snapshot.size;
+          
+          // Also check users collection
+          const usersRef = collection(db, 'users');
+          const usersQ = query(usersRef, where('role', '==', 'student'));
+          const usersSnapshot = await getDocs(usersQ);
+          
+          // Merge and deduplicate
+          const userIds = new Set();
+          snapshot.forEach(doc => userIds.add(doc.id));
+          usersSnapshot.forEach(doc => userIds.add(doc.id));
+          count = userIds.size;
+          
+          if (studentsCount) {
+            studentsCount.textContent = count;
+            studentsCount.setAttribute('aria-label', count + ' total students');
+          }
+          if (studentsBar) {
+            const progress = Math.min(count * 5, 100);
+            studentsBar.style.width = progress + '%';
+          }
+        } catch (error) {
+          console.log('Error loading student count:', error.message);
+          if (studentsCount) studentsCount.textContent = '0';
+        }
+      }
+
+      async function loadPendingSubmissions(subjects) {
+        const pendingSubmissionsEl = document.getElementById('pendingSubmissions');
+        const submissionsBar = document.getElementById('submissionsBar');
+        
         let pendingSubmissions = 0;
         
+        // Calculate from local subjects data
         subjects.forEach(subject => {
-          // Count students (simulated - in real app would be from actual enrollment data)
-          if (subject.students) {
-            totalStudents += subject.students.length;
-          } else {
-            totalStudents += Math.floor(Math.random() * 10) + 5; // Simulated for demo
-          }
-          
-          // Count pending submissions
           if (subject.assignments) {
             subject.assignments.forEach(assignment => {
               const submissions = assignment.submissions || [];
@@ -270,37 +311,8 @@
               pendingSubmissions += pending;
             });
           }
-          if (subject.tasks) {
-            subject.tasks.forEach(task => {
-              const submissions = task.submissions || [];
-              const pending = submissions.filter(s => !s.grade && s.status !== 'graded').length;
-              pendingSubmissions += pending;
-            });
-          }
-          if (subject.quizzes) {
-            subject.quizzes.forEach(quiz => {
-              const submissions = quiz.submissions || [];
-              const pending = submissions.filter(s => !s.grade && s.status !== 'graded').length;
-              pendingSubmissions += pending;
-            });
-          }
         });
         
-        // Update students count
-        const studentsCount = document.getElementById('studentsCount');
-        const studentsBar = document.getElementById('studentsBar');
-        if (studentsCount) {
-          studentsCount.textContent = totalStudents;
-          studentsCount.setAttribute('aria-label', totalStudents + ' total students');
-        }
-        if (studentsBar) {
-          const progress = Math.min(totalStudents * 5, 100);
-          studentsBar.style.width = progress + '%';
-        }
-        
-        // Update pending submissions
-        const pendingSubmissionsEl = document.getElementById('pendingSubmissions');
-        const submissionsBar = document.getElementById('submissionsBar');
         if (pendingSubmissionsEl) {
           pendingSubmissionsEl.textContent = pendingSubmissions;
           pendingSubmissionsEl.setAttribute('aria-label', pendingSubmissions + ' pending submissions');
@@ -309,9 +321,6 @@
           const progress = Math.min(pendingSubmissions * 10, 100);
           submissionsBar.style.width = progress + '%';
         }
-        
-        // Load upcoming deadlines
-        loadUpcomingDeadlines();
       }
 
       function loadUpcomingDeadlines() {
