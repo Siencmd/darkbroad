@@ -529,6 +529,18 @@ function setMessage(id, msg, success = false) {
 // =========================
 // LOGIN FUNCTIONALITY
 // =========================
+// Helper function to get the appropriate dashboard URL based on user role
+function getDashboardUrl(userData) {
+    // Check if user is instructor, teacher, or admin
+    const normalizedRole = (userData?.role || '').toLowerCase();
+    const isInstructor = normalizedRole === 'instructor' || normalizedRole === 'teacher' || normalizedRole === 'admin';
+    
+    if (isInstructor) {
+        return 'InstructorDashboard.html';
+    }
+    return 'index.html';
+}
+
 function initializeLogin() {
     const loginForm = document.getElementById("loginForm");
     loginForm?.addEventListener("submit", async e => {
@@ -556,10 +568,12 @@ function initializeLogin() {
 
             // Store logged-in user in localStorage
             localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("userData", JSON.stringify({ id: user.uid, name: user.displayName || email, role: userRole, course: userCourse }));
+            const userData = { id: user.uid, name: user.displayName || email, role: userRole, course: userCourse };
+            localStorage.setItem("userData", JSON.stringify(userData));
 
             setMessage("loginSuccess", "Login successful! Redirecting...", true);
-            setTimeout(() => location.href = "index.html", 1200);
+            const dashboardUrl = getDashboardUrl(userData);
+            setTimeout(() => location.href = dashboardUrl, 1200);
         } catch (err) {
             setMessage("loginError", err.message);
         }
@@ -3464,12 +3478,16 @@ function initializeMenuFilter() {
 // AUTH GUARD - Protect pages from unauthenticated users
 // =========================
 function checkAuth() {
-    const isLoginPage = window.location.pathname.includes('Login.html') || 
-                        window.location.pathname.includes('SignUp.html') ||
-                        window.location.pathname.endsWith('/');
+    const path = window.location.pathname.toLowerCase();
+    const isLoginPage = path.includes('login.html') || 
+                        path.includes('signup.html') ||
+                        path.endsWith('/');
+    const isStudentDashboard = path.includes('index.html') || path.endsWith('/');
+    const isInstructorDashboard = path.includes('instructordashboard.html');
     
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const userData = localStorage.getItem('userData');
+    const userDataStr = localStorage.getItem('userData');
+    const userData = userDataStr ? JSON.parse(userDataStr) : null;
     
     // If not on login/signup page and not logged in, redirect to login
     if (!isLoginPage && !isLoggedIn) {
@@ -3481,8 +3499,29 @@ function checkAuth() {
     // If on login/signup page and already logged in, redirect to dashboard
     if (isLoginPage && isLoggedIn && userData) {
         console.log('User already logged in, redirecting to dashboard...');
-        window.location.href = 'index.html';
+        const dashboardUrl = getDashboardUrl(userData);
+        window.location.href = dashboardUrl;
         return false;
+    }
+    
+    // Role-based dashboard access control
+    if (userData) {
+        const normalizedRole = (userData.role || '').toLowerCase();
+        const isInstructor = normalizedRole === 'instructor' || normalizedRole === 'teacher' || normalizedRole === 'admin';
+        
+        // If instructor tries to access student dashboard, redirect to instructor dashboard
+        if (isInstructor && isStudentDashboard) {
+            console.log('Instructor accessing student dashboard, redirecting to instructor dashboard...');
+            window.location.href = 'InstructorDashboard.html';
+            return false;
+        }
+        
+        // If student tries to access instructor dashboard, redirect to student dashboard
+        if (!isInstructor && isInstructorDashboard) {
+            console.log('Student accessing instructor dashboard, redirecting to student dashboard...');
+            window.location.href = 'index.html';
+            return false;
+        }
     }
     
     return true;
