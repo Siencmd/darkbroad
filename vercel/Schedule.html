@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0a1929" />
+    <title>Schedule - Darkboard</title>
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  </head>
+  <body class="schedule-page">
+    <!-- Main Navigation - Horizontal for All -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-header">
+        <a href="index.html" class="brand">DARKBOARD</a>
+      </div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+        <li><a href="Subjects.html" class="nav-item"><i class="fas fa-book"></i><span>Subjects</span></a></li>
+        <li><a href="Grades.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Grades</span></a></li>
+        <li><a href="Schedule.html" class="nav-item active"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
+        <li><a href="Announcements.html" class="nav-item"><i class="fas fa-bell"></i><span>Announcements</span></a></li>
+        <li><a href="Submissions.html" class="nav-item"><i class="fas fa-file-upload"></i><span>Submissions</span></a></li>
+        <li><a href="Profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a></li>
+        <li><a href="Settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li><a href="Help.html" class="nav-item"><i class="fas fa-question-circle"></i><span>Help</span></a></li>
+        <li><a href="#" id="logoutBtn" class="nav-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="user-menu-right">
+          <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar">
+          <span id="headerUserName">Loading...</span>
+        </div>
+      </div>
+      <div class="top-user-name" id="topUserName"></div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="welcome-section">
+        <div class="welcome-text">
+          <h1><i class="fas fa-calendar-alt"></i> My Schedule</h1>
+          <p>View your subject schedule, deadlines, and upcoming events.</p>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading-container">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading schedule...</p>
+        </div>
+      </div>
+
+      <!-- Calendar View -->
+      <div id="calendarContainer" style="display: none;">
+        <div class="calendar-controls">
+          <div class="calendar-filters">
+            <label>
+              <input type="checkbox" id="showAssignments" checked> Assignments
+            </label>
+            <label>
+              <input type="checkbox" id="showTasks" checked> Tasks
+            </label>
+            <label>
+              <input type="checkbox" id="showQuizzes" checked> Quizzes
+            </label>
+            <label>
+              <input type="checkbox" id="showSubjects" checked> Subjects
+            </label>
+          </div>
+          <button class="btn-export-calendar" onclick="exportCalendar()">
+            <i class="fas fa-download"></i> Export to Calendar
+          </button>
+        </div>
+
+        <div class="card">
+          <div id="calendar"></div>
+        </div>
+      </div>
+
+      <!-- Upcoming Deadlines -->
+      <div id="upcomingDeadlines" class="card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fas fa-clock"></i> Upcoming Deadlines</h2>
+        </div>
+        <div class="deadlines-list" id="deadlinesList">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Weekly Schedule (Traditional View) -->
+      <div id="weeklySchedule" class="card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fas fa-calendar-week"></i> Weekly Subject Schedule</h2>
+        </div>
+        <div class="schedule-grid" id="weeklyScheduleGrid">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state-container" style="display: none;">
+        <div class="empty-state">
+          <i class="fas fa-calendar-plus"></i>
+          <h3>No Schedule Yet</h3>
+          <p>Your subject schedule and deadlines will appear here once added by your instructors.</p>
+          <a href="Subjects.html" class="btn-primary">Go to Subjects</a>
+        </div>
+      </div>
+
+    </main>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+    <script type="module">
+      import { logout } from "./script.js";
+      import { auth } from './firebase.js';
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { setupRealtimeSubjects } from "./realtime.js";
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
+      
+      // Load user data for header
+      window.addEventListener('DOMContentLoaded', () => {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName && userData) {
+          headerUserName.textContent = userData.name || 'User';
+        }
+      });
+
+      let calendar;
+      let subjects = [];
+      let userData = null;
+      let allEvents = [];
+      let subjectsRealtimeUnsubscribe = null;
+
+      // Subject colors
+      const subjectColors = [
+        '#4ade80', '#60a5fa', '#a78bfa', '#fbbf24', '#fb923c', 
+        '#f472b6', '#34d399', '#818cf8', '#fcd34d', '#fb7185'
+      ];
+
+      const dayToIndex = {
+        sunday: 0,
+        monday: 1,
+        tuesday: 2,
+        wednesday: 3,
+        thursday: 4,
+        friday: 5,
+        saturday: 6
+      };
+
+      function extractDaysFromTimeText(timeText) {
+        const matches = String(timeText || '').match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/gi) || [];
+        const normalized = matches.map(day => day.toLowerCase());
+        return [...new Set(normalized)];
+      }
+
+      function parseTimeRange(timeText) {
+        const match = String(timeText || '').match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
+        if (!match) return null;
+        return { start: match[1], end: match[2] };
+      }
+
+      function toEventDateTime(baseDate, timeValue) {
+        const time = String(timeValue || '').trim();
+        const parsed = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+        if (!parsed) return null;
+
+        let hours = Number(parsed[1]);
+        const minutes = Number(parsed[2]);
+        const ampm = parsed[3] ? parsed[3].toUpperCase() : '';
+
+        if (ampm === 'PM' && hours < 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+
+        const date = new Date(baseDate);
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+      }
+
+      function formatLocalDate(dateValue) {
+        const date = new Date(dateValue);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDateLocal(value) {
+        if (!value) return null;
+        if (value instanceof Date) return new Date(value);
+
+        const text = String(value).trim();
+        const dateOnlyMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (dateOnlyMatch) {
+          const year = Number(dateOnlyMatch[1]);
+          const month = Number(dateOnlyMatch[2]) - 1;
+          const day = Number(dateOnlyMatch[3]);
+          return new Date(year, month, day);
+        }
+
+        const parsed = new Date(text);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      function createClassEvents(subject, index, color) {
+        const classEvents = [];
+        const days = extractDaysFromTimeText(subject.time);
+        if (days.length === 0) return classEvents;
+
+        const now = new Date();
+        const timeRange = parseTimeRange(subject.time);
+        const totalWeeks = 8;
+
+        days.forEach((dayName) => {
+          const targetDayIndex = dayToIndex[dayName];
+          if (targetDayIndex === undefined) return;
+
+          const baseOffset = (targetDayIndex - now.getDay() + 7) % 7;
+          for (let week = 0; week < totalWeeks; week++) {
+            const classDate = new Date(now);
+            classDate.setHours(0, 0, 0, 0);
+            classDate.setDate(classDate.getDate() + baseOffset + (week * 7));
+
+            const startDate = timeRange ? toEventDateTime(classDate, timeRange.start) : null;
+            const endDate = timeRange ? toEventDateTime(classDate, timeRange.end) : null;
+            const hasTimedRange = !!(startDate && endDate);
+
+            classEvents.push({
+              id: `class-${subject.id || index}-${dayName}-${week}`,
+              title: `${subject.name}`,
+              start: hasTimedRange ? startDate : formatLocalDate(classDate),
+              end: hasTimedRange ? endDate : undefined,
+              allDay: !hasTimedRange,
+              backgroundColor: color,
+              borderColor: color,
+              extendedProps: {
+                type: 'subject',
+                subject: subject.name,
+                subjectIndex: index,
+                itemTitle: subject.name,
+                classTime: subject.time || ''
+              }
+            });
+          }
+        });
+
+        return classEvents;
+      }
+
+      // Initialize page
+      async function initializeSchedulePage() {
+        userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        
+        // Load subjects from localStorage
+        subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
+
+        if (subjects.length === 0) {
+          showEmptyState();
+          return;
+        }
+
+        // Load events from subjects
+        loadEvents();
+
+        // Show all sections
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('calendarContainer').style.display = 'block';
+        document.getElementById('upcomingDeadlines').style.display = 'block';
+        document.getElementById('weeklySchedule').style.display = 'block';
+
+        // Initialize calendar only after container is visible.
+        initializeCalendar();
+        // Force size recompute after paint so FullCalendar doesn't stay collapsed.
+        requestAnimationFrame(() => {
+          if (calendar && typeof calendar.updateSize === 'function') {
+            calendar.updateSize();
+          }
+        });
+        
+        // Render weekly schedule
+        renderWeeklySchedule();
+        
+        // Show upcoming deadlines
+        renderUpcomingDeadlines();
+
+        // Setup filter listeners
+        document.getElementById('showAssignments').addEventListener('change', updateCalendarEvents);
+        document.getElementById('showTasks').addEventListener('change', updateCalendarEvents);
+        document.getElementById('showQuizzes').addEventListener('change', updateCalendarEvents);
+        document.getElementById('showSubjects').addEventListener('change', updateCalendarEvents);
+
+        // Keep schedule in sync with subject updates from Firestore.
+        if (!subjectsRealtimeUnsubscribe && userData?.course) {
+          subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, (updatedSubjects) => {
+            if (!Array.isArray(updatedSubjects)) return;
+            subjects = updatedSubjects;
+            localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
+            loadEvents();
+            updateCalendarEvents();
+            renderWeeklySchedule();
+            renderUpcomingDeadlines();
+          }, (error) => {
+            console.warn("Schedule realtime subjects failed:", error?.message || error);
+          });
+        }
+      }
+
+      // Load events from subjects
+      function loadEvents() {
+        allEvents = [];
+
+        subjects.forEach((subject, index) => {
+          const color = subjectColors[index % subjectColors.length];
+
+          // Add assignments
+          if (subject.assignments) {
+            subject.assignments.forEach(assignment => {
+              if (assignment.dueDate) {
+                allEvents.push({
+                  id: `assignment-${assignment.id}`,
+                  title: `Assignment: ${assignment.title}`,
+                  start: assignment.dueDate,
+                  allDay: true,
+                  backgroundColor: '#60a5fa',
+                  borderColor: '#60a5fa',
+                  extendedProps: {
+                    type: 'assignment',
+                    subject: subject.name,
+                    subjectIndex: index,
+                    itemTitle: assignment.title,
+                    points: assignment.points
+                  }
+                });
+              }
+            });
+          }
+
+          // Add tasks
+          if (subject.tasks) {
+            subject.tasks.forEach(task => {
+              if (task.dueDate) {
+                allEvents.push({
+                  id: `task-${task.id}`,
+                  title: `Task: ${task.title}`,
+                  start: task.dueDate,
+                  allDay: true,
+                  backgroundColor: '#a78bfa',
+                  borderColor: '#a78bfa',
+                  extendedProps: {
+                    type: 'task',
+                    subject: subject.name,
+                    subjectIndex: index,
+                    itemTitle: task.title,
+                    priority: task.priority
+                  }
+                });
+              }
+            });
+          }
+
+          // Add quizzes
+          if (subject.quizzes) {
+            subject.quizzes.forEach(quiz => {
+              if (quiz.dueDate) {
+                allEvents.push({
+                  id: `quiz-${quiz.id}`,
+                  title: `Quiz: ${quiz.title}`,
+                  start: quiz.dueDate,
+                  allDay: true,
+                  backgroundColor: '#fb923c',
+                  borderColor: '#fb923c',
+                  extendedProps: {
+                    type: 'quiz',
+                    subject: subject.name,
+                    subjectIndex: index,
+                    itemTitle: quiz.title,
+                    points: quiz.points
+                  }
+                });
+              }
+            });
+          }
+
+          const classEvents = createClassEvents(subject, index, color);
+          classEvents.forEach(event => allEvents.push(event));
+        });
+      }
+
+      // Initialize FullCalendar
+      function initializeCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        
+        calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+          },
+          events: allEvents,
+          eventClick: handleEventClick,
+          eventDidMount: function(info) {
+            // Add tooltip
+            info.el.title = `${info.event.title}\n${info.event.extendedProps.subject}`;
+          }
+        });
+
+        calendar.render();
+      }
+
+      // Update calendar events based on filters
+      function updateCalendarEvents() {
+        const showAssignments = document.getElementById('showAssignments').checked;
+        const showTasks = document.getElementById('showTasks').checked;
+        const showQuizzes = document.getElementById('showQuizzes').checked;
+        const showSubjects = document.getElementById('showSubjects').checked;
+
+        const filteredEvents = allEvents.filter(event => {
+          const type = event?.extendedProps?.type;
+          if (!type) return false;
+          if (type === 'assignment' && !showAssignments) return false;
+          if (type === 'task' && !showTasks) return false;
+          if (type === 'quiz' && !showQuizzes) return false;
+          if (type === 'subject' && !showSubjects) return false;
+          return true;
+        });
+
+        calendar.removeAllEvents();
+        calendar.addEventSource(filteredEvents);
+      }
+      // Handle event click
+      function handleEventClick(info) {
+        const event = info.event;
+        const props = event.extendedProps;
+
+        alert(`
+${props.itemTitle}
+
+Subject: ${props.subject}
+Type: ${props.type}
+${props.points ? `Points: ${props.points}` : ''}
+${props.priority ? `Priority: ${props.priority}` : ''}
+${props.classTime ? `Time: ${props.classTime}` : ''}
+Due: ${event.start ? (parseDateLocal(event.start)?.toLocaleDateString() || 'N/A') : 'N/A'}
+        `);
+      }
+      // Render weekly schedule
+      function renderWeeklySchedule() {
+        const grid = document.getElementById('weeklyScheduleGrid');
+        
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        let html = '';
+        
+        days.forEach(day => {
+          html += `
+            <div class="schedule-day">
+              <h3>${day}</h3>
+              <div class="schedule-items" id="schedule-${day.toLowerCase()}">
+                <!-- Items will be added here -->
+              </div>
+            </div>
+          `;
+        });
+        
+        grid.innerHTML = html;
+
+        // Add schedule items from subjects
+        subjects.forEach(subject => {
+          if (subject.time) {
+            // Extract day(s) from time string - handle both "Monday 08:00 AM" and just "08:00 AM" formats
+            const dayMatches = subject.time.match(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/gi) || [];
+            
+            if (dayMatches.length > 0) {
+              // New format with day in the time string
+              dayMatches.forEach((matchedDay) => {
+                const day = matchedDay.charAt(0).toUpperCase() + matchedDay.slice(1).toLowerCase();
+                const dayKey = day.toLowerCase();
+                const dayContainer = document.getElementById(`schedule-${dayKey}`);
+                
+                if (dayContainer) {
+                  const item = document.createElement('div');
+                  item.className = 'schedule-item';
+                  item.innerHTML = `
+                    <span class="time">${subject.time}</span>
+                    <span class="subject">${subject.name}</span>
+                  `;
+                  dayContainer.appendChild(item);
+                }
+              });
+            } else {
+              // Old format without day - show in all days or add a message
+              // For backward compatibility, show as "Time TBD" on all days
+              const item = document.createElement('div');
+              item.className = 'schedule-item';
+              item.innerHTML = `
+                <span class="time">${subject.time}</span>
+                <span class="subject">${subject.name}</span>
+                <span class="room" style="font-size: 0.8em;">(Day not set - please edit)</span>
+              `;
+              // Add to Monday as default
+              const dayContainer = document.getElementById('schedule-monday');
+              if (dayContainer) {
+                dayContainer.appendChild(item);
+              }
+            }
+          }
+        });
+      }
+
+      // Render upcoming deadlines
+      function renderUpcomingDeadlines() {
+        const container = document.getElementById('deadlinesList');
+        
+        // Get upcoming events (next 7 days)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        const upcomingEvents = allEvents.filter(event => {
+          if (event?.extendedProps?.type === 'subject') return false;
+          if (!event.start) return false;
+          const eventDate = parseDateLocal(event.start);
+          if (!eventDate) return false;
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate >= today && eventDate <= nextWeek;
+        }).sort((a, b) => {
+          const aDate = parseDateLocal(a.start);
+          const bDate = parseDateLocal(b.start);
+          if (!aDate || !bDate) return 0;
+          return aDate - bDate;
+        });
+
+        if (upcomingEvents.length === 0) {
+          container.innerHTML = `
+            <div class="empty-deadline">
+              <i class="fas fa-check-circle"></i>
+              <p>No upcoming deadlines in the next 7 days!</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = upcomingEvents.map(event => {
+          const props = event.extendedProps;
+          const eventDate = parseDateLocal(event.start) || new Date();
+          const daysLeft = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+          
+          let urgencyClass = '';
+          if (daysLeft <= 1) urgencyClass = 'urgent';
+          else if (daysLeft <= 3) urgencyClass = 'soon';
+
+          return `
+            <div class="deadline-item ${urgencyClass}">
+              <div class="deadline-date">
+                <span class="day">${eventDate.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                <span class="date">${eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              </div>
+              <div class="deadline-info">
+                <h4>${props.itemTitle}</h4>
+                <p>${props.subject} &middot; ${props.type}</p>
+              </div>
+              <div class="deadline-days">
+                ${daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Export calendar
+      window.exportCalendar = function() {
+        // Create ICS file
+        let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Darkboard//Schedule//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+
+        allEvents.forEach(event => {
+          const startDate = parseDateLocal(event.start) || new Date();
+          const dateStr = formatLocalDate(startDate).replace(/-/g, '');
+          
+          icsContent += `BEGIN:VEVENT
+DTSTART;VALUE=DATE:${dateStr}
+DTEND;VALUE=DATE:${dateStr}
+SUMMARY:${event.title}
+DESCRIPTION:Subject: ${event.extendedProps.subject}
+STATUS:CONFIRMED
+END:VEVENT
+`;
+        });
+
+        icsContent += 'END:VCALENDAR';
+
+        const blob = new Blob([icsContent], { type: 'text/calendar' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'darkboard-schedule.ics';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+
+      // Show empty state
+      function showEmptyState() {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'flex';
+      }
+
+      // Initialize on load
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          initializeSchedulePage();
+        } else {
+          window.location.href = 'Login.html';
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof subjectsRealtimeUnsubscribe === 'function') {
+          subjectsRealtimeUnsubscribe();
+          subjectsRealtimeUnsubscribe = null;
+        }
+      });
+    </script>
+
+  </body>
+</html>

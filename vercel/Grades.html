@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0a1929" />
+    <title>Grades - Darkboard</title>
+    <link rel="stylesheet" href="Darkboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <!-- Main Navigation - Horizontal for All -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-header">
+        <a href="index.html" class="brand">DARKBOARD</a>
+      </div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+        <li><a href="Subjects.html" class="nav-item"><i class="fas fa-book"></i><span>Subjects</span></a></li>
+        <li><a href="Grades.html" class="nav-item active"><i class="fas fa-chart-bar"></i><span>Grades</span></a></li>
+        <li><a href="Schedule.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
+        <li><a href="Announcements.html" class="nav-item"><i class="fas fa-bell"></i><span>Announcements</span></a></li>
+        <li><a href="Submissions.html" class="nav-item"><i class="fas fa-file-upload"></i><span>Submissions</span></a></li>
+        <li><a href="Profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a></li>
+        <li><a href="Settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li><a href="Help.html" class="nav-item"><i class="fas fa-question-circle"></i><span>Help</span></a></li>
+        <li><a href="#" id="logoutBtn" class="nav-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="user-menu-right">
+          <img src="Gemini_Generated_Image_g3iakg3iakg3iakg.png" alt="User avatar" class="user-avatar" loading="lazy">
+          <span id="headerUserName">Loading...</span>
+        </div>
+      </div>
+      <div class="top-user-name" id="topUserName"></div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="welcome-section">
+        <div class="welcome-text">
+          <h1><i class="fas fa-chart-bar"></i> My Grades</h1>
+          <p>Track your academic performance and grades across all subjects.</p>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading-container">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading your grades...</p>
+        </div>
+      </div>
+
+      <!-- Grade Stats - Will be populated dynamically -->
+      <div id="gradesStats" class="grades-stats" style="display: none;">
+        <div class="stat-card">
+          <div class="stat-value" id="averageGrade">--</div>
+          <div class="stat-name">Current Average</div>
+          <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="stat-fill" id="averageBar" style="width: 0%; background: #4ade80"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="gpaValue">--</div>
+          <div class="stat-name">GPA</div>
+          <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="stat-fill" id="gpaBar" style="width: 0%; background: #60a5fa"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="completionRate">--</div>
+          <div class="stat-name">Completion Rate</div>
+          <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="stat-fill" id="completionBar" style="width: 0%; background: #a78bfa"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Section -->
+      <div id="analyticsSection" class="analytics-section" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-chart-pie"></i> Grade Analytics</h2>
+          </div>
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h3>Performance by Subject</h3>
+              <canvas id="subjectGradesChart"></canvas>
+            </div>
+            <div class="analytics-card">
+              <h3>Grade Distribution</h3>
+              <canvas id="gradeDistributionChart"></canvas>
+            </div>
+            <div class="analytics-card">
+              <h3>Progress Over Time</h3>
+              <canvas id="progressChart"></canvas>
+            </div>
+            <div class="analytics-card">
+              <h3>Assignment Types</h3>
+              <canvas id="assignmentTypesChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div id="filterSection" class="card filter-card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fas fa-filter"></i> Filter Grades</h2>
+        </div>
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="subjectFilter">Subject:</label>
+            <select id="subjectFilter" class="filter-select">
+              <option value="all">All Subjects</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="termFilter">Term:</label>
+            <select id="termFilter" class="filter-select">
+              <option value="all">All Terms</option>
+              <option value="prelim">Prelim</option>
+              <option value="midterm">Midterm</option>
+              <option value="finals">Finals</option>
+            </select>
+          </div>
+          <button class="btn-export" onclick="exportGrades()">
+            <i class="fas fa-download"></i> Export Grades
+          </button>
+        </div>
+      </div>
+
+      <!-- Grades Table -->
+      <div id="gradesTable" class="card" style="display: none;">
+        <div class="card-header">
+          <h2><i class="fas fa-graduation-cap"></i> Grade Report</h2>
+        </div>
+        <div class="table-container">
+          <table class="grades-table" id="gradesTableContent">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Teacher</th>
+                <th>Assignment</th>
+                <th>Type</th>
+                <th>Score</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="gradesTableBody">
+              <!-- Will be populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state-container" style="display: none;">
+        <div class="empty-state">
+          <i class="fas fa-book-open"></i>
+          <h3>No Grades Yet</h3>
+          <p>Once your instructors grade your submissions, your grades will appear here.</p>
+          <a href="Subjects.html" class="btn-primary">Go to Subjects</a>
+        </div>
+      </div>
+
+      <div id="gradingModal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <span class="close" id="closeGradingModal">&times;</span>
+          <div class="modal-body">
+            <h2 id="modalTitle">Grade Submission</h2>
+            <div id="modalContent"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="script.js"></script>
+    <script type="module">
+      import { logout } from "./script.js";
+      import { auth, db } from './firebase.js';
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { doc, getDoc, getDocs, collection, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { setupRealtimeSubjects } from "./realtime.js";
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
+
+      // Global data
+      let subjects = [];
+      let userData = null;
+      let allRows = [];
+      let allGrades = [];
+      let displayedRows = [];
+      let charts = {};
+      const pageParams = new URLSearchParams(window.location.search);
+      const focusSubject = pageParams.get('subject');
+      const focusType = pageParams.get('type');
+      const focusItemId = pageParams.get('itemId');
+      let subjectsRealtimeUnsubscribe = null;
+      let gradeRealtimeUnsubscribers = [];
+      let realtimeRefreshTimer = null;
+
+      function isInstructorRole() {
+        return ['instructor', 'teacher', 'admin'].includes((userData?.role || '').toLowerCase());
+      }
+
+      function normalizeTerm(termValue) {
+        const term = String(termValue || '').trim().toLowerCase();
+        if (term === 'prelim') return 'prelim';
+        if (term === 'midterm') return 'midterm';
+        if (term === 'final' || term === 'finals') return 'finals';
+        return '';
+      }
+
+      function populateSubjectFilterOptions() {
+        const subjectFilter = document.getElementById('subjectFilter');
+        if (!subjectFilter) return;
+
+        const currentValue = subjectFilter.value;
+        subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
+
+        subjects.forEach((subject, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = subject.name;
+          subjectFilter.appendChild(option);
+        });
+
+        if (focusSubject !== null && focusSubject !== '') {
+          subjectFilter.value = String(focusSubject);
+          return;
+        }
+
+        const valueExists = Array.from(subjectFilter.options).some(opt => opt.value === String(currentValue));
+        if (valueExists) {
+          subjectFilter.value = String(currentValue);
+        }
+      }
+
+      function clearGradeRealtimeListeners() {
+        gradeRealtimeUnsubscribers.forEach((unsubscribe) => {
+          try {
+            unsubscribe();
+          } catch (error) {
+            console.warn('Failed to unsubscribe grade listener:', error?.message || error);
+          }
+        });
+        gradeRealtimeUnsubscribers = [];
+      }
+
+      function scheduleRealtimeGradesReload() {
+        if (realtimeRefreshTimer) {
+          clearTimeout(realtimeRefreshTimer);
+        }
+
+        realtimeRefreshTimer = setTimeout(async () => {
+          realtimeRefreshTimer = null;
+          await loadGrades();
+          filterGrades();
+        }, 250);
+      }
+
+      function setupGradeRealtimeListeners() {
+        clearGradeRealtimeListeners();
+
+        const courseId = userData?.course;
+        if (!courseId) return;
+
+        const listenToItems = (items, type) => {
+          if (!Array.isArray(items)) return;
+
+          items.forEach((item) => {
+            if (!item?.id) return;
+            const collectionName = type === 'task' ? 'tasks' : type === 'assignment' ? 'assignments' : 'quizzes';
+            const submissionsRef = collection(db, 'subjects', courseId, collectionName, item.id, 'submissions');
+            const unsubscribe = onSnapshot(submissionsRef, () => {
+              scheduleRealtimeGradesReload();
+            }, (error) => {
+              console.warn('Realtime grade listener failed:', error?.message || error);
+            });
+            gradeRealtimeUnsubscribers.push(unsubscribe);
+          });
+        };
+
+        subjects.forEach((subject) => {
+          listenToItems(subject?.assignments, 'assignment');
+          listenToItems(subject?.tasks, 'task');
+          listenToItems(subject?.quizzes, 'quiz');
+        });
+      }
+
+      function inferTermFromDate(dateValue) {
+        if (!dateValue) return '';
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return '';
+        const month = date.getMonth() + 1;
+        if (month >= 1 && month <= 4) return 'prelim';
+        if (month >= 5 && month <= 8) return 'midterm';
+        return 'finals';
+      }
+
+      // Initialize page
+      async function initializeGradesPage() {
+        userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        
+        // Load subjects from localStorage
+        subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
+        
+        // Populate subject filter
+        populateSubjectFilterOptions();
+
+
+        if (isInstructorRole()) {
+          const welcomeTitle = document.querySelector('.welcome-text h1');
+          const welcomeText = document.querySelector('.welcome-text p');
+          if (welcomeTitle) welcomeTitle.innerHTML = '<i class="fas fa-clipboard-check"></i> Grade Submissions';
+          if (welcomeText) welcomeText.textContent = 'Review submissions and input points for students.';
+        }
+
+        // Load grades from Firestore
+        await loadGrades();
+        setupGradeRealtimeListeners();
+
+        // Keep subject metadata synced in realtime without duplicating listeners.
+        if (!subjectsRealtimeUnsubscribe && userData?.course) {
+          subjectsRealtimeUnsubscribe = setupRealtimeSubjects(userData.course, async (updatedSubjects) => {
+            if (!Array.isArray(updatedSubjects)) return;
+            subjects = updatedSubjects;
+            localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
+            populateSubjectFilterOptions();
+            setupGradeRealtimeListeners();
+            await loadGrades();
+            filterGrades();
+          }, (error) => {
+            console.warn('Grades realtime subjects failed:', error?.message || error);
+          });
+        }
+        
+        // Setup filter listeners
+        document.getElementById('subjectFilter').addEventListener('change', filterGrades);
+        document.getElementById('termFilter').addEventListener('change', filterGrades);
+      }
+
+      // Load grades from Firestore
+      async function loadGrades() {
+        const loadingState = document.getElementById('loadingState');
+        loadingState.style.display = 'flex';
+        
+        try {
+          const courseId = userData.course;
+          if (!courseId) {
+            showEmptyState();
+            return;
+          }
+
+          allRows = [];
+
+          // Load grades from each subject
+          for (let subjectIndex = 0; subjectIndex < subjects.length; subjectIndex++) {
+            const subject = subjects[subjectIndex];
+            
+            // Load assignment grades
+            if (subject.assignments && subject.assignments.length > 0) {
+              for (const assignment of subject.assignments) {
+                const rows = await fetchSubmissions('assignments', assignment.id, courseId);
+                rows.forEach(row => {
+                  allRows.push({
+                    ...row,
+                    subjectIndex,
+                    subjectName: subject.name,
+                    teacher: subject.teacher,
+                    itemTitle: assignment.title,
+                    itemType: 'assignment',
+                    itemId: assignment.id,
+                    itemPoints: assignment.points || 100,
+                    dueDate: assignment.dueDate,
+                    term: normalizeTerm(row.term || assignment.term) || inferTermFromDate(assignment.dueDate)
+                  });
+                });
+              }
+            }
+
+            // Load task grades
+            if (subject.tasks && subject.tasks.length > 0) {
+              for (const task of subject.tasks) {
+                const rows = await fetchSubmissions('tasks', task.id, courseId);
+                rows.forEach(row => {
+                  allRows.push({
+                    ...row,
+                    subjectIndex,
+                    subjectName: subject.name,
+                    teacher: subject.teacher,
+                    itemTitle: task.title,
+                    itemType: 'task',
+                    itemId: task.id,
+                    itemPoints: 100,
+                    dueDate: task.dueDate,
+                    term: normalizeTerm(row.term || task.term) || inferTermFromDate(task.dueDate)
+                  });
+                });
+              }
+            }
+
+            // Load quiz grades
+            if (subject.quizzes && subject.quizzes.length > 0) {
+              for (const quiz of subject.quizzes) {
+                const rows = await fetchSubmissions('quizzes', quiz.id, courseId);
+                rows.forEach(row => {
+                  allRows.push({
+                    ...row,
+                    subjectIndex,
+                    subjectName: subject.name,
+                    teacher: subject.teacher,
+                    itemTitle: quiz.title,
+                    itemType: 'quiz',
+                    itemId: quiz.id,
+                    itemPoints: quiz.points || 100,
+                    dueDate: quiz.dueDate,
+                    term: normalizeTerm(row.term || quiz.term) || inferTermFromDate(quiz.dueDate)
+                  });
+                });
+              }
+            }
+          }
+
+          // Students only see their own records
+          if (!isInstructorRole()) {
+            allRows = allRows.filter(row => row.studentId === userData.id);
+          }
+
+          if (focusSubject !== null && focusSubject !== '') {
+            allRows = allRows.filter(row => String(row.subjectIndex) === String(focusSubject));
+          }
+          if (focusType) {
+            allRows = allRows.filter(row => row.itemType === String(focusType).toLowerCase());
+          }
+          if (focusItemId) {
+            allRows = allRows.filter(row => String(row.itemId) === String(focusItemId));
+          }
+
+          allGrades = allRows.filter(row => row.grade !== undefined && row.status === 'graded');
+
+          if (allRows.length === 0) {
+            showEmptyState();
+            return;
+          }
+
+          const loadingEl = document.getElementById('loadingState');
+          const statsEl = document.getElementById('gradesStats');
+          const analyticsEl = document.getElementById('analyticsSection');
+          const filterEl = document.getElementById('filterSection');
+          const tableEl = document.getElementById('gradesTable');
+
+          if (isInstructorRole()) {
+            renderGradesTable(allRows);
+            loadingEl.style.display = 'none';
+            statsEl.style.display = 'none';
+            analyticsEl.style.display = 'none';
+            filterEl.style.display = 'block';
+            tableEl.style.display = 'block';
+            return;
+          }
+
+          if (allGrades.length === 0) {
+            showEmptyState();
+            return;
+          }
+
+          calculateStatistics();
+          renderGradesTable(allGrades);
+          renderAnalytics();
+
+          loadingEl.style.display = 'none';
+          statsEl.style.display = 'flex';
+          analyticsEl.style.display = 'block';
+          filterEl.style.display = 'block';
+          tableEl.style.display = 'block';
+
+        } catch (error) {
+          console.error('Error loading grades:', error);
+          showEmptyState();
+        }
+      }
+
+      // Fetch submissions from Firestore
+      async function fetchSubmissions(collectionName, itemId, courseId) {
+        if (!courseId || !itemId) return [];
+        
+        const submissionsRef = collection(db, "subjects", courseId, collectionName, itemId, "submissions");
+        
+        try {
+          const submissionsSnap = await getDocs(submissionsRef);
+          const rows = [];
+          submissionsSnap.forEach((doc) => {
+            const rowData = doc.data() || {};
+            rows.push({
+              id: doc.id,
+              ...rowData,
+              studentId: rowData.studentId || doc.id
+            });
+          });
+          return rows;
+        } catch (error) {
+          console.warn(`Could not fetch ${collectionName} submissions:`, error.message);
+          return [];
+        }
+      }
+
+      // Calculate statistics
+      function calculateStatistics() {
+        if (allGrades.length === 0) return;
+
+        // Calculate average
+        const totalPoints = allGrades.reduce((sum, g) => sum + (g.grade || 0), 0);
+        const totalMaxPoints = allGrades.reduce((sum, g) => sum + (g.itemPoints || 100), 0);
+        const average = totalMaxPoints > 0 ? (totalPoints / totalMaxPoints) * 100 : 0;
+
+        // Calculate GPA (assuming 4.0 scale)
+        const gpa = (average / 100) * 4.0;
+
+        // Calculate completion rate
+        const gradedCount = allGrades.length;
+        const totalItems = allRows.length;
+        const completionRate = totalItems > 0 ? (gradedCount / totalItems) * 100 : 0;
+
+        // Update UI
+        document.getElementById('averageGrade').textContent = getLetterGrade(average);
+        document.getElementById('averageBar').style.width = `${average}%`;
+        
+        document.getElementById('gpaValue').textContent = gpa.toFixed(2);
+        document.getElementById('gpaBar').style.width = `${(gpa / 4.0) * 100}%`;
+        
+        document.getElementById('completionRate').textContent = `${Math.round(completionRate)}%`;
+        document.getElementById('completionBar').style.width = `${completionRate}%`;
+      }
+
+      // Get letter grade from percentage
+      function getLetterGrade(percentage) {
+        if (percentage >= 97) return 'A+';
+        if (percentage >= 93) return 'A';
+        if (percentage >= 90) return 'A-';
+        if (percentage >= 87) return 'B+';
+        if (percentage >= 83) return 'B';
+        if (percentage >= 80) return 'B-';
+        if (percentage >= 77) return 'C+';
+        if (percentage >= 73) return 'C';
+        if (percentage >= 70) return 'C-';
+        if (percentage >= 67) return 'D+';
+        if (percentage >= 63) return 'D';
+        if (percentage >= 60) return 'D-';
+        return 'F';
+      }
+
+      // Get color for grade
+      function getGradeColor(percentage) {
+        if (percentage >= 90) return '#4ade80'; // Green
+        if (percentage >= 80) return '#60a5fa'; // Blue
+        if (percentage >= 70) return '#fbbf24'; // Yellow
+        if (percentage >= 60) return '#fb923c'; // Orange
+        return '#ef4444'; // Red
+      }
+
+      function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleString();
+      }
+
+      // Render grades table
+      function renderGradesTable(grades) {
+        displayedRows = [...grades];
+        const tbody = document.getElementById('gradesTableBody');
+        const instructorView = isInstructorRole();
+        
+        if (grades.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${instructorView ? 'No submissions found' : 'No grades found'}</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = grades.map(grade => {
+          const isGraded = grade.grade !== undefined && grade.status === 'graded';
+          const percentage = isGraded && grade.itemPoints > 0 ? ((grade.grade / grade.itemPoints) * 100) : 0;
+          const letterGrade = isGraded ? getLetterGrade(percentage) : '--';
+          const gradeColor = isGraded ? getGradeColor(percentage) : '#64748b';
+          const actionButton = instructorView
+            ? `<button class="${isGraded ? 'btn-edit-grade' : 'btn-grade'}" onclick="openGradingModal('${grade.subjectIndex}', '${grade.itemType}', '${grade.itemId}', '${grade.studentId}', ${grade.itemPoints || 100})">
+                <i class="fas fa-edit"></i> ${isGraded ? 'Edit Grade' : 'Grade'}
+              </button>`
+            : '';
+          
+          return `
+            <tr>
+              <td><strong>${grade.subjectName}</strong></td>
+              <td>${grade.teacher || 'N/A'}</td>
+              <td>${grade.itemTitle}</td>
+              <td><span class="type-badge ${grade.itemType}">${grade.itemType}</span></td>
+              <td><strong>${isGraded ? grade.grade : '--'}</strong></td>
+              <td>${grade.itemPoints}</td>
+              <td>${isGraded ? `${percentage.toFixed(1)}%` : '--'}</td>
+              <td><span class="grade-badge" style="background: ${gradeColor}">${letterGrade}</span></td>
+              <td>
+                ${isGraded
+                  ? '<span class="status-badge graded"><i class="fas fa-check"></i> Graded</span>'
+                  : '<span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>'
+                }
+                ${instructorView ? actionButton : ''}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Filter grades
+      function filterGrades() {
+        const subjectFilter = document.getElementById('subjectFilter').value;
+        const termFilter = document.getElementById('termFilter').value;
+
+        let filtered = isInstructorRole() ? [...allRows] : [...allGrades];
+
+        if (subjectFilter !== 'all') {
+          filtered = filtered.filter(g => g.subjectIndex == subjectFilter);
+        }
+
+        if (focusType) {
+          filtered = filtered.filter(g => g.itemType === String(focusType).toLowerCase());
+        }
+        if (focusItemId) {
+          filtered = filtered.filter(g => String(g.itemId) === String(focusItemId));
+        }
+
+        if (termFilter !== 'all') {
+          filtered = filtered.filter(g => normalizeTerm(g.term) === termFilter);
+        }
+
+        renderGradesTable(filtered);
+      }
+
+      // Render analytics charts
+      function renderAnalytics() {
+        renderSubjectGradesChart();
+        renderGradeDistributionChart();
+        renderProgressChart();
+        renderAssignmentTypesChart();
+      }
+
+      // Performance by Subject Chart
+      function renderSubjectGradesChart() {
+        const ctx = document.getElementById('subjectGradesChart').getContext('2d');
+        
+        // Group grades by subject
+        const subjectGrades = {};
+        allGrades.forEach(grade => {
+          if (!subjectGrades[grade.subjectName]) {
+            subjectGrades[grade.subjectName] = { total: 0, max: 0 };
+          }
+          subjectGrades[grade.subjectName].total += grade.grade || 0;
+          subjectGrades[grade.subjectName].max += grade.itemPoints || 100;
+        });
+
+        const labels = Object.keys(subjectGrades);
+        const data = labels.map(s => {
+          const g = subjectGrades[s];
+          return g.max > 0 ? (g.total / g.max) * 100 : 0;
+        });
+
+        if (charts.subjectGrades) charts.subjectGrades.destroy();
+        
+        charts.subjectGrades = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Average Grade (%)',
+              data: data,
+              backgroundColor: [
+                '#4ade80', '#60a5fa', '#a78bfa', '#fbbf24', '#fb923c', '#f472b6'
+              ],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, max: 100 }
+            }
+          }
+        });
+      }
+
+      // Grade Distribution Chart
+      function renderGradeDistributionChart() {
+        const ctx = document.getElementById('gradeDistributionChart').getContext('2d');
+        
+        const distribution = {
+          'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0
+        };
+
+        allGrades.forEach(grade => {
+          const percentage = grade.itemPoints > 0 ? ((grade.grade / grade.itemPoints) * 100) : 0;
+          const letter = getLetterGrade(percentage);
+          const letterOnly = letter.charAt(0);
+          if (distribution[letterOnly] !== undefined) {
+            distribution[letterOnly]++;
+          }
+        });
+
+        if (charts.gradeDistribution) charts.gradeDistribution.destroy();
+        
+        charts.gradeDistribution = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['A', 'B', 'C', 'D', 'F'],
+            datasets: [{
+              data: [distribution.A, distribution.B, distribution.C, distribution.D, distribution.F],
+              backgroundColor: ['#4ade80', '#60a5fa', '#fbbf24', '#fb923c', '#ef4444'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+
+      // Progress Over Time Chart
+      function renderProgressChart() {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        
+        // Sort grades by date
+        const sortedGrades = [...allGrades].sort((a, b) => {
+          const dateA = a.gradedAt ? new Date(a.gradedAt.seconds * 1000) : new Date();
+          const dateB = b.gradedAt ? new Date(b.gradedAt.seconds * 1000) : new Date();
+          return dateA - dateB;
+        });
+
+        // Calculate running average
+        const labels = sortedGrades.map((g, i) => `Assignment ${i + 1}`);
+        const runningAvg = [];
+        let sum = 0;
+        
+        sortedGrades.forEach((grade, i) => {
+          sum += (grade.grade / grade.itemPoints) * 100;
+          runningAvg.push(sum / (i + 1));
+        });
+
+        if (charts.progress) charts.progress.destroy();
+        
+        charts.progress = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Running Average',
+              data: runningAvg,
+              borderColor: '#4ade80',
+              backgroundColor: 'rgba(74, 222, 128, 0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, max: 100 }
+            }
+          }
+        });
+      }
+
+      // Assignment Types Chart
+      function renderAssignmentTypesChart() {
+        const ctx = document.getElementById('assignmentTypesChart').getContext('2d');
+        
+        const types = {
+          'assignment': 0,
+          'task': 0,
+          'quiz': 0
+        };
+
+        allGrades.forEach(grade => {
+          if (types[grade.itemType] !== undefined) {
+            types[grade.itemType]++;
+          }
+        });
+
+        if (charts.assignmentTypes) charts.assignmentTypes.destroy();
+        
+        charts.assignmentTypes = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: ['Assignments', 'Tasks', 'Quizzes'],
+            datasets: [{
+              data: [types.assignment, types.task, types.quiz],
+              backgroundColor: ['#60a5fa', '#a78bfa', '#fb923c'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+
+      // Show empty state
+      function showEmptyState() {
+        document.getElementById('loadingState').style.display = 'none';
+        if (isInstructorRole()) {
+          const emptyTitle = document.querySelector('#emptyState h3');
+          const emptyText = document.querySelector('#emptyState p');
+          if (emptyTitle) emptyTitle.textContent = 'No Submissions Yet';
+          if (emptyText) emptyText.textContent = 'No student submissions matched this filter yet.';
+        }
+        document.getElementById('emptyState').style.display = 'flex';
+      }
+
+      // Open grading modal
+      window.openGradingModal = function(subjectIndex, itemType, itemId, studentId, itemPoints) {
+        if (!isInstructorRole()) return;
+
+        const modal = document.getElementById('gradingModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const maxPoints = Number(itemPoints) || 100;
+
+        const submission = allRows.find(row =>
+          String(row.subjectIndex) === String(subjectIndex) &&
+          row.itemType === itemType &&
+          String(row.itemId) === String(itemId) &&
+          String(row.studentId) === String(studentId)
+        );
+
+        if (!submission) {
+          alert('Submission not found');
+          return;
+        }
+
+        modalTitle.textContent = `Grade: ${submission.itemTitle}`;
+        modalContent.innerHTML = `
+          <div class="grading-form">
+            <div class="submission-details">
+              <p><strong>Student:</strong> ${submission.studentName || submission.studentId || 'Unknown'}</p>
+              <p><strong>Submitted:</strong> ${formatDate(submission.submittedAt)}</p>
+              <p><strong>File:</strong> <a href="${submission.fileUrl}" target="_blank">${submission.fileName || 'Submission file'}</a></p>
+            </div>
+            <div class="grade-input-section">
+              <div class="form-group">
+                <label for="gradeInput">Grade:</label>
+                <input type="number" id="gradeInput" class="grade-input" value="${submission.grade !== undefined ? submission.grade : ''}" min="0" max="${maxPoints}" placeholder="0" />
+                / ${maxPoints} points
+              </div>
+              <div class="form-group">
+                <label for="feedbackInput">Feedback:</label>
+                <textarea id="feedbackInput" class="feedback-input" rows="4" placeholder="Enter feedback">${submission.feedback || ''}</textarea>
+              </div>
+              <button class="btn-save-grade" onclick="saveGradeFromModal('${subjectIndex}', '${itemType}', '${itemId}', '${studentId}', ${maxPoints})">
+                <i class="fas fa-save"></i> Save Grade
+              </button>
+            </div>
+          </div>
+        `;
+
+        modal.style.display = 'block';
+      };
+
+      // Save grade from modal
+      window.saveGradeFromModal = async function(subjectIndex, itemType, itemId, studentId, itemPoints) {
+        const gradeInput = document.getElementById('gradeInput');
+        const feedbackInput = document.getElementById('feedbackInput');
+        const maxPoints = Number(itemPoints) || 100;
+        const grade = parseFloat(gradeInput.value);
+        const feedback = (feedbackInput.value || '').trim();
+
+        if (isNaN(grade) || grade < 0 || grade > maxPoints) {
+          alert(`Grade must be between 0 and ${maxPoints}`);
+          return;
+        }
+
+        try {
+          const collectionName = itemType === 'task' ? 'tasks' : itemType === 'assignment' ? 'assignments' : 'quizzes';
+          const submissionRef = doc(db, "subjects", userData.course, collectionName, itemId, "submissions", studentId);
+
+          await setDoc(submissionRef, {
+            grade,
+            maxPoints,
+            feedback,
+            gradedAt: serverTimestamp(),
+            gradedBy: auth.currentUser.uid,
+            status: "graded"
+          }, { merge: true });
+
+          alert('Grade saved successfully!');
+          document.getElementById('gradingModal').style.display = 'none';
+          await loadGrades();
+        } catch (error) {
+          console.error("Error saving grade:", error);
+          alert("Failed to save grade: " + error.message);
+        }
+      };
+
+      // Export grades
+      window.exportGrades = function() {
+        if (displayedRows.length === 0) {
+          alert('No grades to export');
+          return;
+        }
+
+        let csv = 'Subject,Teacher,Assignment,Type,Score,Total,Percentage,Grade\n';
+        
+        displayedRows.forEach(grade => {
+          if (grade.grade === undefined || grade.status !== 'graded') return;
+          const percentage = grade.itemPoints > 0 ? ((grade.grade / grade.itemPoints) * 100) : 0;
+          const letterGrade = getLetterGrade(percentage);
+          csv += `"${grade.subjectName}","${grade.teacher}","${grade.itemTitle}","${grade.itemType}",${grade.grade},${grade.itemPoints},${percentage.toFixed(1)},${letterGrade}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-grades.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      };
+
+      // Modal close handlers
+      document.getElementById('closeGradingModal').addEventListener('click', () => {
+        document.getElementById('gradingModal').style.display = 'none';
+      });
+      window.addEventListener('click', (event) => {
+        if (event.target && event.target.id === 'gradingModal') {
+          document.getElementById('gradingModal').style.display = 'none';
+        }
+      });
+
+      // Initialize on load
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          // Load user data for header
+          const userData = JSON.parse(localStorage.getItem('userData'));
+          if (userData) {
+            const headerUserName = document.getElementById('headerUserName');
+            if (headerUserName) {
+              headerUserName.textContent = userData.name || 'User';
+            }
+          }
+          initializeGradesPage();
+        } else {
+          window.location.href = 'Login.html';
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (typeof subjectsRealtimeUnsubscribe === 'function') {
+          subjectsRealtimeUnsubscribe();
+          subjectsRealtimeUnsubscribe = null;
+        }
+        clearGradeRealtimeListeners();
+        if (realtimeRefreshTimer) {
+          clearTimeout(realtimeRefreshTimer);
+          realtimeRefreshTimer = null;
+        }
+      });
+    </script>
+  </body>
+</html>
