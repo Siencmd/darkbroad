@@ -67,6 +67,13 @@ service cloud.firestore {
         userRole().matches('(?i)^\\s*(instructor|teacher|admin)\\s*$');
     }
 
+    // Helper function to check if user is an instructor (general - not course-specific)
+    function isInstructorRole() {
+      return signedIn() && userExists() &&
+        (userRole() is string) &&
+        userRole().matches('(?i)^\\s*(instructor|teacher|admin)\\s*$');
+    }
+
     // Users collection - users can read/write their own profile
     match /users/{userId} {
       allow read, write: if signedIn() && request.auth.uid == userId;
@@ -83,12 +90,8 @@ service cloud.firestore {
     }
 
     // Subjects collection - document ID is the course name (e.g., "BSIT")
-    // This is a single document per course containing all subjects
     match /subjects/{courseId} {
-      // All signed-in users in the course can read (for realtime updates)
       allow read: if inCourse(courseId);
-      
-      // Only instructors can write (create, update, delete)
       allow write: if isInstructor(courseId);
 
       // Tasks subcollection
@@ -98,7 +101,8 @@ service cloud.firestore {
 
         match /submissions/{studentId} {
           allow read: if inCourse(courseId);
-          allow create, update: if inCourse(courseId) && request.auth.uid == studentId;
+          allow create: if inCourse(courseId) && request.auth.uid == studentId;
+          allow update: if (inCourse(courseId) && request.auth.uid == studentId) || isInstructor(courseId);
           allow delete: if isInstructor(courseId);
         }
       }
@@ -110,7 +114,8 @@ service cloud.firestore {
 
         match /submissions/{studentId} {
           allow read: if inCourse(courseId);
-          allow create, update: if inCourse(courseId) && request.auth.uid == studentId;
+          allow create: if inCourse(courseId) && request.auth.uid == studentId;
+          allow update: if (inCourse(courseId) && request.auth.uid == studentId) || isInstructor(courseId);
           allow delete: if isInstructor(courseId);
         }
       }
@@ -125,7 +130,21 @@ service cloud.firestore {
       match /quizzes/{quizId} {
         allow read: if inCourse(courseId);
         allow write: if isInstructor(courseId);
+
+        match /submissions/{studentId} {
+          allow read: if inCourse(courseId);
+          allow create: if inCourse(courseId) && request.auth.uid == studentId;
+          allow update: if (inCourse(courseId) && request.auth.uid == studentId) || isInstructor(courseId);
+          allow delete: if isInstructor(courseId);
+        }
       }
+    }
+
+    // Announcements collection - all signed-in users can read, only instructors can create/update/delete
+    match /announcements/{announcementId} {
+      allow read: if signedIn() && userExists();
+      allow create: if isInstructorRole();
+      allow update, delete: if isInstructorRole() && resource.data.authorId == request.auth.uid;
     }
 
     // Orders collection
