@@ -53,83 +53,105 @@
           <h1>Announcements</h1>
           <p>Stay updated with the latest news and announcements.</p>
         </div>
+        <div id="instructorActions" class="instructor-actions" style="display: none;">
+          <button class="btn-primary" id="addAnnouncementBtn">
+            <i class="fas fa-plus"></i> New Announcement
+          </button>
+        </div>
       </div>
 
       <!-- Announcements List -->
-      <div class="announcements-list">
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-graduation-cap"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 10, 2026</span>
-              <span class="announcement-category">Academic</span>
-            </div>
-          </div>
-          <h3>Midterm Examinations Schedule</h3>
-          <p>The midterm examination schedule has been released. Please check your email for detailed information regarding your exam dates and times.</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Registrar's Office</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
+      <div class="announcements-list" id="announcementsList">
+        <!-- Announcements will be loaded dynamically -->
+        <div class="loading-announcements">
+          <i class="fas fa-spinner fa-spin"></i> Loading announcements...
         </div>
+      </div>
 
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-calendar-check"></i>
+      <!-- Empty State -->
+      <div class="card empty-state" id="emptyState" style="display: none;">
+        <i class="fas fa-bell-slash"></i>
+        <h3>No Announcements Yet</h3>
+        <p>There are no announcements to display.</p>
+      </div>
+    </main>
+
+    <!-- Create/Edit Announcement Modal -->
+    <div id="announcementModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeAnnouncementModal">&times;</span>
+        <div class="modal-body">
+          <h2 id="announcementModalTitle"><i class="fas fa-bullhorn"></i> New Announcement</h2>
+          <form id="announcementForm">
+            <input type="hidden" id="announcementId" value="">
+            <div class="form-group">
+              <label for="announcementTitle">Title <span class="required">*</span></label>
+              <input type="text" id="announcementTitle" class="form-input" placeholder="Enter announcement title" required>
             </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 8, 2026</span>
-              <span class="announcement-category">Events</span>
+            <div class="form-group">
+              <label for="announcementMessage">Message <span class="required">*</span></label>
+              <textarea id="announcementMessage" class="form-input" rows="5" placeholder="Enter your announcement message" required></textarea>
             </div>
-          </div>
-          <h3>Tech Innovation Week 2026</h3>
-          <p>Join us for Tech Innovation Week featuring workshops, hackathons, and guest speakers from leading tech companies. Register now!</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Student Council</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="announcementCategory">Category</label>
+                <select id="announcementCategory" class="form-input">
+                  <option value="General">General</option>
+                  <option value="Academic">Academic</option>
+                  <option value="Events">Events</option>
+                  <option value="Resources">Resources</option>
+                  <option value="Club">Club</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="announcementIcon">Icon</label>
+                <select id="announcementIcon" class="form-input">
+                  <option value="bell">Bell</option>
+                  <option value="graduation-cap">Graduation Cap</option>
+                  <option value="calendar-check">Calendar</option>
+                  <option value="book">Book</option>
+                  <option value="users">Users</option>
+                  <option value="exclamation-triangle">Warning</option>
+                  <option value="info-circle">Info</option>
+                  <option value="star">Star</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-cancel" id="cancelAnnouncement">Cancel</button>
+              <button type="submit" class="btn-submit" id="submitAnnouncement">
+                <i class="fas fa-paper-plane"></i> Post Announcement
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
+    </div>
 
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-book"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 5, 2026</span>
-              <span class="announcement-category">Resources</span>
-            </div>
-          </div>
-          <h3>Library Extended Hours</h3>
-          <p>The library will be open 24/7 during midterm week. Quiet study areas are now available on the 3rd floor.</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Library Services</span>
-            <button class="btn-read-more">Read More</button>
-          </div>
-        </div>
-
-        <div class="card announcement-card">
-          <div class="announcement-header">
-            <div class="announcement-icon">
-              <i class="fas fa-users"></i>
-            </div>
-            <div class="announcement-meta">
-              <span class="announcement-date">February 3, 2026</span>
-              <span class="announcement-category">Club</span>
-            </div>
-          </div>
-          <h3>New Student Organizations</h3>
-          <p>Three new student organizations have been approved: AI Club, Game Development Society, and Cybersecurity Group. Join today!</p>
-          <div class="announcement-footer">
-            <span class="announcement-author">Posted by: Student Affairs</span>
-            <button class="btn-read-more">Read More</button>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteAnnouncementModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeDeleteAnnouncementModal">&times;</span>
+        <div class="modal-body">
+          <h2><i class="fas fa-exclamation-triangle"></i> Delete Announcement</h2>
+          <p class="warning-text">Are you sure you want to delete this announcement? This action cannot be undone.</p>
+          <input type="hidden" id="deleteAnnouncementId" value="">
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" id="cancelDeleteAnnouncement">Cancel</button>
+            <button type="button" class="btn-danger" id="confirmDeleteAnnouncement">
+              <i class="fas fa-trash"></i> Delete
+            </button>
           </div>
         </div>
       </div>
-    </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+      <i class="fas fa-check-circle"></i>
+      <span id="toastMessage">Success!</span>
+    </div>
 
     <script type="module" src="firebase.js"></script>
     <script type="module" src="script.js"></script>
@@ -137,21 +159,65 @@
       import { logout } from "./script.js";
       import { auth, db } from "./firebase.js";
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-      import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+      import { 
+        doc, 
+        onSnapshot, 
+        collection, 
+        addDoc, 
+        updateDoc, 
+        deleteDoc, 
+        serverTimestamp,
+        query,
+        orderBy
+      } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
       
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
       
       let profileRealtimeUnsubscribe = null;
+      let announcementsUnsubscribe = null;
+      let currentUserRole = 'student';
+      let isEditing = false;
 
+      // Check if user is instructor
+      function isInstructor() {
+        return currentUserRole === 'instructor' || currentUserRole === 'teacher' || currentUserRole === 'admin';
+      }
+
+      // Show toast notification
+      function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        if (!toast || !toastMessage) return;
+        
+        toastMessage.textContent = message;
+        toast.className = `toast toast-${type}`;
+        toast.style.display = 'flex';
+        
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 3000);
+      }
+
+      // Update header name
       function updateHeaderName() {
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         const headerUserName = document.getElementById('headerUserName');
         if (headerUserName) {
           headerUserName.textContent = userData.name || 'User';
         }
+        
+        // Update current user role
+        currentUserRole = (userData.role || 'student').toLowerCase();
+        
+        // Show/hide instructor actions
+        const instructorActions = document.getElementById('instructorActions');
+        if (instructorActions) {
+          instructorActions.style.display = isInstructor() ? 'block' : 'none';
+        }
       }
 
+      // Setup profile realtime listener
       function setupProfileRealtime() {
         onAuthStateChanged(auth, (user) => {
           if (!user) return;
@@ -180,92 +246,365 @@
         });
       }
 
-      // Load user data for header
-      window.addEventListener('DOMContentLoaded', () => {
-        updateHeaderName();
-        loadAnnouncements();
-        setupProfileRealtime();
-      });
-
-      // Keep announcements in sync across tabs/windows.
-      window.addEventListener('storage', (event) => {
-        if (event.key === 'announcements') {
-          loadAnnouncements();
-        }
-      });
-
-      window.addEventListener('beforeunload', () => {
-        if (typeof profileRealtimeUnsubscribe === 'function') {
-          profileRealtimeUnsubscribe();
-          profileRealtimeUnsubscribe = null;
-        }
-      });
-      
+      // Load announcements from Firestore with realtime updates
       function loadAnnouncements() {
-        const announcementsList = document.querySelector('.announcements-list');
+        const announcementsList = document.getElementById('announcementsList');
+        const emptyState = document.getElementById('emptyState');
         
-        // Get announcements from localStorage
-        let announcements = [];
-        try {
-          announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
-          if (!Array.isArray(announcements)) announcements = [];
-        } catch (error) {
-          announcements = [];
+        // Cancel previous listener
+        if (typeof announcementsUnsubscribe === 'function') {
+          announcementsUnsubscribe();
         }
-        
-        if (announcements.length === 0) {
-          // Show empty state message but keep sample announcements
-          console.log('No announcements in localStorage, showing defaults');
-          return;
-        }
-        
-        // Clear current announcements
-        announcementsList.innerHTML = '';
-        
-        // Render announcements
-        announcements.forEach(announcement => {
-          const card = document.createElement('div');
-          card.className = 'card announcement-card';
-          card.innerHTML = `
-            <div class="announcement-header">
-              <div class="announcement-icon">
-                <i class="fas fa-${announcement.icon || 'bell'}"></i>
-              </div>
-              <div class="announcement-meta">
-                <span class="announcement-date">${announcement.date || new Date().toLocaleDateString()}</span>
-                <span class="announcement-category">${announcement.category || 'General'}</span>
-              </div>
-            </div>
-            <h3>${announcement.title || 'Untitled'}</h3>
-            <p>${announcement.message || announcement.content || ''}</p>
-            <div class="announcement-footer">
-              <span class="announcement-author">Posted by: ${announcement.author || 'Admin'}</span>
-              <button class="btn-read-more">Read More</button>
+
+        const announcementsRef = collection(db, 'announcements');
+        const q = query(announcementsRef, orderBy('createdAt', 'desc'));
+
+        announcementsUnsubscribe = onSnapshot(q, (snapshot) => {
+          const announcements = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            announcements.push({
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt ? data.createdAt.toDate() : new Date()
+            });
+          });
+
+          // Clear current list
+          announcementsList.innerHTML = '';
+
+          if (announcements.length === 0) {
+            emptyState.style.display = 'block';
+            announcementsList.style.display = 'none';
+          } else {
+            emptyState.style.display = 'none';
+            announcementsList.style.display = 'block';
+            
+            // Render announcements
+            announcements.forEach(announcement => {
+              const card = createAnnouncementCard(announcement);
+              announcementsList.appendChild(card);
+            });
+          }
+        }, (error) => {
+          console.error('Error loading announcements:', error);
+          announcementsList.innerHTML = `
+            <div class="card error-card">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>Failed to load announcements. Please try again later.</p>
             </div>
           `;
-          announcementsList.appendChild(card);
         });
       }
 
-      document.addEventListener('click', (event) => {
-        const button = event.target.closest('.btn-read-more');
-        if (!button) return;
+      // Create announcement card HTML
+      function createAnnouncementCard(announcement) {
+        const card = document.createElement('div');
+        card.className = 'card announcement-card';
+        card.dataset.id = announcement.id;
 
-        const card = button.closest('.announcement-card');
-        const text = card?.querySelector('p');
-        if (!text) return;
+        const date = announcement.createdAt ? announcement.createdAt.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : 'Unknown date';
 
-        const expanded = button.dataset.expanded === 'true';
-        if (expanded) {
-          text.style.maxHeight = '';
-          text.style.overflow = '';
-          button.textContent = 'Read More';
-          button.dataset.expanded = 'false';
+        const iconMap = {
+          'bell': 'fa-bell',
+          'graduation-cap': 'fa-graduation-cap',
+          'calendar-check': 'fa-calendar-check',
+          'book': 'fa-book',
+          'users': 'fa-users',
+          'exclamation-triangle': 'fa-exclamation-triangle',
+          'info-circle': 'fa-info-circle',
+          'star': 'fa-star'
+        };
+
+        const iconClass = iconMap[announcement.icon] || 'fa-bell';
+        const isInstructorUser = isInstructor();
+
+        card.innerHTML = `
+          <div class="announcement-header">
+            <div class="announcement-icon">
+              <i class="fas ${iconClass}"></i>
+            </div>
+            <div class="announcement-meta">
+              <span class="announcement-date">${date}</span>
+              <span class="announcement-category">${announcement.category || 'General'}</span>
+            </div>
+          </div>
+          <h3>${announcement.title || 'Untitled'}</h3>
+          <p>${announcement.message || ''}</p>
+          <div class="announcement-footer">
+            <span class="announcement-author">Posted by: ${announcement.authorName || 'Admin'}</span>
+            ${isInstructorUser ? `
+              <div class="announcement-actions">
+                <button class="btn-edit-announcement" data-id="${announcement.id}" title="Edit">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-delete-announcement" data-id="${announcement.id}" title="Delete">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </div>
+            ` : ''}
+            <button class="btn-read-more">Read More</button>
+          </div>
+        `;
+
+        return card;
+      }
+
+      // Open announcement modal for creating/editing
+      function openAnnouncementModal(announcement = null) {
+        const modal = document.getElementById('announcementModal');
+        const title = document.getElementById('announcementModalTitle');
+        const form = document.getElementById('announcementForm');
+        const idInput = document.getElementById('announcementId');
+        const titleInput = document.getElementById('announcementTitle');
+        const messageInput = document.getElementById('announcementMessage');
+        const categorySelect = document.getElementById('announcementCategory');
+        const iconSelect = document.getElementById('announcementIcon');
+        const submitBtn = document.getElementById('submitAnnouncement');
+
+        if (!modal) return;
+
+        if (announcement) {
+          // Edit mode
+          isEditing = true;
+          title.innerHTML = '<i class="fas fa-edit"></i> Edit Announcement';
+          idInput.value = announcement.id;
+          titleInput.value = announcement.title || '';
+          messageInput.value = announcement.message || '';
+          categorySelect.value = announcement.category || 'General';
+          iconSelect.value = announcement.icon || 'bell';
+          submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
         } else {
-          text.style.maxHeight = 'none';
-          text.style.overflow = 'visible';
-          button.textContent = 'Show Less';
-          button.dataset.expanded = 'true';
+          // Create mode
+          isEditing = false;
+          title.innerHTML = '<i class="fas fa-bullhorn"></i> New Announcement';
+          form.reset();
+          idInput.value = '';
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Announcement';
+        }
+
+        modal.style.display = 'block';
+      }
+
+      // Close announcement modal
+      function closeAnnouncementModal() {
+        const modal = document.getElementById('announcementModal');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+        document.getElementById('announcementForm').reset();
+        isEditing = false;
+      }
+
+      // Open delete confirmation modal
+      function openDeleteModal(announcementId) {
+        const modal = document.getElementById('deleteAnnouncementModal');
+        const idInput = document.getElementById('deleteAnnouncementId');
+        if (modal) {
+          idInput.value = announcementId;
+          modal.style.display = 'block';
+        }
+      }
+
+      // Close delete confirmation modal
+      function closeDeleteModal() {
+        const modal = document.getElementById('deleteAnnouncementModal');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+        document.getElementById('deleteAnnouncementId').value = '';
+      }
+
+      // Save announcement (create or update)
+      async function saveAnnouncement(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('announcementId').value;
+        const title = document.getElementById('announcementTitle').value.trim();
+        const message = document.getElementById('announcementMessage').value.trim();
+        const category = document.getElementById('announcementCategory').value;
+        const icon = document.getElementById('announcementIcon').value;
+        
+        if (!title || !message) {
+          showToast('Please fill in all required fields', 'error');
+          return;
+        }
+
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        
+        const announcementData = {
+          title,
+          message,
+          category,
+          icon,
+          authorId: userData.id || auth.currentUser?.uid,
+          authorName: userData.name || 'Admin',
+          updatedAt: serverTimestamp()
+        };
+
+        try {
+          if (isEditing && id) {
+            // Update existing announcement
+            await updateDoc(doc(db, 'announcements', id), {
+              ...announcementData,
+              updatedAt: serverTimestamp()
+            });
+            showToast('Announcement updated successfully!');
+          } else {
+            // Create new announcement
+            await addDoc(collection(db, 'announcements'), {
+              ...announcementData,
+              createdAt: serverTimestamp()
+            });
+            showToast('Announcement posted successfully!');
+          }
+          
+          closeAnnouncementModal();
+        } catch (error) {
+          console.error('Error saving announcement:', error);
+          showToast('Failed to save announcement. Please try again.', 'error');
+        }
+      }
+
+      // Delete announcement
+      async function deleteAnnouncement() {
+        const id = document.getElementById('deleteAnnouncementId').value;
+        
+        if (!id) return;
+
+        try {
+          await deleteDoc(doc(db, 'announcements', id));
+          showToast('Announcement deleted successfully!');
+          closeDeleteModal();
+        } catch (error) {
+          console.error('Error deleting announcement:', error);
+          showToast('Failed to delete announcement. Please try again.', 'error');
+        }
+      }
+
+      // Get announcement by ID from Firestore
+      async function getAnnouncementById(id) {
+        const { getDoc } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+        const docSnap = await getDoc(doc(db, 'announcements', id));
+        if (docSnap.exists()) {
+          return { id: docSnap.id, ...docSnap.data() };
+        }
+        return null;
+      }
+
+      // Event Listeners
+      document.addEventListener('DOMContentLoaded', () => {
+        updateHeaderName();
+        loadAnnouncements();
+        setupProfileRealtime();
+
+        // Add announcement button
+        const addBtn = document.getElementById('addAnnouncementBtn');
+        if (addBtn) {
+          addBtn.addEventListener('click', () => openAnnouncementModal());
+        }
+
+        // Modal close buttons
+        const closeModal = document.getElementById('closeAnnouncementModal');
+        if (closeModal) {
+          closeModal.addEventListener('click', closeAnnouncementModal);
+        }
+
+        const cancelBtn = document.getElementById('cancelAnnouncement');
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', closeAnnouncementModal);
+        }
+
+        // Delete modal
+        const closeDeleteModalBtn = document.getElementById('closeDeleteAnnouncementModal');
+        if (closeDeleteModalBtn) {
+          closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+        }
+
+        const cancelDeleteBtn = document.getElementById('cancelDeleteAnnouncement');
+        if (cancelDeleteBtn) {
+          cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        }
+
+        const confirmDeleteBtn = document.getElementById('confirmDeleteAnnouncement');
+        if (confirmDeleteBtn) {
+          confirmDeleteBtn.addEventListener('click', deleteAnnouncement);
+        }
+
+        // Form submission
+        const form = document.getElementById('announcementForm');
+        if (form) {
+          form.addEventListener('submit', saveAnnouncement);
+        }
+
+        // Click outside modal to close
+        window.addEventListener('click', (event) => {
+          const modal = document.getElementById('announcementModal');
+          if (event.target === modal) {
+            closeAnnouncementModal();
+          }
+          
+          const deleteModal = document.getElementById('deleteAnnouncementModal');
+          if (event.target === deleteModal) {
+            closeDeleteModal();
+          }
+        });
+
+        // Delegated event listeners for edit/delete buttons
+        document.addEventListener('click', async (event) => {
+          // Edit button
+          const editBtn = event.target.closest('.btn-edit-announcement');
+          if (editBtn) {
+            const id = editBtn.dataset.id;
+            const announcement = await getAnnouncementById(id);
+            if (announcement) {
+              openAnnouncementModal(announcement);
+            }
+            return;
+          }
+
+          // Delete button
+          const deleteBtn = event.target.closest('.btn-delete-announcement');
+          if (deleteBtn) {
+            const id = deleteBtn.dataset.id;
+            openDeleteModal(id);
+            return;
+          }
+
+          // Read more button
+          const readMoreBtn = event.target.closest('.btn-read-more');
+          if (readMoreBtn) {
+            const card = readMoreBtn.closest('.announcement-card');
+            const text = card?.querySelector('p');
+            if (!text) return;
+
+            const expanded = readMoreBtn.dataset.expanded === 'true';
+            if (expanded) {
+              text.style.maxHeight = '';
+              text.style.overflow = '';
+              readMoreBtn.textContent = 'Read More';
+              readMoreBtn.dataset.expanded = 'false';
+            } else {
+              text.style.maxHeight = 'none';
+              text.style.overflow = 'visible';
+              readMoreBtn.textContent = 'Show Less';
+              readMoreBtn.dataset.expanded = 'true';
+            }
+          }
+        });
+      });
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        if (typeof profileRealtimeUnsubscribe === 'function') {
+          profileRealtimeUnsubscribe();
+        }
+        if (typeof announcementsUnsubscribe === 'function') {
+          announcementsUnsubscribe();
         }
       });
     </script>
