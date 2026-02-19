@@ -1601,7 +1601,7 @@ function initializeSubjects() {
                                     <button class="btn-edit-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-view-submissions" data-subject-index="${index}" data-quiz-id="${quiz.id || ''}" title="Open in Submissions">
+                                    <button class="btn-view-submissions" data-subject-index="${index}" onclick="window.subjectsOpenGradesForItem(${index}, 'quiz', '${quiz.id || ''}')" title="Open in Submissions">
                                         <i class="fas fa-users"></i>
                                     </button>
                                     <button class="btn-delete-item" data-type="quiz" data-item-index="${i}" data-subject-index="${index}">
