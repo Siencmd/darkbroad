@@ -7,9 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#0a1929" />
-    <title>Darkboard - Student Dashboard for College of Computer Studies</title>
-    <meta name="description" content="Access your personalized student dashboard at Darkboard. Manage subjects, grades, schedule, announcements, and more for College of Computer Studies students." />
-    <meta name="keywords" content="student dashboard, college management, subjects, grades, schedule, announcements, education platform" />
+    <title>Darkboard - Dashboard</title>
+    <meta name="description" content="Access your personalized dashboard at Darkboard. Manage subjects, grades, schedule, announcements, and more." />
+    <meta name="keywords" content="dashboard, college management, subjects, grades, schedule, announcements, education platform" />
     <meta name="author" content="Darkboard Team" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://darkboard.edu/index.html" />
@@ -19,15 +19,15 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://darkboard.edu/" />
-    <meta property="og:title" content="Darkboard - Student Dashboard" />
-    <meta property="og:description" content="Personalized student dashboard for managing academic activities at College of Computer Studies." />
+    <meta property="og:title" content="Darkboard - Dashboard" />
+    <meta property="og:description" content="Personalized dashboard for managing academic activities." />
     <meta property="og:image" content="https://darkboard.edu/Gemini_Generated_Image_g3iakg3iakg3iakg.png" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://darkboard.edu/" />
-    <meta property="twitter:title" content="Darkboard - Student Dashboard" />
-    <meta property="twitter:description" content="Personalized student dashboard for managing academic activities at College of Computer Studies." />
+    <meta property="twitter:title" content="Darkboard - Dashboard" />
+    <meta property="twitter:description" content="Personalized dashboard for managing academic activities." />
     <meta property="twitter:image" content="https://darkboard.edu/Gemini_Generated_Image_g3iakg3iakg3iakg.png" />
 
     <link rel="stylesheet" href="Darkboard.css" />
@@ -100,34 +100,18 @@
                 <span class="greetingMessage" aria-live="polite"></span>
               </p>
             </div>
+            <div id="roleBadge" class="role-badge">
+              <i class="fas fa-user-graduate"></i>
+              <span id="roleLabel">Student</span>
+            </div>
           </div>
         </section>
 
         <!-- Quick Stats Banner -->
         <section class="card" aria-labelledby="stats-heading">
           <h2 id="stats-heading" class="sr-only">Academic Statistics</h2>
-          <div class="grades-stats" style="margin-bottom: 0">
-            <div class="stat-card">
-              <div class="stat-value" id="subjectsCount" aria-label="0 subjects enrolled">0</div>
-              <div class="stat-name">Subjects Enrolled</div>
-              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                <div class="stat-fill" id="subjectsBar" style="width: 0%"></div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="averageGrade" aria-label="No grade yet">--</div>
-              <div class="stat-name">Current Average</div>
-              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                <div class="stat-fill" id="gradeBar" style="width: 0%; background: #4ade80"></div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="deadlinesCount" aria-label="0 upcoming deadlines">0</div>
-              <div class="stat-name">Upcoming Deadlines</div>
-              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                <div class="stat-fill" id="deadlinesBar" style="width: 0%; background: #fbbf24"></div>
-              </div>
-            </div>
+          <div class="grades-stats" style="margin-bottom: 0" id="statsContainer">
+            <!-- Stats will be populated based on role -->
           </div>
         </section>
 
@@ -136,23 +120,30 @@
           <div class="card-header">
             <h2 id="actions-heading"><i class="fas fa-bolt" aria-hidden="true"></i> Quick Actions</h2>
           </div>
-          <div class="quick-actions-grid">
-            <button class="action-card" id="actionSubmitAssignment" aria-label="Submit assignment">
-              <i class="fas fa-file-upload" aria-hidden="true"></i>
-              <span>Submit Assignment</span>
-            </button>
-            <button class="action-card" id="actionMessageTeacher" aria-label="Message teacher">
-              <i class="fas fa-envelope" aria-hidden="true"></i>
-              <span>Message Teacher</span>
-            </button>
-            <button class="action-card" id="actionDownloadMaterials" aria-label="Download materials">
-              <i class="fas fa-download" aria-hidden="true"></i>
-              <span>Download Materials</span>
-            </button>
-            <button class="action-card" id="actionViewResults" aria-label="View results">
-              <i class="fas fa-eye" aria-hidden="true"></i>
-              <span>View Results</span>
-            </button>
+          <div class="quick-actions-grid" id="quickActionsGrid">
+            <!-- Quick actions will be populated based on role -->
+          </div>
+        </section>
+
+        <!-- Instructor Section: Recent Submissions -->
+        <section class="card instructor-section" id="instructorSubmissionsSection" style="display: none;" aria-labelledby="instructor-submissions-heading">
+          <div class="card-header">
+            <h2 id="instructor-submissions-heading"><i class="fas fa-file-submissions" aria-hidden="true"></i> Recent Submissions</h2>
+            <a href="Submissions.html" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+          </div>
+          <div class="instructor-stats" id="instructorStats">
+            <!-- Will be populated by script -->
+          </div>
+        </section>
+
+        <!-- Student Section: Upcoming Deadlines -->
+        <section class="card student-section" id="studentDeadlinesSection" aria-labelledby="deadlines-heading">
+          <div class="card-header">
+            <h2 id="deadlines-heading"><i class="fas fa-clock" aria-hidden="true"></i> Upcoming Deadlines</h2>
+            <a href="Subjects.html" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+          </div>
+          <div class="upcoming-deadlines" id="upcomingDeadlines">
+            <!-- Will be populated by script -->
           </div>
         </section>
       </main>
@@ -169,11 +160,11 @@
       const logoutBtn = document.getElementById("logoutBtn");
       if (logoutBtn) logoutBtn.addEventListener("click", (e) => logout(e));
 
+      let userRole = 'student';
+      let subjects = [];
+
       window.addEventListener('DOMContentLoaded', () => {
         loadDashboardData();
-        
-        // Setup quick action buttons
-        setupQuickActions();
       });
 
       function loadDashboardData() {
@@ -192,132 +183,472 @@
             dashboardUserName.textContent = userData.name ? userData.name.split(' ')[0] : 'User';
           }
           
-          // Update role display
-          const userRole = userData.role || 'student';
-          document.title = userRole === 'instructor' ? 'Darkboard - Instructor Dashboard' : 'Darkboard - Student Dashboard';
+          // Update role
+          userRole = (userData.role || 'student').toLowerCase();
+          
+          const isInstructor = userRole === 'instructor' || userRole === 'teacher' || userRole === 'admin';
+          
+          // Update page title
+          document.title = isInstructor ? 'Darkboard - Instructor Dashboard' : 'Darkboard - Student Dashboard';
+          
+          // Update role badge
+          const roleBadge = document.getElementById('roleBadge');
+          const roleLabel = document.getElementById('roleLabel');
+          if (roleBadge && roleLabel) {
+            roleLabel.textContent = isInstructor ? 'Instructor' : 'Student';
+            roleBadge.querySelector('i').className = isInstructor ? 'fas fa-chalkboard-teacher' : 'fas fa-user-graduate';
+          }
+          
+          // Show/hide appropriate sections
+          const instructorSection = document.getElementById('instructorSubmissionsSection');
+          const studentSection = document.getElementById('studentDeadlinesSection');
+          if (instructorSection) instructorSection.style.display = isInstructor ? 'block' : 'none';
+          if (studentSection) studentSection.style.display = isInstructor ? 'none' : 'block';
         }
         
-        // Load subjects for stats
+        // Load subjects and stats
+        subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
         loadStatsData();
+        setupQuickActions();
+        loadUpcomingDeadlines();
       }
 
       function loadStatsData() {
-        const subjects = JSON.parse(localStorage.getItem('subjects') || '[]');
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const statsContainer = document.getElementById('statsContainer');
+        const isInstructor = userRole === 'instructor' || userRole === 'teacher' || userRole === 'admin';
         
-        // Update subjects count
-        const subjectsCount = document.getElementById('subjectsCount');
-        const subjectsBar = document.getElementById('subjectsBar');
-        const subjectCount = subjects.length || 0;
-        if (subjectsCount) {
-          subjectsCount.textContent = subjectCount;
-          subjectsCount.setAttribute('aria-label', subjectCount + ' subjects enrolled');
-        }
-        if (subjectsBar) {
-          const progress = Math.min(subjectCount * 20, 100); // Assume max 5 subjects for full bar
-          subjectsBar.style.width = progress + '%';
+        if (!statsContainer) return;
+
+        let statsHTML = '';
+        
+        if (isInstructor) {
+          // Instructor stats
+          const totalSubmissions = countTotalSubmissions();
+          const pendingGrading = countPendingGrading();
+          const activeSubjects = subjects.length;
+          
+          statsHTML = `
+            <div class="stat-card">
+              <div class="stat-value" aria-label="${activeSubjects} subjects">${activeSubjects}</div>
+              <div class="stat-name">My Subjects</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="${Math.min(activeSubjects * 20, 100)}" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: ${Math.min(activeSubjects * 20, 100)}%"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" aria-label="${pendingGrading} submissions pending">${pendingGrading}</div>
+              <div class="stat-name">Pending Grading</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="${Math.min(pendingGrading * 20, 100)}" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: ${Math.min(pendingGrading * 20, 100)}%; background: #fbbf24"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" aria-label="${totalSubmissions} total submissions">${totalSubmissions}</div>
+              <div class="stat-name">Total Submissions</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="${Math.min(totalSubmissions * 10, 100)}" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: ${Math.min(totalSubmissions * 10, 100)}%; background: #4ade80"></div>
+              </div>
+            </div>
+          `;
+        } else {
+          // Student stats
+          const subjectCount = subjects.length;
+          const upcomingDeadlines = countUpcomingDeadlines();
+          const completedTasks = countCompletedTasks();
+          
+          statsHTML = `
+            <div class="stat-card">
+              <div class="stat-value" aria-label="${subjectCount} subjects enrolled">${subjectCount}</div>
+              <div class="stat-name">Subjects Enrolled</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="${Math.min(subjectCount * 20, 100)}" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: ${Math.min(subjectCount * 20, 100)}%"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" aria-label="--">--</div>
+              <div class="stat-name">Current Average</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: 0%; background: #4ade80"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" aria-label="${upcomingDeadlines} upcoming deadlines">${upcomingDeadlines}</div>
+              <div class="stat-name">Upcoming Deadlines</div>
+              <div class="stat-bar" role="progressbar" aria-valuenow="${Math.min(upcomingDeadlines * 25, 100)}" aria-valuemin="0" aria-valuemax="100">
+                <div class="stat-fill" style="width: ${Math.min(upcomingDeadlines * 25, 100)}%; background: #fbbf24"></div>
+              </div>
+            </div>
+          `;
         }
         
-        // Calculate upcoming deadlines (tasks/assignments/quizzes due within 7 days)
-        let deadlines = 0;
+        statsContainer.innerHTML = statsHTML;
+      }
+
+      function countTotalSubmissions() {
+        let count = 0;
+        subjects.forEach(subject => {
+          if (subject.assignments) {
+            subject.assignments.forEach(a => {
+              if (a.submissions) count += a.submissions.length;
+            });
+          }
+          if (subject.tasks) {
+            subject.tasks.forEach(t => {
+              if (t.submissions) count += t.submissions.length;
+            });
+          }
+          if (subject.quizzes) {
+            subject.quizzes.forEach(q => {
+              if (q.submissions) count += q.submissions.length;
+            });
+          }
+        });
+        return count;
+      }
+
+      function countPendingGrading() {
+        let count = 0;
+        subjects.forEach(subject => {
+          if (subject.assignments) {
+            subject.assignments.forEach(a => {
+              if (a.submissions) {
+                a.submissions.forEach(s => {
+                  if (!s.grade && !s.graded) count++;
+                });
+              }
+            });
+          }
+          if (subject.tasks) {
+            subject.tasks.forEach(t => {
+              if (t.submissions) {
+                t.submissions.forEach(s => {
+                  if (!s.grade && !s.graded) count++;
+                });
+              }
+            });
+          }
+          if (subject.quizzes) {
+            subject.quizzes.forEach(q => {
+              if (q.submissions) {
+                q.submissions.forEach(s => {
+                  if (!s.grade && !s.graded) count++;
+                });
+              }
+            });
+          }
+        });
+        return count;
+      }
+
+      function countUpcomingDeadlines() {
         const now = new Date();
         const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        let count = 0;
         
         subjects.forEach(subject => {
-          // Check tasks
           if (subject.tasks) {
             subject.tasks.forEach(task => {
               if (task.dueDate) {
                 const dueDate = new Date(task.dueDate);
                 if (dueDate >= now && dueDate <= sevenDaysFromNow && task.status !== 'completed') {
-                  deadlines++;
+                  count++;
                 }
               }
             });
           }
-          // Check assignments
           if (subject.assignments) {
             subject.assignments.forEach(assignment => {
               if (assignment.dueDate) {
                 const dueDate = new Date(assignment.dueDate);
                 if (dueDate >= now && dueDate <= sevenDaysFromNow && assignment.status !== 'graded') {
-                  deadlines++;
+                  count++;
                 }
               }
             });
           }
-          // Check quizzes
           if (subject.quizzes) {
             subject.quizzes.forEach(quiz => {
               if (quiz.dueDate) {
                 const dueDate = new Date(quiz.dueDate);
                 if (dueDate >= now && dueDate <= sevenDaysFromNow && quiz.status !== 'completed') {
-                  deadlines++;
+                  count++;
                 }
               }
             });
           }
         });
         
-        const deadlinesCount = document.getElementById('deadlinesCount');
-        const deadlinesBar = document.getElementById('deadlinesBar');
-        if (deadlinesCount) {
-          deadlinesCount.textContent = deadlines;
-          deadlinesCount.setAttribute('aria-label', deadlines + ' upcoming deadlines');
-        }
-        if (deadlinesBar) {
-          const progress = Math.min(deadlines * 25, 100);
-          deadlinesBar.style.width = progress + '%';
-        }
-        
-        // Average grade (placeholder - would need grades data)
-        const averageGrade = document.getElementById('averageGrade');
-        const gradeBar = document.getElementById('gradeBar');
-        if (averageGrade) {
-          averageGrade.textContent = '--';
-        }
-        if (gradeBar) {
-          gradeBar.style.width = '0%';
-        }
+        return count;
+      }
+
+      function countCompletedTasks() {
+        let count = 0;
+        subjects.forEach(subject => {
+          if (subject.tasks) {
+            subject.tasks.forEach(task => {
+              if (task.status === 'completed' || task.status === 'submitted') {
+                count++;
+              }
+            });
+          }
+        });
+        return count;
       }
 
       function setupQuickActions() {
-        // Submit Assignment - go to Subjects page
-        const submitAssignmentBtn = document.getElementById('actionSubmitAssignment');
-        if (submitAssignmentBtn) {
-          submitAssignmentBtn.addEventListener('click', () => {
-            window.location.href = 'Subjects.html';
-          });
-        }
+        const quickActionsGrid = document.getElementById('quickActionsGrid');
+        const isInstructor = userRole === 'instructor' || userRole === 'teacher' || userRole === 'admin';
         
-        // Message Teacher - show info (could be expanded to messaging system)
-        const messageTeacherBtn = document.getElementById('actionMessageTeacher');
-        if (messageTeacherBtn) {
-          messageTeacherBtn.addEventListener('click', () => {
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            if (userData && userData.role === 'instructor') {
-              alert('Messaging system coming soon! You can contact students through announcements.');
-            } else {
-              alert('Messaging system coming soon! You can contact your teachers through the Subjects page.');
+        if (!quickActionsGrid) return;
+
+        let actions = [];
+
+        if (isInstructor) {
+          // Instructor quick actions
+          actions = [
+            {
+              id: 'actionAddSubject',
+              icon: 'fa-plus-circle',
+              label: 'Add Subject',
+              href: 'Subjects.html'
+            },
+            {
+              id: 'actionGradeSubmissions',
+              icon: 'fa-clipboard-check',
+              label: 'Grade Submissions',
+              href: 'Submissions.html'
+            },
+            {
+              id: 'actionPostAnnouncement',
+              icon: 'fa-bullhorn',
+              label: 'Post Announcement',
+              href: 'Announcements.html'
+            },
+            {
+              id: 'actionManageSchedule',
+              icon: 'fa-calendar-alt',
+              label: 'Manage Schedule',
+              href: 'Schedule.html'
+            },
+            {
+              id: 'actionViewGrades',
+              icon: 'fa-chart-bar',
+              label: 'View Grades',
+              href: 'Grades.html'
+            },
+            {
+              id: 'actionStudentProgress',
+              icon: 'fa-users',
+              label: 'Student Progress',
+              href: 'Subjects.html'
+            }
+          ];
+        } else {
+          // Student quick actions
+          actions = [
+            {
+              id: 'actionSubmitAssignment',
+              icon: 'fa-file-upload',
+              label: 'Submit Assignment',
+              href: 'Subjects.html'
+            },
+            {
+              id: 'actionViewGrades',
+              icon: 'fa-chart-bar',
+              label: 'View Grades',
+              href: 'Grades.html'
+            },
+            {
+              id: 'actionViewSchedule',
+              icon: 'fa-calendar-alt',
+              label: 'View Schedule',
+              href: 'Schedule.html'
+            },
+            {
+              id: 'actionViewAnnouncements',
+              icon: 'fa-bell',
+              label: 'Announcements',
+              href: 'Announcements.html'
+            },
+            {
+              id: 'actionMySubmissions',
+              icon: 'fa-folder-open',
+              label: 'My Submissions',
+              href: 'Submissions.html'
+            },
+            {
+              id: 'actionBrowseSubjects',
+              icon: 'fa-book',
+              label: 'Browse Subjects',
+              href: 'Subjects.html'
+            }
+          ];
+        }
+
+        quickActionsGrid.innerHTML = actions.map(action => `
+          <button class="action-card" data-href="${action.href}" aria-label="${action.label}">
+            <i class="fas ${action.icon}" aria-hidden="true"></i>
+            <span>${action.label}</span>
+          </button>
+        `).join('');
+
+        // Add click handlers
+        quickActionsGrid.querySelectorAll('.action-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const href = card.dataset.href;
+            if (href) {
+              window.location.href = href;
             }
           });
-        }
+        });
+      }
+
+      function loadUpcomingDeadlines() {
+        const upcomingDeadlines = document.getElementById('upcomingDeadlines');
+        if (!upcomingDeadlines) return;
+
+        const isInstructor = userRole === 'instructor' || userRole === 'teacher' || userRole === 'admin';
         
-        // Download Materials - go to Subjects page
-        const downloadMaterialsBtn = document.getElementById('actionDownloadMaterials');
-        if (downloadMaterialsBtn) {
-          downloadMaterialsBtn.addEventListener('click', () => {
-            window.location.href = 'Subjects.html';
-          });
+        if (isInstructor) {
+          // Show instructor stats instead
+          const instructorStats = document.getElementById('instructorStats');
+          if (instructorStats) {
+            const totalSubmissions = countTotalSubmissions();
+            const pendingGrading = countPendingGrading();
+            
+            instructorStats.innerHTML = `
+              <div class="instructor-stat-grid">
+                <div class="instructor-stat-card">
+                  <i class="fas fa-file-submissions"></i>
+                  <div class="stat-info">
+                    <span class="stat-number">${totalSubmissions}</span>
+                    <span class="stat-label">Total Submissions</span>
+                  </div>
+                </div>
+                <div class="instructor-stat-card warning">
+                  <i class="fas fa-clock"></i>
+                  <div class="stat-info">
+                    <span class="stat-number">${pendingGrading}</span>
+                    <span class="stat-label">Pending Grading</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          return;
         }
+
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         
-        // View Results - go to Grades page
-        const viewResultsBtn = document.getElementById('actionViewResults');
-        if (viewResultsBtn) {
-          viewResultsBtn.addEventListener('click', () => {
-            window.location.href = 'Grades.html';
-          });
+        let deadlines = [];
+        
+        subjects.forEach(subject => {
+          const subjectName = subject.name || 'Unknown Subject';
+          
+          if (subject.tasks) {
+            subject.tasks.forEach(task => {
+              if (task.dueDate) {
+                const dueDate = new Date(task.dueDate);
+                if (dueDate >= now && dueDate <= sevenDaysFromNow && task.status !== 'completed') {
+                  deadlines.push({
+                    subject: subjectName,
+                    title: task.title || task.name || 'Task',
+                    type: 'Task',
+                    dueDate: task.dueDate,
+                    priority: task.priority || 'medium'
+                  });
+                }
+              }
+            });
+          }
+          
+          if (subject.assignments) {
+            subject.assignments.forEach(assignment => {
+              if (assignment.dueDate) {
+                const dueDate = new Date(assignment.dueDate);
+                if (dueDate >= now && dueDate <= sevenDaysFromNow && assignment.status !== 'graded') {
+                  deadlines.push({
+                    subject: subjectName,
+                    title: assignment.title || 'Assignment',
+                    type: 'Assignment',
+                    dueDate: assignment.dueDate,
+                    priority: assignment.priority || 'medium'
+                  });
+                }
+              }
+            });
+          }
+          
+          if (subject.quizzes) {
+            subject.quizzes.forEach(quiz => {
+              if (quiz.dueDate) {
+                const dueDate = new Date(quiz.dueDate);
+                if (dueDate >= now && dueDate <= sevenDaysFromNow && quiz.status !== 'completed') {
+                  deadlines.push({
+                    subject: subjectName,
+                    title: quiz.title || 'Quiz',
+                    type: 'Quiz',
+                    dueDate: quiz.dueDate,
+                    priority: 'high'
+                  });
+                }
+              }
+            });
+          }
+        });
+
+        // Sort by due date
+        deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+        
+        // Take only first 5
+        deadlines = deadlines.slice(0, 5);
+
+        if (deadlines.length === 0) {
+          upcomingDeadlines.innerHTML = `
+            <div class="empty-deadlines">
+              <i class="fas fa-check-circle"></i>
+              <p>No upcoming deadlines in the next 7 days!</p>
+            </div>
+          `;
+          return;
         }
+
+        upcomingDeadlines.innerHTML = deadlines.map(deadline => {
+          const dueDate = new Date(deadline.dueDate);
+          const daysLeft = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+          
+          let priorityClass = '';
+          let priorityIcon = '';
+          
+          if (deadline.priority === 'high' || daysLeft <= 1) {
+            priorityClass = 'high-priority';
+            priorityIcon = 'fa-exclamation-circle';
+          } else if (deadline.priority === 'medium' || daysLeft <= 3) {
+            priorityClass = 'medium-priority';
+            priorityIcon = 'fa-clock';
+          } else {
+            priorityClass = 'low-priority';
+            priorityIcon = 'fa-info-circle';
+          }
+
+          return `
+            <div class="deadline-item ${priorityClass}">
+              <div class="deadline-icon">
+                <i class="fas ${priorityIcon}"></i>
+              </div>
+              <div class="deadline-info">
+                <span class="deadline-subject">${deadline.subject}</span>
+                <span class="deadline-title">${deadline.title}</span>
+                <span class="deadline-type">${deadline.type}</span>
+              </div>
+              <div class="deadline-date">
+                <span class="days-left">${daysLeft} day${daysLeft !== 1 ? 's' : ''}</span>
+                <span class="due-date">${dueDate.toLocaleDateString()}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
 
       // Add animation on the web page using ScrollReveal
